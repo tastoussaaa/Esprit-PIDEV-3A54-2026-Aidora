@@ -15,8 +15,8 @@
     <main class="portal__main">
 
         <header class="portal__header">
-            <h1 class="portal__title">All Ordonnances</h1>
-            <p class="portal__subtitle">List of prescriptions with actions.</p>
+            <h1 class="portal__title">Toutes les ordonnances</h1>
+            <p class="portal__subtitle">Liste des ordonnances avec actions.</p>
         </header>
 
         <section class="portal__content">
@@ -24,13 +24,13 @@
                 <form method="get" style="display:flex;gap:8px;flex:1">
                     <input type="text" name="search" placeholder="Search by medicament, consultation, or date..." value="{{ search }}" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;flex:1;font-size:14px">
                     <select name="sort" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;font-size:14px">
-                        <option value="date" {% if sort == 'date' %}selected{% endif %}>Newest First</option>
-                        <option value="medicament" {% if sort == 'medicament' %}selected{% endif %}>Medicament A-Z</option>
-                        <option value="consultation" {% if sort == 'consultation' %}selected{% endif %}>Consultation Name</option>
+                        <option value="date" {% if sort == 'date' %}selected{% endif %}>Le plus récent en premier</option>
+                        <option value="medicament" {% if sort == 'medicament' %}selected{% endif %}>Médicaments de A à Z</option>
+                        <option value="consultation" {% if sort == 'consultation' %}selected{% endif %}>Nom de la Consultation</option>
                     </select>
-                    <button type="submit" class="btn btn--primary">Search</button>
+                    <button type="submit" class="btn btn--primary">Rechercher</button>
                     {% if search or sort != 'date' %}
-                        <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost">Reset</a>
+                        <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost">Réinitialiser</a>
                     {% endif %}
                 </form>
             </div>
@@ -38,25 +38,55 @@
             <div class="portal__card">
                 <div class="box">
                     {% if ordonnances is empty %}
-                        <p>No ordonnances available.</p>
+                        <p>Aucune ordonnance disponible.</p>
                     {% else %}
                         <table style="width:100%; border-collapse:collapse">
                             <thead>
                                 <tr style="text-align:left; border-bottom:1px solid rgba(7,19,31,.08)">
                                     <th>Medicament</th>
                                     <th>Dosage</th>
-                                    <th>Duration</th>
+                                    <th>Durée</th>
                                     <th>Consultation</th>
-                                    <th>Created</th>
+                                    <th>Créé</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for o in ordonnances %}
                                     <tr style="border-bottom:1px solid rgba(7,19,31,.06)">
-                                        <td>{{ o.medicament }}</td>
-                                        <td>{{ o.dosage }}</td>
-                                        <td>{{ o.duree }}</td>
+                                        <td>
+                                            {% if o.medicaments|length > 0 %}
+                                                {% set meds = [] %}
+                                                {% for med in o.medicaments %}
+                                                    {% set meds = meds|merge([med.medicament]) %}
+                                                {% endfor %}
+                                                {{ meds|join(', ') }}
+                                            {% else %}
+                                                {{ o.medicament ?: '—' }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if o.medicaments|length > 0 %}
+                                                {% set dosages = [] %}
+                                                {% for med in o.medicaments %}
+                                                    {% set dosages = dosages|merge([med.dosage ?: '—']) %}
+                                                {% endfor %}
+                                                {{ dosages|join(', ') }}
+                                            {% else %}
+                                                {{ o.dosage ?: '—' }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if o.medicaments|length > 0 %}
+                                                {% set durees = [] %}
+                                                {% for med in o.medicaments %}
+                                                    {% set durees = durees|merge([med.duree ?: '—']) %}
+                                                {% endfor %}
+                                                {{ durees|join(', ') }}
+                                            {% else %}
+                                                {{ o.duree ?: '—' }}
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% if o.consultation %}
                                                 {{ o.consultation.name }} {{ o.consultation.familyName }}
@@ -66,11 +96,14 @@
                                         </td>
                                         <td>{{ o.createdAt ? o.createdAt|date('Y-m-d') : '—' }}</td>
                                         <td>
-                                            <a href="{{ path('Ordonnance_show', {'id': o.id}) }}" class="btn btn--ghost">Details</a>
-                                            <a href="{{ path('Ordonnance_edit', {'id': o.id}) }}" class="btn btn--primary">Update</a>
+                                            {% if o.consultation %}
+                                                <a href="{{ path('download_consultation_pdf', {'consultationId': o.consultation.id}) }}" class="btn btn--ghost" title="Télécharger PDF" style="padding:6px 10px;font-size:16px">📥</a>
+                                            {% endif %}
+                                            <a href="{{ path('Ordonnance_show', {'id': o.id}) }}" class="btn btn--ghost">Détails</a>
+                                            <a href="{{ path('Ordonnance_edit', {'id': o.id}) }}" class="btn btn--primary">Modifier</a>
                                             <form method="post" action="{{ path('Ordonnance_delete', {'id': o.id}) }}" style="display:inline">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ o.id) }}">
-                                                <button type="submit" class="btn btn--ghost" onclick="return confirm('Delete this ordonnance?')">Delete</button>
+                                                <button type="submit" class="btn btn--ghost" onclick="return confirm('Supprimer cette ordonnance?')">Supprimer</button>
                                             </form>
                                         </td>
                                     </tr>

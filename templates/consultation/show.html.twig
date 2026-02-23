@@ -20,15 +20,15 @@
 
     <main class="portal__main">
         <header class="portal__header">
-            <h1 class="portal__title">Consultation Details</h1>
-            <p class="portal__subtitle">Details for consultation #{{ consultation.id }}</p>
+            <h1 class="portal__title">Détails de la consultation</h1>
+            <p class="portal__subtitle">Détails de la consultation #{{ consultation.id }}</p>
         </header>
 
         <section class="portal__content portal__card">
             <div class="card">
                 <div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start">
                     <div>
-                        <h3 style="margin:0 0 8px">{{ consultation.motif }} <span style="color:var(--muted);font-weight:700">· {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d H:i') : '—' }}</span></h3>
+                        <h3 style="margin:0 0 8px">{{ consultation.motif }} <span style="color:var(--muted);font-weight:700">· {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d') ~ ' ' ~ consultation.timeSlot : '—' }}</span></h3>
 
                         <div style="margin-top:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
                             <div>
@@ -37,22 +37,22 @@
                                 <div style="color:var(--muted);font-size:13px">{{ consultation.email }}</div>
                             </div>
                             <div>
-                                <div class="section-title"><h2 style="font-size:14px;margin:0">Details</h2></div>
-                                <div style="margin-top:6px">Sex: {{ consultation.sex ?: '—' }}</div>
-                                <div>Age: {{ consultation.age ?: '—' }}</div>
-                                <div>Status: {{ consultation.status|capitalize }}</div>
+                                <div class="section-title"><h2 style="font-size:14px;margin:0">Détails</h2></div>
+                                <div style="margin-top:6px">Sexe : {{ consultation.sex ?: '—' }}</div>
+                                <div>Âge : {{ consultation.age ?: '—' }}</div>
+                                <div>Statut : {{ consultation.status|capitalize }}</div>
                             </div>
                         </div>
                     </div>
 
                     <aside>
                         <div style="background:var(--card);border:1px solid rgba(7,19,31,.06);border-radius:12px;padding:12px">
-                            <div style="font-weight:900">Meta</div>
-                            <div style="color:var(--muted);margin-top:6px">Created: {{ consultation.createdAt ? consultation.createdAt|date('Y-m-d H:i') : '—' }}</div>
+                            <div style="font-weight:900">Métadonnées</div>
+                            <div style="color:var(--muted);margin-top:6px">Créé : {{ consultation.createdAt ? consultation.createdAt|date('Y-m-d H:i') : '—' }}</div>
 
                             <div class="form__actions" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-                                <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Back</a>
-                                <a href="{{ path('consultation_edit', {'id': consultation.id}) }}" class="btn btn--primary">Edit</a>
+                                <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Retour</a>
+                                <a href="{{ path('consultation_edit', {'id': consultation.id}) }}" class="btn btn--primary">Modifier</a>
                             </div>
                         </div>
                     </aside>

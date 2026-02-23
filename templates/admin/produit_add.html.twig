@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Ajouter un Produit{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #d0d7de; border-radius: 6px; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #374151; }
+        .form-errors { color: #dc2626; background-color: #fee2e2; border: 1px solid #fca5a5; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-top: 4px; }
+        .error-box { color: #dc2626; background-color: #fee2e2; border: 1px solid #fca5a5; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Ajouter un Produit</h1>
+                <p class="portal__subtitle">Ajoutez un nouveau produit au catalogue</p>
+            </div>
+        </div>
+
+        <nav style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+            {% for item in navigation|default([]) %}
+            <a href="{{ item.path }}" 
+               style="padding: 8px 16px; text-decoration: none; border-radius: 6px; {% if item.name == 'Produits' %}background-color: #f0f4ff; color: #2563eb; font-weight: 600;{% else %}color: #6b7280;{% endif %} transition: all 0.3s;">
+                <span style="margin-right: 4px;">{{ item.icon }}</span>{{ item.name }}
+            </a>
+            {% endfor %}
+        </nav>
+
+        <div class="box" style="max-width: 700px;">
+            {% for message in app.flashes('error') %}
+            <div class="error-box">
+                ✗ {{ message }}
+            </div>
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'autocomplete': 'off', 'novalidate': 'novalidate'}}) }}
+            
+            <div class="form-group">
+                {{ form_label(form.nom, 'Nom du produit *') }}
+                {{ form_widget(form.nom, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Amoxicilline 500mg'}}) }}
+                {% if form_errors(form.nom) %}
+                    <div class="form-errors">{{ form_errors(form.nom) }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.categorie, 'Catégorie *') }}
+                {{ form_widget(form.categorie, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Antibiotiques'}}) }}
+                {% if form_errors(form.categorie) %}
+                    <div class="form-errors">{{ form_errors(form.categorie) }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.description, 'Description *') }}
+                {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '5', 'placeholder': 'Décrivez le produit en détail...'}}) }}
+                {% if form_errors(form.description) %}
+                    <div class="form-errors">{{ form_errors(form.description) }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    {{ form_label(form.prix, 'Prix (DT) *') }}
+                    {{ form_widget(form.prix, {'attr': {'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'min': '0'}}) }}
+                    {% if form_errors(form.prix) %}
+                        <div class="form-errors">{{ form_errors(form.prix) }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.stock, 'Stock *') }}
+                    {{ form_widget(form.stock, {'attr': {'class': 'form-control', 'placeholder': '0', 'min': '0'}}) }}
+                    {% if form_errors(form.stock) %}
+                        <div class="form-errors">{{ form_errors(form.stock) }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.image, 'Image du produit') }}
+                {{ form_widget(form.image, {'attr': {'class': 'form-control', 'accept': 'image/jpeg,image/png,image/gif,image/webp'}}) }}
+                <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">Formats acceptés: JPEG, PNG, GIF, WebP (Max: 2MB)</p>
+                {% if form_errors(form.image) %}
+                    <div class="form-errors">{{ form_errors(form.image) }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 28px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                <button type="submit" style="padding: 12px 24px; background-color: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                    ✓ Ajouter le produit
+                </button>
+                <a href="{{ path('admin_produits') }}" style="padding: 12px 24px; background-color: #6b7280; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center;">
+                    ✕ Annuler
+                </a>
+            </div>
+            
+            {{ form_end(form) }}
+        </div>
+    </main>
+</div>
+{% endblock %}

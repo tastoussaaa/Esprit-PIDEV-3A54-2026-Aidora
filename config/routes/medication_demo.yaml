@@ -1,0 +1,13 @@
+medication_demo:
+  path: /medication-demo
+  controller: App\\Controller\\MedicationDemoWebController::index
+
+medication_demo_rtbc:
+  path: /mock/rtbc
+  controller: App\\Controller\\MedicationDemoWebController::mockRtbc
+  methods: [POST]
+
+medication_demo_eprescribe:
+  path: /mock/eprescribe
+  controller: App\\Controller\\MedicationDemoWebController::mockEprescribe
+  methods: [POST]

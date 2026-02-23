@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Gestion des Produits{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .produits-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .produits-table thead tr { border-bottom: 2px solid #e5e7eb; }
+        .produits-table th { padding: 12px; text-align: left; font-weight: 600; color: #374151; }
+        .produits-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        .produits-table tr:hover { background-color: #f9fafb; }
+        .btn-group { display: flex; gap: 8px; }
+        .btn-edit, .btn-delete { padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .btn-edit { background-color: #3b82f6; color: white; }
+        .btn-edit:hover { background-color: #2563eb; }
+        .btn-delete { background-color: #ef4444; color: white; border: none; cursor: pointer; }
+        .btn-delete:hover { background-color: #dc2626; }
+        .btn-add { display: inline-block; padding: 10px 16px; background-color: #10b981; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 24px; }
+        .btn-add:hover { background-color: #059669; }
+        .produit-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Gestion des Produits</h1>
+                <p class="portal__subtitle">Gérez tous les produits disponibles</p>
+            </div>
+        </div>
+
+        <nav style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+            {% for item in navigation|default([]) %}
+            <a href="{{ item.path }}" 
+               style="padding: 8px 16px; text-decoration: none; border-radius: 6px; {% if item.name == 'Produits' %}background-color: #f0f4ff; color: #2563eb; font-weight: 600;{% else %}color: #6b7280;{% endif %} transition: all 0.3s;">
+                <span style="margin-right: 4px;">{{ item.icon }}</span>{{ item.name }}
+            </a>
+            {% endfor %}
+        </nav>
+
+        <div class="portal__content">
+            {% for message in app.flashes('success') %}
+            <div class="pill" style="margin-bottom: 16px; color: #059669; background-color: #ecfdf5; border: 1px solid #6ee7b7;">
+                ✓ {{ message }}
+            </div>
+            {% endfor %}
+
+            <a href="{{ path('admin_produit_add') }}" class="btn-add">+ Ajouter un produit</a>
+
+            {% if produits %}
+            <div class="box">
+                <h3 style="margin-bottom: 16px;">Produits ({{ produits|length }})</h3>
+                <table class="produits-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Image</th>
+                            <th>Nom</th>
+                            <th>Catégorie</th>
+                            <th style="width: 100px;">Prix</th>
+                            <th style="width: 80px;">Stock</th>
+                            <th style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in produits %}
+                        <tr>
+                            <td>
+                                {% if produit.imageName %}
+                                    <img src="{{ asset('uploads/produits/' ~ produit.imageName) }}" alt="{{ produit.nom }}" class="produit-img">
+                                {% else %}
+                                    <div style="width: 50px; height: 50px; background-color: #e5e7eb; border-radius: 4px;"></div>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ produit.nom }}</strong></td>
+                            <td>{{ produit.categorie ?? '-' }}</td>
+                            <td>{{ produit.prix|number_format(2, ',', ' ') }} DT</td>
+                            <td>{{ produit.stock }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ path('admin_produit_edit', {'id': produit.id}) }}" class="btn-edit">Modifier</a>
+                                    <form method="POST" action="{{ path('admin_produit_delete', {'id': produit.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-produit' ~ produit.id) }}">
+                                        <button type="submit" class="btn-delete">Supprimer</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="box" style="text-align: center; padding: 48px 24px;">
+                <p style="color: #6b7280; margin-bottom: 16px;">Aucun produit trouvé.</p>
+                <a href="{{ path('admin_produit_add') }}" class="btn-add">+ Ajouter le premier produit</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

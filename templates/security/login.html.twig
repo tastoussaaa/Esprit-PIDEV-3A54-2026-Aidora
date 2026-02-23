@@ -1,6 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block title %}Connexion{% endblock %}
 
+
+{% block javascripts %}
+    <script src="{{ asset('public/assets/js/controle.js') }}" defer></script>
+{% endblock %}
+
 {% block body %}
 <div class="bg-orbs"></div>
 
@@ -31,19 +36,31 @@
       </div>
     {% endif %}
 
-    {% if error %}
-      <div class="pill" style="margin-bottom:12px;color:#b91c1c">
-        Identifiants incorrects
+    {% if app.session.has('validation_error_message') %}
+      {% set message = app.session.get('validation_error_message') %}
+      {% if 'en attente de validation' in message %}
+        <div class="pill" style="margin-bottom:12px;color:#d97706;background-color:#fef3c7;border:1px solid #fcd34d">
+          ⏳ {{ message }}
+        </div>
+      {% else %}
+        <div class="pill" style="margin-bottom:12px;color:#dc2626;background-color:#fee2e2;border:1px solid #fca5a5">
+          ❌ {{ message }}
+        </div>
+      {% endif %}
+      {% set _ = app.session.remove('validation_error_message') %}
+    {% elseif error %}
+      <div class="pill" style="margin-bottom:12px;color:#dc2626;background-color:#fee2e2;border:1px solid #fca5a5">
+        ❌ Ce compte n'existe pas ou les identifiants sont incorrects.
       </div>
     {% endif %}
 
     <form method="post">
       <label>Email</label>
-      <input type="email" name="_username" value="{{ last_username }}" required
+      <input type="email" name="_username" value="{{ last_username }}" 
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Mot de passe</label>
-      <input type="password" name="_password" required
+      <input type="password" name="_password"
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Avis de nouvelle consultation</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px;">
+    <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" style="background:#ffffff; border-radius:8px; padding:24px;">
+
+                    <tr>
+                        <td style="text-align:center; padding-bottom:20px;">
+                            <h2 style="color:#2c3e50; margin:0;">Aidora</h2>
+                            <p style="color:#7f8c8d; margin:5px 0 0;">
+                                Gestion des consultations
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="color:#2c3e50; font-size:15px;">
+                            <p>Bonjour Docteur. {{ medecin.fullName }},</p>
+
+                            <p>
+                                Une nouvelle consultation a été soumise et nécessite votre attention.
+                            </p>
+
+                            <div style="background:#f8f9fa; padding:15px; border-radius:6px; margin:20px 0;">
+                                <h3 style="margin:0 0 10px; color:#2c3e50;">Détails de la consultation:</h3>
+                                <p><strong>Patient:</strong> {{ consultation.name }} {{ consultation.familyName }}</p>
+                                <p><strong>Motif:</strong> {{ consultation.motif }}</p>
+                                <p><strong>Date:</strong> {{ consultation.dateConsultation ? consultation.dateConsultation|date('d/m/Y') : 'Not specified' }}</p>
+                                <p><strong>Plage horaire:</strong> {{ consultation.timeSlot ?: 'Not specified' }}</p>
+                                <p><strong>Email:</strong> {{ consultation.email }}</p>
+                                <p><strong>Age:</strong> {{ consultation.age }}</p>
+                                <p><strong>Sexe:</strong> {{ consultation.sex }}</p>
+                            </div>
+
+                            <p>Please review this consultation and either accept or decline it through your dashboard.</p>
+
+                            <div style="text-align:center; margin:30px 0;">
+                                <a href="{{ url('medecin_consultations') }}" style="background:#3498db; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;">View Consultations</a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-top:30px; font-size:13px; color:#7f8c8d;">
+                            <hr style="border:none; border-top:1px solid #ecf0f1;">
+                            <p>TCe courriel a été envoyé automatiquement. Veuillez ne pas y répondre.</p>
+                            <p>© {{ "now"|date("Y") }} Aidora</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

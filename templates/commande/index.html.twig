@@ -37,6 +37,38 @@
             <a href="{{ path('commande_new') }}" class="btn btn--primary">Nouvelle commande</a>
         </div>
 
+        <form method="get" action="{{ path('commande_index') }}" class="produit-filters" style="margin-bottom:24px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="recherche">Recherche</label>
+                <input type="text" id="recherche" name="recherche" value="{{ recherche }}" placeholder="Nom du produit...">
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="statut">Statut</label>
+                <select id="statut" name="statut">
+                    <option value="">Tous</option>
+                    {% for s in statuts %}
+                        <option value="{{ s }}" {% if statut_filtre == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="tri">Trier par</label>
+                <select id="tri" name="tri">
+                    <option value="dateCommande" {% if tri == 'dateCommande' %}selected{% endif %}>Date</option>
+                    <option value="montantTotal" {% if tri == 'montantTotal' %}selected{% endif %}>Montant</option>
+                    <option value="statut" {% if tri == 'statut' %}selected{% endif %}>Statut</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="ordre">Ordre</label>
+                <select id="ordre" name="ordre">
+                    <option value="ASC" {% if ordre == 'ASC' %}selected{% endif %}>Croissant</option>
+                    <option value="DESC" {% if ordre == 'DESC' %}selected{% endif %}>Décroissant</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn--primary">Filtrer</button>
+        </form>
+
         <div class="box">
             <div class="table-wrap">
                 <table>

@@ -30,14 +30,29 @@ class ProduitRepository extends ServiceEntityRepository
         
         // Validate sort field
         $allowedSort = ['nom', 'prix', 'categorie', 'stock'];
-        $sortField = in_array($tri, $allowedSort, true) ? $tri : 'nom';
-        
+        $sortField = in_array($tri, $allowedSort, true) ? $tri : 'prix'; // Default to 'prix' if invalid
+
         // Validate sort order
         $sortOrder = ($ordre === 'DESC') ? 'DESC' : 'ASC';
         
         $qb->orderBy('p.' . $sortField, $sortOrder);
-        
-        return $qb->getQuery()->getResult();
+
+        $results = $qb->getQuery()->getResult();
+
+        // If sorting by prix, ensure numeric ordering in PHP as a fallback
+        if ($sortField === 'prix') {
+            usort($results, function (Produit $a, Produit $b) use ($sortOrder) {
+                $av = (float) $a->getPrix();
+                $bv = (float) $b->getPrix();
+                if ($av === $bv) {
+                    return 0;
+                }
+                $cmp = ($av < $bv) ? -1 : 1;
+                return $sortOrder === 'ASC' ? $cmp : -$cmp;
+            });
+        }
+
+        return $results;
     }
 
     public function findDistinctCategories(): array

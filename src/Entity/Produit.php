@@ -17,40 +17,28 @@ class Produit
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le nom du produit est obligatoire')]
-    #[Assert\Length(
-        min: 3,
-        max: 255,
-        minMessage: 'Le nom doit contenir au moins 3 caractères',
-        maxMessage: 'Le nom ne peut pas dépasser 255 caractères'
+    #[Assert\Regex(
+        pattern: '/[a-zA-ZÀ-ÿ]/',
+        message: 'Le nom du produit ne peut pas être composé uniquement de chiffres'
     )]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: 'La description est obligatoire')]
-    #[Assert\Length(
-        min: 10,
-        minMessage: 'La description doit contenir au moins 10 caractères'
-    )]
     private ?string $description = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Le prix est obligatoire')]
     #[Assert\Positive(message: 'Le prix doit être positif')]
-    #[Assert\Range(min: 0.01, max: 999999, notInRangeMessage: 'Le prix doit être entre 0.01 et 999999')]
     private ?float $prix = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Le stock est obligatoire')]
-    #[Assert\PositiveOrZero(message: 'Le stock ne peut pas être négatif')]
-    #[Assert\Range(min: 0, max: 100000, notInRangeMessage: 'Le stock doit être entre 0 et 100000')]
+    #[Assert\Positive(message: 'Le stock doit être un nombre positif')]
     private ?int $stock = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire')]
-    #[Assert\Length(
-        max: 255,
-        maxMessage: 'La catégorie ne peut pas dépasser 255 caractères'
-    )]
     private ?string $categorie = null;
 
     #[ORM\Column(length: 255, nullable: true)]

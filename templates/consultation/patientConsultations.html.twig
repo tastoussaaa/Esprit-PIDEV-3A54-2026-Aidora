@@ -35,7 +35,7 @@
                         {% for c in consultations %}
                             <div class="rowItem">
                                 <div>
-                                    <div class="rowItem__title">{{ c.motif }} — {{ c.dateConsultation ? c.dateConsultation|date('Y-m-d H:i') : 'TBD' }}</div>
+                                    <div class="rowItem__title">{{ c.motif }} — {{ c.dateConsultation ? c.dateConsultation|date('Y-m-d') ~ ' ' ~ c.timeSlot : 'TBD' }}</div>
                                     <div class="rowItem__meta">
                                         Date de création: {{ c.createdAt ? c.createdAt|date('d/m/Y H:i') : '—' }}
                                     </div>

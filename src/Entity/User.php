@@ -38,6 +38,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $userType = null;
 
+    #[ORM\Column]
+    private bool $isActive = true;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -133,6 +136,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUserType(?string $userType): static
     {
         $this->userType = $userType;
+
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

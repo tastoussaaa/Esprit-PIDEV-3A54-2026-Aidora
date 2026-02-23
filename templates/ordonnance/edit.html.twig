@@ -1,10 +1,145 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Ordonnance{% endblock %}
+{% block title %}Modifier l'ordonnance{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
+    <style>
+        .medicaments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .medicament-item {
+            border: 1px solid rgba(7, 19, 31, 0.06);
+            border-radius: 8px;
+            padding: 16px;
+            background: var(--card);
+            position: relative;
+        }
+
+        .medicament-item-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .medicament-item-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .remove-medicament-btn {
+            padding: 4px 8px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .remove-medicament-btn:hover {
+            background: #cc0000;
+        }
+
+        .add-medicament-btn {
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-medicament-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .add-medicament-btn:active {
+            transform: translateY(0);
+        }
+
+        .form__fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Error message styling - Make them highly visible */
+        .form-error, 
+        ul.errors, 
+        ul.errors li {
+            background-color: #fff5f5 !important;
+            border: 2px solid #d64545 !important;
+            border-radius: 8px !important;
+            padding: 12px 14px !important;
+            color: #7a1f1f !important;
+            font-weight: 700 !important;
+            margin-top: 8px !important;
+            display: block !important;
+            font-size: 15px !important;
+            box-shadow: 0 6px 18px rgba(214, 69, 69, 0.12) !important;
+        }
+
+        ul.errors {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        ul.errors li {
+            padding: 8px 0 !important;
+            border: none !important;
+            background: transparent !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border-left: 6px solid #d64545;
+            padding-left: 12px !important;
+        }
+
+        ul.errors li:before {
+            content: "⚠ " !important;
+            margin-right: 6px !important;
+        }
+
+        .medicament-error {
+            margin: 10px 0 12px 0;
+            padding: 12px 14px;
+            background: linear-gradient(90deg, #fff5f5, #fff0f0);
+            border: 2px solid #d64545;
+            color: #7a1f1f;
+            border-radius: 8px;
+            font-weight: 700;
+            box-shadow: 0 6px 18px rgba(214,69,69,0.12);
+        }
+
+        @keyframes pulseError {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0); }
+        }
+
+        .medicament-error.animate {
+            animation: pulseError 600ms ease-in-out 1;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -15,21 +150,53 @@
     <main class="portal__main">
 
         <header class="portal__header">
-            <h1 class="portal__title">Edit Ordonnance</h1>
-            <p class="portal__subtitle">Update the prescription details.</p>
+            <h1 class="portal__title">Modifier l'ordonnance</h1>
+            <p class="portal__subtitle">Mise à jour des détails de la prescription.</p>
         </header>
 
         <section class="portal__content portal__card">
 
-            {{ form_start(form, {'attr': {'class': 'form'}}) }}
+            {{ form_start(form, {'attr': {'class': 'form', 'novalidate': 'novalidate', 'id': 'ordonnance-form'}}) }}
 
                 <div class="form__fields">
-                    {{ form_widget(form) }}
+                    {{ form_row(form.consultation) }}
+                    
+                    <div class="form__field">
+                        <label class="form__label">Médicaments</label>
+                        <div class="medicaments-list" id="medicaments-list">
+                            {% for medicament_form in form.medicaments %}
+                                <div class="medicament-item" data-index="{{ loop.index0 }}">
+                                    <div class="medicament-item-title">
+                                        <span>Médicament {{ loop.index }}</span>
+                                        <button type="button" class="remove-medicament-btn" data-remove-medicament>Supprimer</button>
+                                    </div>
+
+                                    {% if medicament_form.medicament.vars.errors|length > 0 %}
+                                        <div class="medicament-error" role="alert" aria-live="assertive">
+                                            <ul class="errors">
+                                                {% for error in medicament_form.medicament.vars.errors %}
+                                                    <li>{{ error.message }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="medicament-item-content">
+                                        {{ form_row(medicament_form.medicament) }}
+                                        {{ form_row(medicament_form.dosage) }}
+                                        {{ form_row(medicament_form.duree) }}
+                                        {{ form_row(medicament_form.instructions) }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="add-medicament-btn" id="add-medicament-btn">+ Ajouter un médicament</button>
+                    </div>
                 </div>
 
                 <div class="form__actions">
-                    <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost" role="button">Cancel</a>
-                    <button type="submit" class="btn btn--primary">Update Ordonnance</button>
+                    <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost" role="button">Annuler</a>
+                    <button type="submit" class="btn btn--primary">Mettre à jour l'ordonnance</button>
                 </div>
 
             {{ form_end(form) }}
@@ -39,4 +206,106 @@
     </main>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('ordonnance-form');
+    const medicamentsList = document.getElementById('medicaments-list');
+    const addBtn = document.getElementById('add-medicament-btn');
+
+    function getPrototype() {
+        return `
+            <div class="medicament-item" data-index="__INDEX__">
+                <div class="medicament-item-title">
+                    <span>Médicament __INDEX_DISPLAY__</span>
+                    <button type="button" class="remove-medicament-btn" data-remove-medicament>Supprimer</button>
+                </div>
+                <div class="medicament-item-content">
+                    <div class="form__field">
+                        <label class="form__label">Médicament</label>
+                        <input type="text" name="ordonnance[medicaments][__INDEX__][medicament]" class="form__input" placeholder="ex: Amoxicilline" required>
+                    </div>
+                    <div class="form__field">
+                        <label class="form__label">Dosage</label>
+                        <input type="text" name="ordonnance[medicaments][__INDEX__][dosage]" class="form__input" placeholder="ex: 500mg">
+                    </div>
+                    <div class="form__field">
+                        <label class="form__label">Durée</label>
+                        <input type="text" name="ordonnance[medicaments][__INDEX__][duree]" class="form__input" placeholder="ex: 7 jours">
+                    </div>
+                    <div class="form__field">
+                        <label class="form__label">Instructions</label>
+                        <textarea name="ordonnance[medicaments][__INDEX__][instructions]" class="form__textarea" rows="2" placeholder="ex: Prendre 3 fois par jour avec nourriture"></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getNextIndex() {
+        const items = medicamentsList.querySelectorAll('.medicament-item');
+        if (items.length === 0) return 0;
+        return Math.max(...Array.from(items).map(item => parseInt(item.dataset.index || 0))) + 1;
+    }
+
+    function updateRemoveButtons() {
+        const items = medicamentsList.querySelectorAll('.medicament-item');
+        items.forEach((item, index) => {
+            const title = item.querySelector('.medicament-item-title span');
+            title.textContent = `Médicament ${index + 1}`;
+        });
+    }
+
+    function attachRemoveListener(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const item = btn.closest('.medicament-item');
+            item.remove();
+            updateRemoveButtons();
+        });
+    }
+
+    addBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const nextIndex = getNextIndex();
+        const prototype = getPrototype();
+        const newHTML = prototype
+            .replace(/__INDEX__/g, nextIndex)
+            .replace(/__INDEX_DISPLAY__/g, nextIndex + 1);
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newHTML;
+        const newItem = tempDiv.firstElementChild;
+        
+        medicamentsList.appendChild(newItem);
+        updateRemoveButtons();
+        
+        const removeBtn = newItem.querySelector('[data-remove-medicament]');
+        if (removeBtn) {
+            attachRemoveListener(removeBtn);
+        }
+    });
+
+    // Attach listeners to existing remove buttons
+    medicamentsList.querySelectorAll('[data-remove-medicament]').forEach(btn => {
+        attachRemoveListener(btn);
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to and animate the first medicament error if present
+    const firstErrorBanner = document.querySelector('.medicament-error');
+    if (firstErrorBanner) {
+        firstErrorBanner.classList.add('animate');
+        firstErrorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const item = firstErrorBanner.nextElementSibling || firstErrorBanner.parentElement.querySelector('.medicament-item-content');
+        if (item) {
+            const input = item.querySelector('input, textarea, select');
+            if (input) input.focus();
+        }
+    }
+});
+</script>
 {% endblock %}
+

@@ -5,6 +5,150 @@
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .view-toggle button {
+            padding: 10px 16px;
+            border: 1px solid rgba(7, 19, 31, 0.1);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .view-toggle button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .view-toggle button:hover {
+            border-color: #007bff;
+        }
+
+        .calendar-container {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(7, 19, 31, 0.06);
+        }
+
+        .calendar-container.active {
+            display: block;
+        }
+
+        .list-container {
+            display: block;
+        }
+
+        .list-container.hidden {
+            display: none;
+        }
+
+        #calendar {
+            height: 600px;
+        }
+
+        .fc {
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .fc .fc-button-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .fc .fc-button-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .fc .fc-button-primary.fc-button-active {
+            background-color: #0056b3;
+        }
+
+        .fc .fc-today {
+            background-color: rgba(0, 123, 255, 0.1) !important;
+        }
+
+        .fc-event-pending {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+        }
+
+        .fc-event-accepted {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+        }
+
+        .fc-event-declined {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+        }
+
+        /* Analytics Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .chart-card {
+            background: white;
+            border: 1px solid rgba(7, 19, 31, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        .mini-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(7, 19, 31, 0.1);
+            font-size: 14px;
+        }
+        
+        .mini-stat:last-child {
+            border-bottom: none;
+        }
+        
+        .mini-stat strong {
+            color: #1f2937;
+        }
+        
+        .mini-stat-value {
+            color: #6b7280;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -18,67 +162,138 @@
         <div class="portal__top">
             <div>
                 <h1 class="portal__title">Consultations</h1>
-                <p class="portal__subtitle">Manage patient consultations — review, accept or decline.</p>
+                <p class="portal__subtitle">Gérer les consultations des patients — examiner, accepter ou refuser.</p>
             </div>
 
-            {% if context == 'medecin' %}
-                <a href="{{ path('consultation_new') }}" class="btn btn--primary">New Consultation</a>
-            {% endif %}
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div class="view-toggle">
+                    <button id="listViewBtn" class="active" data-view="list">📋 Liste</button>
+                    <button id="calendarViewBtn" data-view="calendar">📅 Calendrier</button>
+                </div>
+                {% if context == 'medecin' %}
+                    <a href="{{ path('consultation_new') }}" class="btn btn--primary">Nouvelle Consultation</a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="portal__content">
 
-            <div class="portal__card">
-                <div style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end">
-                    <form method="get" style="display:flex;gap:8px;flex:1">
-                        <input type="text" name="search" placeholder="Search by motif or patient..." value="{{ search }}" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;flex:1;font-size:14px">
-                        <select name="sort" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;font-size:14px">
-                            <option value="date" {% if sort == 'date' %}selected{% endif %}>Newest First</option>
-                            <option value="motif" {% if sort == 'motif' %}selected{% endif %}>Motif A-Z</option>
-                        </select>
-                        <button type="submit" class="btn btn--primary">Search</button>
-                        {% if search or sort != 'date' %}
-                            <a href="{{ context == 'admin' ? path('admin_consultations') : path('medecin_consultations') }}" class="btn btn--ghost">Reset</a>
-                        {% endif %}
-                    </form>
+            <!-- ANALYTICS SECTION (ADMIN ONLY) -->
+            {% if context == 'admin' and consultationsByDay is defined %}
+            <div class="analytics-grid">
+                <!-- Consultations Per Day Chart -->
+                <div class="chart-card full-width">
+                    <h3>📈 Consultations par Jour (30 derniers jours)</h3>
+                    <div class="chart-container">
+                        <canvas id="consultationsChart"></canvas>
+                    </div>
                 </div>
-                {% if consultations is empty %}
-                    <p>No consultations found.</p>
-                {% else %}
-                    <div class="list">
-                        {% for consultation in consultations %}
-                            <div class="rowItem">
-                                <div>
-                                    <div class="rowItem__title">{{ consultation.motif }} — {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d H:i') : 'TBD' }}</div>
-                                    <div class="rowItem__meta">
-                                        Patient: {{ consultation.name }} {{ consultation.familyName }} · 
-                                        Status: 
-                                        {% if consultation.status == 'pending' %}
-                                            <span style="color:var(--muted)">⏳ Pending</span>
-                                        {% elseif consultation.status == 'accepted' %}
-                                            <span style="color:rgb(19,184,194)">✅ Accepted</span>
-                                        {% else %}
-                                            <span style="color:rgb(255,107,107)">❌ Declined</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                                    <a href="{{ path('consultation_show', {'id': consultation.id}) }}" class="btn btn--ghost">Details</a>
-                                    {% if consultation.status == 'pending' %}
-                                        <div style="display:flex;gap:6px">
-                                            <form method="post" action="{{ path('medecin_consultation_accept', {'id': consultation.id}) }}">
-                                                <button type="submit" class="btn" style="background:linear-gradient(135deg,rgba(19,184,194,.22),rgba(45,230,215,.22));border:1px solid rgba(19,184,194,.30);color:var(--text);font-weight:900;padding:10px 14px;border-radius:10px">✓ Accept</button>
-                                            </form>
-                                            <form method="post" action="{{ path('medecin_consultation_decline', {'id': consultation.id}) }}">
-                                                <button type="submit" class="btn" style="background:linear-gradient(135deg,rgba(255,107,107,.16),rgba(255,150,107,.16));border:1px solid rgba(255,107,107,.25);color:var(--text);font-weight:900;padding:10px 14px;border-radius:10px">✕ Decline</button>
-                                            </form>
-                                        </div>
-                                    {% endif %}
-                                </div>
+
+                <!-- Acceptance Rate Chart -->
+                <div class="chart-card">
+                    <h3>✅ Taux d'Acceptation</h3>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="acceptanceChart"></canvas>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        {% for item, value in acceptanceData.data|keys %}
+                            <div class="mini-stat">
+                                <strong>{{ acceptanceData.labels[item] }}</strong>
+                                <span class="mini-stat-value">{{ value }} ({{ (value / acceptanceData.total * 100)|round(1) }}%)</span>
                             </div>
                         {% endfor %}
                     </div>
-                {% endif %}
+                </div>
+
+                <!-- Urgent Cases Chart -->
+                <div class="chart-card">
+                    <h3>🚨 Répartition par Urgence</h3>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="urgentChart"></canvas>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div class="mini-stat">
+                            <strong>Urgentes</strong>
+                            <span class="mini-stat-value">{{ urgentData.urgent }}</span>
+                        </div>
+                        <div class="mini-stat">
+                            <strong>Modérées</strong>
+                            <span class="mini-stat-value">{{ urgentData.moderate }}</span>
+                        </div>
+                        <div class="mini-stat">
+                            <strong>Routine</strong>
+                            <span class="mini-stat-value">{{ urgentData.low }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr style="margin: 40px 0; border: none; border-top: 1px solid rgba(7, 19, 31, 0.1);">
+            {% endif %}
+
+            <!-- LIST VIEW -->
+            <div class="list-container" id="listView">
+                <div class="portal__card">
+                    <div style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end">
+                        <form method="get" style="display:flex;gap:8px;flex:1">
+                            <input type="text" name="search" placeholder="Rechercher par motif ou patient..." value="{{ search }}" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;flex:1;font-size:14px">
+                            <select name="sort" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;font-size:14px">
+                                <option value="date" {% if sort == 'date' %}selected{% endif %}>Le plus récent en premier</option>
+                                <option value="motif" {% if sort == 'motif' %}selected{% endif %}>Motif A-Z</option>
+                            </select>
+                            <button type="submit" class="btn btn--primary">Recherche</button>
+                            {% if search or sort != 'date' %}
+                                <a href="{{ context == 'admin' ? path('admin_consultations') : path('medecin_consultations') }}" class="btn btn--ghost">Réinitialiser</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                    {% if consultations is empty %}
+                        <p>Aucune consultation trouvée.</p>
+                    {% else %}
+                        <div class="list">
+                            {% for consultation in consultations %}
+                                <div class="rowItem">
+                                    <div>
+                                        <div class="rowItem__title">{{ consultation.motif }} — {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d H:i') : 'TBD' }}</div>
+                                        <div class="rowItem__meta">
+                                            Patient: {{ consultation.name }} {{ consultation.familyName }} · 
+                                            Status: 
+                                            {% if consultation.status == 'pending' %}
+                                                <span style="color:var(--muted)">⏳ En attente</span>
+                                            {% elseif consultation.status == 'accepted' %}
+                                                <span style="color:rgb(19,184,194)">✅ Accepté</span>
+                                            {% else %}
+                                                <span style="color:rgb(255,107,107)">❌ Refusé</span>
+                                            {% endif %}
+                                            {% set r = riskScores[consultation.id] ?? null %}
+                                            {% if r is not null %}
+                                                · Risk: {{ r.score }}/100 ({{ r.level }})
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                                        <a href="{{ path('consultation_show', {'id': consultation.id}) }}" class="btn btn--ghost">Details</a>
+                                        {% if consultation.status == 'pending' %}
+                                            <div style="display:flex;gap:6px">
+                                                <form method="post" action="{{ path('medecin_consultation_accept', {'id': consultation.id}) }}">
+                                                    <button type="submit" class="btn" style="background:linear-gradient(135deg,rgba(19,184,194,.22),rgba(45,230,215,.22));border:1px solid rgba(19,184,194,.30);color:var(--text);font-weight:900;padding:10px 14px;border-radius:10px">✓ Accept</button>
+                                                </form>
+                                                <form method="post" action="{{ path('medecin_consultation_decline', {'id': consultation.id}) }}">
+                                                    <button type="submit" class="btn" style="background:linear-gradient(135deg,rgba(255,107,107,.16),rgba(255,150,107,.16));border:1px solid rgba(255,107,107,.25);color:var(--text);font-weight:900;padding:10px 14px;border-radius:10px">✕ Decline</button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- CALENDAR VIEW -->
+            <div class="calendar-container" id="calendarView">
+                <h3 style="margin-top: 0;">Calendrier des consultations</h3>
+                <div id="calendar"></div>
             </div>
 
         </div>
@@ -87,4 +302,184 @@
 
 </div>
 </div>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const listViewBtn = document.getElementById('listViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    const listView = document.getElementById('listView');
+    const calendarView = document.getElementById('calendarView');
+
+    // View toggle
+    listViewBtn.addEventListener('click', function() {
+        listViewBtn.classList.add('active');
+        calendarViewBtn.classList.remove('active');
+        listView.classList.remove('hidden');
+        calendarView.classList.remove('active');
+    });
+
+    calendarViewBtn.addEventListener('click', function() {
+        calendarViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        listView.classList.add('hidden');
+        calendarView.classList.add('active');
+        
+        // Initialize calendar on first view
+        if (!window.calendarInitialized) {
+            initCalendar();
+            window.calendarInitialized = true;
+        }
+    });
+
+    function initCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        
+        // Prepare events from consultations
+        const events = [
+            {% for consultation in consultations %}
+                {
+                    id: '{{ consultation.id }}',
+                    title: '{{ consultation.motif|escape('js') }}',
+                    date: '{{ consultation.dateConsultation|date('Y-m-d') }}',
+                    {% if consultation.timeSlot %}
+                        time: '{{ consultation.timeSlot }}',
+                    {% endif %}
+                    backgroundColor: '{% if consultation.status == "accepted" %}#28a745{% elseif consultation.status == "pending" %}#ffc107{% else %}#dc3545{% endif %}',
+                    borderColor: '{% if consultation.status == "accepted" %}#28a745{% elseif consultation.status == "pending" %}#ffc107{% else %}#dc3545{% endif %}',
+                    classNames: ['fc-event-{{ consultation.status }}'],
+                    extendedProps: {
+                        patient: '{{ consultation.name }} {{ consultation.familyName }}',
+                        status: '{{ consultation.status }}',
+                        email: '{{ consultation.email }}'
+                    }
+                },
+            {% endfor %}
+        ];
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            events: events,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek'
+            },
+            eventClick: function(info) {
+                const consultationId = info.event.id;
+                // Navigate to consultation details page
+                window.location.href = '{{ path('consultation_show', {'id': 0}) }}'.replace('/0', '/' + consultationId);
+            },
+            themeSystem: 'light'
+        });
+
+        calendar.render();
+    }
+
+    // Initialize Charts (Admin only)
+    const context = '{{ context }}';
+    {% if context == 'admin' and consultationsByDay is defined %}
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCharts();
+    });
+
+    function initializeCharts() {
+        const chartConfig = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        };
+
+        // 1. Consultations Per Day Chart (Line Chart)
+        const consultationsCtx = document.getElementById('consultationsChart');
+        if (consultationsCtx) {
+            new Chart(consultationsCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ consultationsByDay.labels|json_encode|raw }},
+                    datasets: [{
+                        label: 'Consultations',
+                        data: {{ consultationsByDay.data|json_encode|raw }},
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                    }]
+                },
+                options: {
+                    ...chartConfig,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 2. Acceptance Rate Chart (Doughnut Chart)
+        const acceptanceCtx = document.getElementById('acceptanceChart');
+        if (acceptanceCtx) {
+            new Chart(acceptanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ acceptanceData.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ acceptanceData.data|json_encode|raw }},
+                        backgroundColor: ['#10b981', '#f59e0b'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartConfig,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // 3. Urgent Cases Chart (Doughnut Chart)
+        const urgentCtx = document.getElementById('urgentChart');
+        if (urgentCtx) {
+            new Chart(urgentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ urgentData.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ urgentData.data|json_encode|raw }},
+                        backgroundColor: {{ urgentData.colors|json_encode|raw }},
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartConfig,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+    }
+    {% endif %}
+});
+</script>
+
 {% endblock %}

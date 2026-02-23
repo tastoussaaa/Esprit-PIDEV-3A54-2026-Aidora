@@ -19,20 +19,20 @@ class ProduitType extends AbstractType
     {
         $builder
             ->add('nom', TextType::class, [
-                'label' => 'Nom du produit'
+                'label' => 'Nom du produit',
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description',
-                'attr' => ['rows' => 4]
+                'attr' => ['rows' => 4],
             ])
             ->add('prix', NumberType::class, [
-                'label' => 'Prix'
+                'label' => 'Prix',
             ])
             ->add('stock', IntegerType::class, [
-                'label' => 'Stock'
+                'label' => 'Stock',
             ])
             ->add('categorie', TextType::class, [
-                'label' => 'Catégorie'
+                'label' => 'Catégorie',
             ])
             ->add('image', FileType::class, [
                 'label' => 'Image du produit',
@@ -42,7 +42,8 @@ class ProduitType extends AbstractType
                     new File([
                         'maxSize' => '2M',
                         'mimeTypes' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-                        'mimeTypesMessage' => 'Veuillez téléverser une image (JPEG, PNG, GIF ou WebP).',
+                        'mimeTypesMessage' => 'Veuillez téléverser une image valide (JPEG, PNG, GIF ou WebP).',
+                        'maxSizeMessage' => 'L\'image ne doit pas dépasser 2MB.',
                     ]),
                 ],
             ]);

@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
 {% endblock %}
 
+{% block javascripts %}
+    <script src="{{ asset('public/assets/js/controle.js') }}" defer></script>
+{% endblock %}
+
 {% block body %}
 <div class="portal">
     {% include 'side_bar.html.twig' %}
@@ -16,90 +20,155 @@
                 <h1 class="portal__title">Mon Profil</h1>
                 <p class="portal__subtitle">Consultez vos informations personnelles</p>
             </div>
-            <a href="{{ path('profile_edit') }}" class="btn btn--primary">Modifier le profil</a>
+            <a href="{{ path('profile_edit') }}" class="btn btn--primary">
+                ✏️ Modifier le profil
+            </a>
         </div>
 
         <div class="portal__content">
-            <div class="box" style="max-width: 600px;">
-                <h3>Informations Personnelles</h3>
+            <div class="box">
+                <h3>👤 Informations Personnelles</h3>
                 
-                <div style="margin-bottom: 24px;">
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Nom complet</div>
-                    <div style="font-size: 16px; font-weight: 600;">{{ current_user.fullName }}</div>
-                </div>
+                <div class="profile-info">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Nom complet</div>
+                        <div class="profile-info-value">{{ current_user.fullName }}</div>
+                    </div>
 
-                <div style="margin-bottom: 24px;">
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Email</div>
-                    <div style="font-size: 16px; font-weight: 600;">{{ current_user.email }}</div>
-                </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Email</div>
+                        <div class="profile-info-value">{{ current_user.email }}</div>
+                    </div>
 
-                <div style="margin-bottom: 24px;">
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Type de compte</div>
-                    <div style="font-size: 16px; font-weight: 600;">
-                        {% if is_medecin %}
-                            Médecin
-                        {% elseif is_patient %}
-                            Patient
-                        {% elseif is_aide_soignant %}
-                            Aide-Soignant
-                        {% else %}
-                            Utilisateur
-                        {% endif %}
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Type de compte</div>
+                        <div class="profile-info-value">
+                            {% if is_medecin %}
+                                <span class="status-active">🏥 Médecin</span>
+                            {% elseif is_patient %}
+                                <span class="status-active">👤 Patient</span>
+                            {% elseif is_aide_soignant %}
+                                <span class="status-active">🩺 Aide-Soignant</span>
+                            {% else %}
+                                <span class="status-active">👤 Utilisateur</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
                 {% if is_medecin and userEntity %}
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
-                    <h4 style="margin-bottom: 16px;">Informations Professionnelles</h4>
+                <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        🏥 Informations Professionnelles
+                    </h4>
                     
-                    <div style="margin-bottom: 24px;">
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Spécialité</div>
-                        <div style="font-size: 16px; font-weight: 600;">{{ userEntity.specialite ?? 'Non spécifiée' }}</div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Spécialité</div>
+                        <div class="profile-info-value">{{ userEntity.specialite ?? 'Non spécifiée' }}</div>
                     </div>
 
                     {% if userEntity.rpps %}
-                    <div style="margin-bottom: 24px;">
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Numéro RPPS</div>
-                        <div style="font-size: 16px; font-weight: 600;">{{ userEntity.rpps }}</div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Numéro RPPS</div>
+                        <div class="profile-info-value">{{ userEntity.rpps }}</div>
                     </div>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if is_patient and userEntity %}
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
-                    <h4 style="margin-bottom: 16px;">Informations de Santé</h4>
+                <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        🏥 Informations de Santé
+                    </h4>
                     
                     {% if userEntity.birthDate %}
-                    <div style="margin-bottom: 24px;">
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Date de naissance</div>
-                        <div style="font-size: 16px; font-weight: 600;">{{ userEntity.birthDate|date('d/m/Y') }}</div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Date de naissance</div>
+                        <div class="profile-info-value">{{ userEntity.birthDate|date('d/m/Y') }}</div>
                     </div>
                     {% endif %}
 
                     {% if userEntity.ssn %}
-                    <div style="margin-bottom: 24px;">
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Numéro de sécurité sociale</div>
-                        <div style="font-size: 16px; font-weight: 600;">{{ userEntity.ssn }}</div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Numéro de sécurité sociale</div>
+                        <div class="profile-info-value">{{ userEntity.ssn }}</div>
                     </div>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if is_aide_soignant and userEntity %}
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
-                    <h4 style="margin-bottom: 16px;">Informations Professionnelles</h4>
+                <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                        🩺 Informations Professionnelles
+                    </h4>
                     
                     {% if userEntity.adeli %}
-                    <div style="margin-bottom: 24px;">
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Numéro ADELI</div>
-                        <div style="font-size: 16px; font-weight: 600;">{{ userEntity.adeli }}</div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Numéro ADELI</div>
+                        <div class="profile-info-value">{{ userEntity.adeli }}</div>
                     </div>
                     {% endif %}
                 </div>
                 {% endif %}
+
+                <!-- Zone de danger -->
+                <div class="danger-zone">
+                    <h4>⚠️ Zone de Danger</h4>
+                    <p>La suppression de votre profil est irréversible. Toutes vos données seront définitivement effacées.</p>
+                    
+                    <button type="button" onclick="openDeleteModal()" class="btn btn--danger">
+                        🗑️ Supprimer mon profil
+                    </button>
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- Modal de confirmation de suppression -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>⚠️ Confirmer la suppression</h3>
+            <p>Êtes-vous sûr de vouloir supprimer votre profil ? Cette action est irréversible.</p>
+            
+            <form method="post" action="{{ path('profile_delete') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-profile') }}">
+                
+                <div class="form-group">
+                    <label>Entrez votre mot de passe pour confirmer :</label>
+                    <input type="password" name="password"  placeholder="Mot de passe">
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn" style="background-color: var(--danger-color);">
+                        🗑️ Supprimer définitivement
+                    </button>
+                    <button type="button" onclick="closeDeleteModal()" class="btn btn--ghost">
+                        ❌ Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // La modale est cachée par défaut
+        function openDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Fermer la modal si on clique en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target == modal) {
+                closeDeleteModal();
+            }
+        }
+    </script>
 </div>
 {% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription{% endblock %}
+{% block javascripts %}
+    <script src="{{ asset('assets/js/controle.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<div style="max-width: 600px; margin: 60px auto; padding: 24px;">
+    <div style="text-align: center; margin-bottom: 48px;">
+        <h1 style="font-size: 32px; margin-bottom: 8px;">Aidora</h1>
+        <p style="color: #6b7280;">Plateforme Médicale</p>
+    </div>
+
+    {% if error %}
+    <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    {% if registered == 'medecin' %}
+    <div style="background-color: #ecfdf5; border: 1px solid #6ee7b7; color: #059669; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        ✓ <strong>Inscription réussie!</strong><br>
+        Votre compte de médecin a été créé. Un administrateur doit valider votre compte avant que vous puissiez accéder à la plateforme.
+        Vous recevrez une notification une fois validé.
+    </div>
+    <div style="text-align: center;">
+        <p style="margin-bottom: 24px; color: #6b7280;">En attendant, vous pouvez vous connecter avec vos identifiants.</p>
+        <a href="{{ path('app_login') }}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+            Aller à la connexion
+        </a>
+    </div>
+    {% elseif registered == 'aidesoignant' %}
+    <div style="background-color: #ecfdf5; border: 1px solid #6ee7b7; color: #059669; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        ✓ <strong>Inscription réussie!</strong><br>
+        Votre compte d'aide-soignant a été créé. Un administrateur doit valider votre compte avant que vous puissiez accéder à la plateforme.
+        Vous recevrez une notification une fois validé.
+    </div>
+    <div style="text-align: center;">
+        <p style="margin-bottom: 24px; color: #6b7280;">En attendant, vous pouvez vous connecter avec vos identifiants.</p>
+        <a href="{{ path('app_login') }}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+            Aller à la connexion
+        </a>
+    </div>
+    {% else %}
+    <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+            <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600;">Email *</label>
+            <input type="email" id="email" name="email"  value="{{ app.request.request.get('email') }}" 
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div>
+            <label for="fullName" style="display: block; margin-bottom: 8px; font-weight: 600;">Nom Complet *</label>
+            <input type="text" id="fullName" name="fullName" value="{{ app.request.request.get('fullName') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div>
+            <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600;">Mot de Passe *</label>
+            <input type="password" id="password" name="password" placeholder="Min 6 caractères"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div>
+            <label for="userType" style="display: block; margin-bottom: 8px; font-weight: 600;">Type d'Utilisateur *</label>
+            <select id="userType" name="userType"
+                    style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+                <option value="">-- Sélectionner --</option>
+                <option value="medecin" {% if app.request.request.get('userType') == 'medecin' %}selected{% endif %}>Médecin</option>
+                <option value="patient" {% if app.request.request.get('userType') == 'patient' %}selected{% endif %}>Patient</option>
+                <option value="aidesoignant" {% if app.request.request.get('userType') == 'aidesoignant' %}selected{% endif %}>Aide-Soignant</option>
+            </select>
+        </div>
+
+        <div id="specialtyField" style="display: none;">
+            <label for="specialty" style="display: block; margin-bottom: 8px; font-weight: 600;">Spécialité</label>
+            <input type="text" id="specialty" name="specialty" value="{{ app.request.request.get('specialty') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div id="rppsField" style="display: none;">
+            <label for="rpps" style="display: block; margin-bottom: 8px; font-weight: 600;">RPPS</label>
+            <input type="text" id="rpps" name="rpps" value="{{ app.request.request.get('rpps') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div id="adeliField" style="display: none;">
+            <label for="adeli" style="display: block; margin-bottom: 8px; font-weight: 600;">ADELI</label>
+            <input type="text" id="adeli" name="adeli" value="{{ app.request.request.get('adeli') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div id="birthDateField" style="display: none;">
+            <label for="birthDate" style="display: block; margin-bottom: 8px; font-weight: 600;">Date de Naissance</label>
+            <input type="date" id="birthDate" name="birthDate" value="{{ app.request.request.get('birthDate') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <div id="ssnField" style="display: none;">
+            <label for="ssn" style="display: block; margin-bottom: 8px; font-weight: 600;">Numéro de Sécurité Sociale</label>
+            <input type="text" id="ssn" name="ssn" value="{{ app.request.request.get('ssn') }}"
+                   style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+        </div>
+
+        <button type="submit" style="padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            S'inscrire
+        </button>
+
+        <p style="text-align: center; color: #6b7280;">
+            Vous avez un compte? <a href="{{ path('app_login') }}" style="color: #2563eb; text-decoration: none; font-weight: 600;">Connexion</a>
+        </p>
+    </form>
+
+    <script>
+        function updateFields() {
+            const userType = document.getElementById('userType').value;
+            document.getElementById('specialtyField').style.display = userType === 'medecin' ? 'block' : 'none';
+            document.getElementById('rppsField').style.display = userType === 'medecin' ? 'block' : 'none';
+            document.getElementById('adeliField').style.display = userType === 'aidesoignant' ? 'block' : 'none';
+            document.getElementById('birthDateField').style.display = userType === 'patient' ? 'block' : 'none';
+            document.getElementById('ssnField').style.display = userType === 'patient' ? 'block' : 'none';
+        }
+        document.getElementById('userType').addEventListener('change', updateFields);
+        updateFields();
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

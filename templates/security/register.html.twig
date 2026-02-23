@@ -1,6 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block title %}Inscription{% endblock %}
 
+{% block javascripts %}
+  {{ parent() }}
+  <script src="{{ asset('assets/js/controle.js') }}" defer></script>
+{% endblock %}
+
 {% block body %}
 <div class="bg-orbs"></div>
 
@@ -21,28 +26,21 @@
       Rejoignez la plateforme Aidora
     </p>
 
-    {% if error %}
-      <div class="pill" style="margin-bottom:12px;color:#b91c1c">
-        {{ error }}
-      </div>
-    {% endif %}
-
     <form method="post" id="registrationForm">
       <label>Nom complet</label>
-      <input type="text" name="fullName" required
+      <input type="text" name="fullName" 
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Email</label>
-      <input type="email" name="email" required
+      <input type="email" name="email" 
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Mot de passe</label>
-      <input type="password" name="password" minlength="6" required
+      <input type="password" name="password" minlength="6" 
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Type de compte</label>
-      <select name="userType" id="userType" required
-              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
+      <select name="userType" id="userType"style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
         <option value="">Sélectionnez</option>
         <option value="medecin">Médecin</option>
         <option value="aidesoignant">Aide-Soignant</option>

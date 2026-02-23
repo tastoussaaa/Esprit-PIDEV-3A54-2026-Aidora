@@ -132,6 +132,7 @@
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Spécialité</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,6 +141,55 @@
                             <td style="padding: 12px;">{{ medecin.fullName }}</td>
                             <td style="padding: 12px;">{{ medecin.email }}</td>
                             <td style="padding: 12px;">{{ medecin.specialite }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_medecin_disable', {id: medecin.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir désactiver ce compte?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('disable-medecin' ~ medecin.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b; color: white; border: 1px solid #f59e0b; margin-right: 4px;">Désactiver</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_medecin_delete', {id: medecin.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-medecin' ~ medecin.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- DISABLED MEDECINS -->
+            {% if disabledMedecins %}
+            <div class="box" style="margin-top: 32px;">
+                <h3 style="color: #6b7280; margin-bottom: 16px;">
+                    🔒 Médecins Désactivés ({{ disabledMedecins|length }})
+                </h3>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Spécialité</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medecin in disabledMedecins %}
+                        <tr style="border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
+                            <td style="padding: 12px;">{{ medecin.fullName }}</td>
+                            <td style="padding: 12px;">{{ medecin.email }}</td>
+                            <td style="padding: 12px;">{{ medecin.specialite }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_medecin_enable', {id: medecin.id}) }}" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('enable-medecin' ~ medecin.id) }}">
+                                    <button type="submit" class="btn btn--primary" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">Activer</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_medecin_delete', {id: medecin.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-medecin' ~ medecin.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -160,6 +210,7 @@
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Prénom</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,6 +219,133 @@
                             <td style="padding: 12px;">{{ aideSoignant.nom }}</td>
                             <td style="padding: 12px;">{{ aideSoignant.prenom }}</td>
                             <td style="padding: 12px;">{{ aideSoignant.email }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_aide_soignant_disable', {id: aideSoignant.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir désactiver ce compte?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('disable-aide' ~ aideSoignant.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b; color: white; border: 1px solid #f59e0b; margin-right: 4px;">Désactiver</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_aide_soignant_delete', {id: aideSoignant.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-aide' ~ aideSoignant.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- DISABLED AIDE SOIGNANTS -->
+            {% if disabledAideSoignants %}
+            <div class="box" style="margin-top: 32px;">
+                <h3 style="color: #6b7280; margin-bottom: 16px;">
+                    🔒 Aides-Soignants Désactivés ({{ disabledAideSoignants|length }})
+                </h3>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Prénom</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for aideSoignant in disabledAideSoignants %}
+                        <tr style="border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
+                            <td style="padding: 12px;">{{ aideSoignant.nom }}</td>
+                            <td style="padding: 12px;">{{ aideSoignant.prenom }}</td>
+                            <td style="padding: 12px;">{{ aideSoignant.email }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_aide_soignant_enable', {id: aideSoignant.id}) }}" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('enable-aide' ~ aideSoignant.id) }}">
+                                    <button type="submit" class="btn btn--primary" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">Activer</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_aide_soignant_delete', {id: aideSoignant.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-aide' ~ aideSoignant.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- ACTIVE PATIENTS -->
+            {% if activePatients %}
+            <div class="box" style="margin-top: 32px;">
+                <h3 style="color: #059669; margin-bottom: 16px;">
+                    👤 Patients Actifs ({{ activePatients|length }})
+                </h3>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Date de naissance</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in activePatients %}
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 12px;">{{ patient.fullName }}</td>
+                            <td style="padding: 12px;">{{ patient.email }}</td>
+                            <td style="padding: 12px;">{{ patient.birthDate ? patient.birthDate|date('d/m/Y') : 'N/A' }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_patient_disable', {id: patient.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir désactiver ce compte?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('disable-patient' ~ patient.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b; color: white; border: 1px solid #f59e0b; margin-right: 4px;">Désactiver</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_patient_delete', {id: patient.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-patient' ~ patient.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- DISABLED PATIENTS -->
+            {% if disabledPatients %}
+            <div class="box" style="margin-top: 32px;">
+                <h3 style="color: #6b7280; margin-bottom: 16px;">
+                    🔒 Patients Désactivés ({{ disabledPatients|length }})
+                </h3>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Nom</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600;">Date de naissance</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in disabledPatients %}
+                        <tr style="border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
+                            <td style="padding: 12px;">{{ patient.fullName }}</td>
+                            <td style="padding: 12px;">{{ patient.email }}</td>
+                            <td style="padding: 12px;">{{ patient.birthDate ? patient.birthDate|date('d/m/Y') : 'N/A' }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <form method="post" action="{{ path('admin_patient_enable', {id: patient.id}) }}" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('enable-patient' ~ patient.id) }}">
+                                    <button type="submit" class="btn btn--primary" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">Activer</button>
+                                </form>
+                                <form method="post" action="{{ path('admin_patient_delete', {id: patient.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte? Cette action est irréversible.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-patient' ~ patient.id) }}">
+                                    <button type="submit" class="btn" style="padding: 4px 8px; font-size: 12px; background-color: #dc2626; color: white; border: 1px solid #dc2626;">Supprimer</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

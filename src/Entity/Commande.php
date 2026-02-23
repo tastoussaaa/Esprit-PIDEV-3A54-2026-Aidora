@@ -16,7 +16,7 @@ class Commande
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Produit::class)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     #[Assert\NotNull(message: 'Vous devez sélectionner un produit')]
     private ?Produit $produit = null;
 
@@ -44,7 +44,7 @@ class Commande
     private ?\DateTimeInterface $dateCommande = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: "CASCADE")]
     private ?User $demandeur = null;
 
     public function __construct()

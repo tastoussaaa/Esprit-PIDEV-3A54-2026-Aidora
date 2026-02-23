@@ -24,8 +24,8 @@
                             <p>Hello <strong>{{ patientName }}</strong>,</p>
 
                             <p>
-                                Your consultation scheduled on  
-                                <strong>{{ consultationDate|date('d/m/Y H:i') }}</strong>
+                                Your consultation scheduled on
+                                <strong>{{ consultationDate }}</strong>
                                 has been
                                 <strong style="color: {{ status == 'accepted' ? '#27ae60' : '#c0392b' }}">
                                     {{ status|upper }}
@@ -35,7 +35,10 @@
                             {% if status == 'accepted' %}
                                 <p>Please make sure to be available at the scheduled time.</p>
                             {% else %}
-                                <p>You may submit another consultation request at your convenience.</p>
+                                <p>We apologize for any inconvenience. You may submit another consultation request at your convenience.</p>
+                                {% if nextAvailableSlot %}
+                                    <p>The closest available slot is on <strong>{{ nextAvailableSlot.date|date('d/m/Y') }} at {{ nextAvailableSlot.timeSlot }}</strong>.</p>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -53,4 +56,4 @@
         </tr>
     </table>
 </body>
-</html>
+</html>         

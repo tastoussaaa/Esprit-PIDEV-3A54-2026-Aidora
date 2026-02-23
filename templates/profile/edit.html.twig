@@ -6,6 +6,11 @@
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
 {% endblock %}
 
+
+{% block javascripts %}
+    <script src="{{ asset('public/assets/js/controle.js') }}" defer></script>
+{% endblock %}
+
 {% block body %}
 <div class="portal">
     {% include 'side_bar.html.twig' %}
@@ -16,110 +21,140 @@
                 <h1 class="portal__title">Modifier mon Profil</h1>
                 <p class="portal__subtitle">Mettez à jour vos informations personnelles</p>
             </div>
-            <a href="{{ path('profile_index') }}" class="btn btn--ghost">Retour</a>
+            <a href="{{ path('profile_index') }}" class="btn btn--ghost">
+                ← Retour au profil
+            </a>
         </div>
 
         <div class="portal__content">
             {% if success %}
-            <div class="pill" style="margin-bottom: 16px; color: #059669; background-color: #ecfdf5; border: 1px solid #6ee7b7;">
+            <div class="pill" style="margin-bottom: 2rem;">
                 ✓ {{ success }}
             </div>
             {% endif %}
 
             {% if error %}
-            <div class="pill" style="margin-bottom: 16px; color: #b91c1c; background-color: #fef2f2; border: 1px solid #fecaca;">
+            <div class="pill" style="margin-bottom: 2rem;">
                 ✕ {{ error }}
             </div>
             {% endif %}
 
-            <div class="box" style="max-width: 600px;">
-                <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Nom complet *</label>
-                        <input type="text" name="fullName" value="{{ user.fullName }}" required
-                               style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
-                    </div>
-
-                    <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Email *</label>
-                        <input type="email" name="email" value="{{ user.email }}" required
-                               style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
-                    </div>
-
-                    {% if is_medecin and userEntity %}
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                        <h4 style="margin-bottom: 16px;">Informations Professionnelles</h4>
-                        
-                        <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Spécialité</label>
-                            <input type="text" name="specialty" value="{{ userEntity.specialite ?? '' }}"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+            <div class="box">
+                <form method="post">
+                    <div class="profile-info">
+                        <!-- Informations de base -->
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Nom complet</label>
+                            <div class="form-group">
+                                <input type="text" name="fullName" value="{{ user.fullName }}">
+                            </div>
                         </div>
 
-                        <div style="margin-top: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Numéro RPPS</label>
-                            <input type="text" name="rpps" value="{{ userEntity.rpps ?? '' }}"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Email</label>
+                            <div class="form-group">
+                                <input type="email" name="email" value="{{ user.email }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations spécifiques selon le type d'utilisateur -->
+                    {% if is_medecin and userEntity %}
+                    <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                            🏥 Informations Professionnelles
+                        </h4>
+                        
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Spécialité</label>
+                            <div class="form-group">
+                                <input type="text" name="specialty" value="{{ userEntity.specialite ?? '' }}" placeholder="Spécialité médicale">
+                            </div>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Numéro RPPS</label>
+                            <div class="form-group">
+                                <input type="text" name="rpps" value="{{ userEntity.rpps ?? '' }}" placeholder="Numéro RPPS">
+                            </div>
                         </div>
                     </div>
                     {% endif %}
 
                     {% if is_patient and userEntity %}
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                        <h4 style="margin-bottom: 16px;">Informations de Santé</h4>
+                    <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                            🏥 Informations de Santé
+                        </h4>
                         
-                        <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Date de naissance</label>
-                            <input type="date" name="birthDate" 
-                                   value="{% if userEntity.birthDate %}{{ userEntity.birthDate|date('Y-m-d') }}{% endif %}"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Date de naissance</label>
+                            <div class="form-group">
+                                <input type="date" name="birthDate" 
+                                       value="{% if userEntity.birthDate %}{{ userEntity.birthDate|date('Y-m-d') }}{% endif %}">
+                            </div>
                         </div>
 
-                        <div style="margin-top: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Numéro de sécurité sociale</label>
-                            <input type="text" name="ssn" value="{{ userEntity.ssn ?? '' }}"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Numéro de sécurité sociale</label>
+                            <div class="form-group">
+                                <input type="text" name="ssn" value="{{ userEntity.ssn ?? '' }}" placeholder="Numéro de sécurité sociale">
+                            </div>
                         </div>
                     </div>
                     {% endif %}
 
                     {% if is_aide_soignant and userEntity %}
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                        <h4 style="margin-bottom: 16px;">Informations Professionnelles</h4>
+                    <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 1.5rem;">
+                            🩺 Informations Professionnelles
+                        </h4>
                         
-                        <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Numéro ADELI</label>
-                            <input type="text" name="adeli" value="{{ userEntity.adeli ?? '' }}"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Numéro ADELI</label>
+                            <div class="form-group">
+                                <input type="text" name="adeli" value="{{ userEntity.adeli ?? '' }}" placeholder="Numéro ADELI">
+                            </div>
                         </div>
                     </div>
                     {% endif %}
 
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                        <h4 style="margin-bottom: 16px;">Changer le mot de passe (optionnel)</h4>
+                    <!-- Section mot de passe -->
+                    <div class="profile-info" style="border-top: 2px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                        <h4 style="color: var(--warning-color); margin-bottom: 1.5rem;">
+                            🔐 Changer le mot de passe (optionnel)
+                        </h4>
                         
-                        <div>
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Mot de passe actuel</label>
-                            <input type="password" name="currentPassword"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Mot de passe actuel</label>
+                            <div class="form-group">
+                                <input type="password" name="currentPassword" placeholder="Entrez votre mot de passe actuel">
+                            </div>
                         </div>
 
-                        <div style="margin-top: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Nouveau mot de passe</label>
-                            <input type="password" name="newPassword"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Nouveau mot de passe</label>
+                            <div class="form-group">
+                                <input type="password" name="newPassword" placeholder="Nouveau mot de passe (min 6 caractères)">
+                            </div>
                         </div>
 
-                        <div style="margin-top: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Confirmer le mot de passe</label>
-                            <input type="password" name="confirmPassword"
-                                   style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d0d7de;">
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Confirmer le mot de passe</label>
+                            <div class="form-group">
+                                <input type="password" name="confirmPassword" placeholder="Confirmez le nouveau mot de passe">
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 12px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                        <button type="submit" class="btn btn--primary">Enregistrer les modifications</button>
-                        <a href="{{ path('profile_index') }}" class="btn btn--ghost">Annuler</a>
+                    <!-- Boutons d'action -->
+                    <div class="action-buttons" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid var(--border-color);">
+                        <button type="submit" class="btn btn--primary">
+                            💾 Enregistrer les modifications
+                        </button>
+                        <a href="{{ path('profile_index') }}" class="btn btn--ghost">
+                            ❌ Annuler
+                        </a>
                     </div>
                 </form>
             </div>

@@ -16,23 +16,43 @@ use Symfony\Component\Routing\Annotation\Route;
 class CommandeController extends AbstractController
 {
     #[Route('/', name: 'commande_index', methods: ['GET'])]
-    public function index(CommandeRepository $commandeRepo): Response
+    public function index(Request $request, CommandeRepository $commandeRepo): Response
     {
         $user = $this->getUser();
+        
+        // Get filter and sort parameters from URL
+        $statut = $request->query->get('statut', '');
+        $tri = $request->query->get('tri', 'dateCommande');
+        $ordre = $request->query->get('ordre', 'DESC');
+        $recherche = $request->query->get('recherche', '');
+        
+        // Validate tri and ordre parameters
+        $tri = in_array($tri, ['dateCommande', 'montantTotal', 'statut']) ? $tri : 'dateCommande';
+        $ordre = in_array($ordre, ['ASC', 'DESC']) ? $ordre : 'DESC';
+        
+        // Fetch commandes with filters
         $commandes = $user
-            ? $commandeRepo->findByDemandeur($user)
-            : $commandeRepo->findBy([], ['dateCommande' => 'DESC']);
-
-        $navigation = [
-            ['name' => 'Dashboard', 'path' => $this->generateUrl('app_patient_dashboard'), 'icon' => '🏠'],
-            ['name' => 'Consultations', 'path' => $this->generateUrl('patient_consultations'), 'icon' => '🩺'],
-            ['name' => 'Produits', 'path' => $this->generateUrl('produit_list'), 'icon' => '🛒'],
-            ['name' => 'Mes commandes', 'path' => $this->generateUrl('commande_index'), 'icon' => '📋'],
-        ];
-
+            ? $commandeRepo->findForUser($user, $statut ?: null, $tri, $ordre)
+            : $commandeRepo->findBy([], [$tri => $ordre]);
+        
+        // Search filter (on product name)
+        if ($recherche !== null && $recherche !== '') {
+            $recherche = trim($recherche);
+            $commandes = array_filter($commandes, function ($c) use ($recherche) {
+                return stripos($c->getProduit() ? $c->getProduit()->getNom() : '', $recherche) !== false;
+            });
+        }
+        
+        // Get all distinct statuts for filter dropdown
+        $statuts = $commandeRepo->findDistinctStatuts();
+        
         return $this->render('commande/index.html.twig', [
             'commandes' => $commandes,
-            'navigation' => $navigation,
+            'statut_filtre' => $statut,
+            'statuts' => $statuts,
+            'tri' => $tri,
+            'ordre' => $ordre,
+            'recherche' => $recherche,
         ]);
     }
 

@@ -18,6 +18,7 @@ class Formation
 
     public const STATUTS = [
         self::STATUT_EN_ATTENTE,
+
         self::STATUT_VALIDE,
         self::STATUT_REFUSE,
     ];
@@ -73,11 +74,20 @@ class Formation
     #[ORM\JoinColumn(nullable: false)]
     private ?Medecin $medecin = null;
 
+    #[ORM\ManyToOne(inversedBy: 'formations')]
+    private ?Admin $admin = null;
+
     /**
      * @var Collection<int, AideSoignant>
      */
     #[ORM\ManyToMany(targetEntity: AideSoignant::class, mappedBy: 'formations')]
     private Collection $aideSoignants;
+
+    /**
+     * @var Collection<int, Admin>
+     */
+    #[ORM\OneToMany(targetEntity: Admin::class, mappedBy: 'formation')]
+    private Collection $admins;
 
     #[ORM\Column(length: 20)]
     private string $statut = self::STATUT_EN_ATTENTE;
@@ -85,6 +95,7 @@ class Formation
     public function __construct()
     {
         $this->aideSoignants = new ArrayCollection();
+        $this->admins = new ArrayCollection();
         $this->statut = self::STATUT_EN_ATTENTE;
     }
 
