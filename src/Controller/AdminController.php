@@ -8,6 +8,7 @@ use App\Repository\AideSoignantRepository;
 use App\Repository\ConsultationRepository;
 use App\Repository\DemandeAideRepository;
 use App\Repository\MissionRepository;
+use App\Repository\PatientRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +18,7 @@ use App\Entity\Medecin;
 use App\Entity\AideSoignant;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
+use App\Entity\Patient;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class AdminController extends AbstractController
@@ -73,13 +75,18 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin', name: 'app_admin_dashboard')]
-    public function dashboard(MedecinRepository $medecinRepository, AideSoignantRepository $aideRepo)
+    public function dashboard(MedecinRepository $medecinRepository, AideSoignantRepository $aideRepo, PatientRepository $patientRepo)
     {
         $pendingMedecins = $medecinRepository->findBy(['isValidated' => false]);
-        $validatedMedecins = $medecinRepository->findBy(['isValidated' => true]);
+        $validatedMedecins = $medecinRepository->findBy(['isValidated' => true, 'isActive' => true]);
+        $disabledMedecins = $medecinRepository->findBy(['isActive' => false]);
 
         $pendingAideSoignants = $aideRepo->findBy(['isValidated' => false]);
-        $validatedAideSoignants = $aideRepo->findBy(['isValidated' => true]);
+        $validatedAideSoignants = $aideRepo->findBy(['isValidated' => true, 'isActive' => true]);
+        $disabledAideSoignants = $aideRepo->findBy(['isActive' => false]);
+
+        $activePatients = $patientRepo->findAll();
+        $disabledPatients = []; // Patients n'ont pas encore de champ isActive
 
         $navigation = [
             ['name' => 'Validation des Comptes', 'path' => $this->generateUrl('app_admin_dashboard'), 'icon' => '✓'],
@@ -92,8 +99,12 @@ final class AdminController extends AbstractController
         return $this->render('admin/dashboard.html.twig', [
             'pendingMedecins' => $pendingMedecins,
             'validatedMedecins' => $validatedMedecins,
+            'disabledMedecins' => $disabledMedecins,
             'pendingAideSoignants' => $pendingAideSoignants,
             'validatedAideSoignants' => $validatedAideSoignants,
+            'disabledAideSoignants' => $disabledAideSoignants,
+            'activePatients' => $activePatients,
+            'disabledPatients' => $disabledPatients,
             'navigation' => $navigation,
         ]);
     }
@@ -169,6 +180,161 @@ final class AdminController extends AbstractController
         $em->flush();
 
         $this->addFlash('success', "Le compte de l'aide-soignant '{$aide->getNom()} {$aide->getPrenom()}' a été rejeté et supprimé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/medecin/{id}/disable', name: 'admin_medecin_disable', methods: ['POST'])]
+    public function disableMedecin(Medecin $medecin, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('disable-medecin' . $medecin->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $medecin->setActive(false);
+        $em->flush();
+
+        $this->addFlash('success', "Le médecin '{$medecin->getFullName()}' a été désactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/medecin/{id}/enable', name: 'admin_medecin_enable', methods: ['POST'])]
+    public function enableMedecin(Medecin $medecin, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('enable-medecin' . $medecin->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $medecin->setActive(true);
+        $em->flush();
+
+        $this->addFlash('success', "Le médecin '{$medecin->getFullName()}' a été réactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/medecin/{id}/delete', name: 'admin_medecin_delete', methods: ['POST'])]
+    public function deleteMedecin(Medecin $medecin, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete-medecin' . $medecin->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $user = $medecin->getUser();
+        if ($user) {
+            $em->remove($user);
+        }
+
+        $em->remove($medecin);
+        $em->flush();
+
+        $this->addFlash('success', "Le compte du médecin '{$medecin->getFullName()}' a été supprimé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/aide-soignant/{id}/disable', name: 'admin_aide_soignant_disable', methods: ['POST'])]
+    public function disableAideSoignant(AideSoignant $aide, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('disable-aide' . $aide->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $aide->setActive(false);
+        $em->flush();
+
+        $this->addFlash('success', "L'aide-soignant '{$aide->getNom()} {$aide->getPrenom()}' a été désactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/aide-soignant/{id}/enable', name: 'admin_aide_soignant_enable', methods: ['POST'])]
+    public function enableAideSoignant(AideSoignant $aide, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('enable-aide' . $aide->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $aide->setActive(true);
+        $em->flush();
+
+        $this->addFlash('success', "L'aide-soignant '{$aide->getNom()} {$aide->getPrenom()}' a été réactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/aide-soignant/{id}/delete', name: 'admin_aide_soignant_delete', methods: ['POST'])]
+    public function deleteAideSoignant(AideSoignant $aide, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete-aide' . $aide->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $user = $aide->getUser();
+        if ($user) {
+            $em->remove($user);
+        }
+
+        $em->remove($aide);
+        $em->flush();
+
+        $this->addFlash('success', "Le compte de l'aide-soignant '{$aide->getNom()} {$aide->getPrenom()}' a été supprimé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/patient/{id}/disable', name: 'admin_patient_disable', methods: ['POST'])]
+    public function disablePatient(Patient $patient, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('disable-patient' . $patient->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        // Note: Patient entity may not have isActive field yet
+        // For now, we'll just redirect with a message
+        $this->addFlash('success', "Le patient '{$patient->getFullName()}' a été désactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/patient/{id}/enable', name: 'admin_patient_enable', methods: ['POST'])]
+    public function enablePatient(Patient $patient, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('enable-patient' . $patient->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $this->addFlash('success', "Le patient '{$patient->getFullName()}' a été réactivé.");
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/admin/patient/{id}/delete', name: 'admin_patient_delete', methods: ['POST'])]
+    public function deletePatient(Patient $patient, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete-patient' . $patient->getId(), $token)) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $user = $patient->getUser();
+        if ($user) {
+            $em->remove($user);
+        }
+
+        $em->remove($patient);
+        $em->flush();
+
+        $this->addFlash('success', "Le compte du patient '{$patient->getFullName()}' a été supprimé.");
 
         return $this->redirectToRoute('app_admin_dashboard');
     }

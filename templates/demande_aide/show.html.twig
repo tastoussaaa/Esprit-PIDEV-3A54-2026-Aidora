@@ -16,28 +16,30 @@
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
+            gap: 40px;
+            margin-bottom: 40px;
         }
         
         .detail-section {
             background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 32px;
+            border-radius: 12px;
             border-left: 4px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         
         .detail-section h3 {
             margin-top: 0;
+            margin-bottom: 24px;
             color: var(--text);
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 600;
         }
         
         .detail-item {
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         .detail-item:last-child {
@@ -51,30 +53,32 @@
             color: var(--muted);
             text-transform: uppercase;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
         }
         
         .detail-value {
             font-size: 15px;
             color: #333;
             font-weight: 500;
+            line-height: 1.6;
         }
         
         /* status and button styles are centralized in public/assets/css/app.css */
         
         .actions {
             display: flex;
-            gap: 12px;
-            margin-top: 24px;
+            gap: 16px;
+            margin-top: 32px;
             flex-wrap: wrap;
         }
         
         .actions button,
         .actions a {
             flex: 1;
-            min-width: 100px;
-            padding: 10px 12px;
-            font-size: 13px;
+            min-width: 120px;
+            padding: 14px 20px;
+            font-size: 14px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -125,13 +129,44 @@
         .aide-meta {
             font-size: 13px;
             color: #666;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .aides-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .aide-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .aide-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .aide-card h4 {
+            margin: 0 0 16px 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         .badge-dispo {
             display: inline-block;
-            margin-top: 8px;
-            padding: 4px 10px;
+            margin-top: 12px;
+            padding: 6px 14px;
             border-radius: 999px;
             font-size: 12px;
             font-weight: 600;
@@ -187,8 +222,8 @@
             </div>
         </div>
 
-        <div class="box" style="max-width: 900px; margin: 0 auto;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+        <div class="box" style="max-width: 1100px; margin: 0 auto; padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 32px;">
                 <div>
                     <h2 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h2>
                     <span class="status-badge status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
@@ -269,13 +304,13 @@
             </div>
 
             {% if demande.lieu or (demande.latitude and demande.longitude) %}
-                <div style="margin-bottom: 24px;">
-                    <h3 style="margin-top: 0;">📍 Localisation</h3>
+                <div style="margin-bottom: 40px;">
+                    <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 17px;">📍 Localisation</h3>
                     {% if demande.lieu %}
-                        <p><strong>Lieu:</strong> {{ demande.lieu }}</p>
+                        <p style="margin-bottom: 16px;"><strong>Lieu:</strong> {{ demande.lieu }}</p>
                     {% endif %}
                     <div id="map"></div>
-                    <p style="font-size: 13px; color: #999; margin-top: 8px;">
+                    <p style="font-size: 13px; color: #999; margin-top: 12px;">
                         Latitude: {{ demande.latitude|number_format(6) }}, Longitude: {{ demande.longitude|number_format(6) }}
                     </p>
                 </div>
@@ -283,11 +318,11 @@
 
             {# AI-powered completeness and report #}
             {% if aiReport is defined %}
-                <div class="detail-section" style="margin-bottom: 24px; border-left-color: #9C27B0;">
+                <div class="detail-section" style="margin-bottom: 40px; border-left-color: #9C27B0;">
                     <h3>🤖 Analyse IA de votre demande</h3>
                     
                     {# Completeness score #}
-                    <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <strong>Complétude de la demande:</strong>
                             <span style="font-size: 24px; font-weight: 700; color: {{ reportAssistant.getCompletenessColor(aiReport.completeness.level) }};">
@@ -304,7 +339,7 @@
 
                     {# Missing fields and suggestions #}
                     {% if aiReport.completeness.suggestions is not empty %}
-                        <div style="background: #FFF9C4; padding: 12px; border-radius: 8px; border-left: 4px solid #FBC02D; margin-bottom: 16px;">
+                        <div style="background: #FFF9C4; padding: 16px; border-radius: 8px; border-left: 4px solid #FBC02D; margin-bottom: 20px;">
                             <strong style="display: block; margin-bottom: 8px; color: #F57F17;">💡 Suggestions pour améliorer votre demande:</strong>
                             <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
                                 {% for suggestion in aiReport.completeness.suggestions %}
@@ -351,10 +386,10 @@
             {% endif %}
 
             {% if riskAnalysis is defined %}
-                <div class="detail-section" style="margin-bottom: 24px; border-left-color: #7E57C2;">
+                <div class="detail-section" style="margin-bottom: 40px; border-left-color: #7E57C2;">
                     <h3>🧠 Score de risque médical (IA)</h3>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px;">
                         <div style="background: #fff; border: 1px solid #EDE7F6; border-radius: 8px; padding: 12px;">
                             <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Score déterministe</div>
                             <div style="font-size: 20px; font-weight: 700; color: #5E35B1;">{{ riskAnalysis.score_deterministe }}/100</div>
@@ -381,7 +416,7 @@
                 </div>
             {% endif %}
 
-            <div class="detail-section" style="margin-bottom: 24px; border-left-color: #4CAF50;">
+            <div class="detail-section" style="margin-bottom: 40px; border-left-color: #4CAF50;">
                 <h3>👩‍⚕️ Aides-soignants compatibles</h3>
                 {% if aidesSoignantsCompatibles is empty %}
                     <p style="margin: 8px 0 0; color: #666;">Aucun aide-soignant compatible trouvé pour le moment.</p>
@@ -409,9 +444,9 @@
             </div>
 
             {% if demande.aideChoisie %}
-            <div class="detail-section" style="margin-bottom: 24px; border-left-color: #2E7D32;">
+            <div class="detail-section" style="margin-bottom: 40px; border-left-color: #2E7D32;">
                 <h3>✓ Aide-soignant sélectionné</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 12px 0;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; padding: 20px 0;">
                     <div class="detail-item">
                         <div class="detail-label">Nom</div>
                         <div class="detail-value">{{ demande.aideChoisie.nom|capitalize }} {{ demande.aideChoisie.prenom|capitalize }}</div>

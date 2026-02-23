@@ -16,28 +16,30 @@
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
+            gap: 40px;
+            margin-bottom: 40px;
         }
 
         .detail-section {
             background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 32px;
+            border-radius: 12px;
             border-left: 4px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .detail-section h3 {
             margin-top: 0;
+            margin-bottom: 24px;
             color: var(--text);
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 600;
         }
 
         .detail-item {
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e0e0e0;
         }
 
         .detail-item:last-child {
@@ -51,24 +53,26 @@
             color: var(--muted);
             text-transform: uppercase;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
         }
 
         .detail-value {
             font-size: 15px;
             color: #333;
             font-weight: 500;
+            line-height: 1.6;
         }
 
         .actions {
             display: flex;
-            gap: 12px;
-            margin-top: 24px;
+            gap: 16px;
+            margin-top: 32px;
             flex-wrap: wrap;
         }
 
         .btn-back {
-            padding: 12px 20px;
+            padding: 14px 24px;
             background: #F5F5F5;
             color: #333;
             border: 1px solid #ddd;
@@ -86,7 +90,7 @@
         }
 
         .btn-success {
-            padding: 12px 20px;
+            padding: 14px 24px;
             background: #C8E6C9;
             color: #2E7D32;
             border: none;
@@ -105,7 +109,7 @@
         }
 
         .btn-danger {
-            padding: 12px 20px;
+            padding: 14px 24px;
             background: #FFCCCC;
             color: #C62828;
             border: none;
@@ -122,7 +126,7 @@
         }
 
         .btn-warning {
-            padding: 12px 20px;
+            padding: 14px 24px;
             background: #FFF9C4;
             color: #F57F17;
             border: none;
@@ -186,7 +190,7 @@
 
         .traceability-meta {
             margin: 16px 0;
-            padding: 12px 16px;
+            padding: 16px 20px;
             border-radius: 8px;
             background: #f9f9f9;
             border-left: 4px solid #13B8C2;
@@ -236,8 +240,8 @@
             </div>
         </div>
 
-        <div class="box" style="max-width: 900px; margin: 0 auto;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+        <div class="box" style="max-width: 1100px; margin: 0 auto; padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 32px;">
                 <div>
                     <h2 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h2>
                     <span class="status-badge status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
@@ -318,13 +322,13 @@
             </div>
 
             {% if demande.lieu or (demande.latitude and demande.longitude) %}
-                <div style="margin-bottom: 24px;">
-                    <h3 style="margin-top: 0;">📍 Localisation</h3>
+                <div style="margin-bottom: 40px;">
+                    <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 17px;">📍 Localisation</h3>
                     {% if demande.lieu %}
-                        <p><strong>Lieu:</strong> {{ demande.lieu }}</p>
+                        <p style="margin-bottom: 16px;"><strong>Lieu:</strong> {{ demande.lieu }}</p>
                     {% endif %}
                     <div id="map"></div>
-                    <p style="font-size: 13px; color: #999; margin-top: 8px;">
+                    <p style="font-size: 13px; color: #999; margin-top: 12px;">
                         Latitude: {{ demande.latitude|number_format(6) }}, Longitude: {{ demande.longitude|number_format(6) }}
                     </p>
                 </div>
@@ -333,7 +337,7 @@
             <div id="traceabilityMessage" class="traceability-message"></div>
 
             {% if mission %}
-                <div class="traceability-meta">
+                <div class="traceability-meta" style="margin-bottom: 32px;">
                     <strong>Traçabilité mission:</strong>
                     Check-in: {{ mission.checkInAt ? mission.checkInAt|date('d/m/Y H:i:s') : 'Non effectué' }} |
                     Check-out: {{ mission.checkOutAt ? mission.checkOutAt|date('d/m/Y H:i:s') : 'Non effectué' }} |
@@ -342,16 +346,16 @@
             {% endif %}
 
             {% if mission and (demande.statut == 'ACCEPTÉE' or mission.statutMission == 'ACCEPTÉE') and not mission.checkOutAt %}
-                <div class="detail-section" style="margin-bottom: 12px;">
+                <div class="detail-section" style="margin-bottom: 32px;">
                     <h3>📎 Preuves optionnelles (check-out)</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <label for="proofPhotoInput" style="display:block; font-weight:600; margin-bottom: 6px;">Photo preuve</label>
-                            <input id="proofPhotoInput" type="file" accept="image/*" style="width:100%;">
+                            <label for="proofPhotoInput" style="display:block; font-weight:600; margin-bottom: 10px;">Photo preuve</label>
+                            <input id="proofPhotoInput" type="file" accept="image/*" style="width:100%; padding: 8px;">
                         </div>
                         <div>
-                            <label for="signatureInput" style="display:block; font-weight:600; margin-bottom: 6px;">Signature (image)</label>
-                            <input id="signatureInput" type="file" accept="image/*" style="width:100%;">
+                            <label for="signatureInput" style="display:block; font-weight:600; margin-bottom: 10px;">Signature (image)</label>
+                            <input id="signatureInput" type="file" accept="image/*" style="width:100%; padding: 8px;">
                         </div>
                     </div>
                 </div>
