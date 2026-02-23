@@ -39,17 +39,19 @@
     <nav class="portal__menu">
         {% if is_granted('ROLE_ADMIN') %}
             <a href="{{ path('app_admin_dashboard') }}"
-               class="portal__item {% if app.request.pathinfo starts with '/admin' %}is-active{% endif %}">
+               class="portal__item {% if app.request.pathinfo == path('app_admin_dashboard') %}is-active{% endif %}">
                 <span class="portal__icon">🛠️</span>
                 <span>Validation des Comptes</span>
             </a>
         {% endif %}
         {% for item in navigation|default([]) %}
-            <a href="{{ item.path }}"
-               class="portal__item {% if item.path is defined and app.request.pathinfo starts with item.path %}is-active{% endif %}">
-                <span class="portal__icon">{{ item.icon }}</span>
-                <span>{{ item.name }}</span>
-            </a>
+            {% if not (is_granted('ROLE_ADMIN') and item.path == path('app_admin_dashboard')) %}
+                <a href="{{ item.path }}"
+                   class="portal__item {% if item.path is defined and app.request.pathinfo starts with item.path %}is-active{% endif %}">
+                    <span class="portal__icon">{{ item.icon }}</span>
+                    <span>{{ item.name }}</span>
+                </a>
+            {% endif %}
         {% endfor %}
     </nav>
 

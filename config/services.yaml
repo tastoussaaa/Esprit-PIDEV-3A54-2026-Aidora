@@ -32,5 +32,23 @@ services:
         tags:
             - { name: doctrine.event_subscriber }
 
+    # Configure AI Risk Analysis Service with HuggingFace API key
+    # Pour utiliser le mock IA (démo): décommentez MockAiRiskAnalysisService et commentez AiRiskAnalysisService
+    
+    # Service IA réel (HuggingFace)
+    # App\Service\AiRiskAnalysisService:
+    #     arguments:
+    #         $huggingfaceApiKey: '%env(string:HUGGINGFACE_API_KEY)%'
+    #     public: true
+
+    # Service IA simulé (pour démo)
+    App\Service\AiRiskAnalysisService:
+        class: App\Service\MockAiRiskAnalysisService
+        public: true
+
+    # Make RiskSupervisionService public for CLI scripts
+    App\Service\RiskSupervisionService:
+        public: true
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

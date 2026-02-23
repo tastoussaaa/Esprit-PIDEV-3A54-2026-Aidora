@@ -9,18 +9,23 @@ use App\Form\DemandeAideType;
 use App\Repository\DemandeAideRepository;
 use App\Service\TransitionNotificationService;
 use App\Service\UserService;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Workflow\Exception\LogicException;
+use Symfony\Component\Workflow\WorkflowInterface;
 
 final class DemandeAideController extends BaseController
 {
     public function __construct(
         UserService $userService,
         private TransitionNotificationService $transitionNotificationService,
+        #[Autowire(service: 'state_machine.mission_process')]
+        private WorkflowInterface $missionWorkflow,
     )
     {
         parent::__construct($userService);
@@ -253,7 +258,7 @@ final class DemandeAideController extends BaseController
                 $mission = new Mission();
                 $mission->setDemandeAide($demandeAide);
                 $mission->setTitreM($demandeAide->getTitreD());
-                $mission->setStatutMission('EN_ATTENTE');
+                $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
                 $mission->setPrixFinal(0);
                 $mission->setNote(null);
                 $mission->setCommentaire(null);
@@ -281,7 +286,13 @@ final class DemandeAideController extends BaseController
     }
 
     #[Route('/demande/{id}', name: 'app_demande_aide_show', methods: ['GET'])]
-    public function show(DemandeAide $demandeAide, EntityManagerInterface $entityManager, \App\Service\ReportAssistant $reportAssistant, \App\Service\CalendarBlockingService $calendarBlocker): Response
+    public function show(
+        DemandeAide $demandeAide,
+        EntityManagerInterface $entityManager,
+        \App\Service\ReportAssistant $reportAssistant,
+        \App\Service\CalendarBlockingService $calendarBlocker,
+        \App\Service\RiskSupervisionService $riskSupervision,
+    ): Response
     {
         $navigation = [
             ['name' => 'Dashboard', 'path' => $this->generateUrl('app_patient_dashboard'), 'icon' => '🏠'],
@@ -327,8 +338,11 @@ final class DemandeAideController extends BaseController
             return $scoreB <=> $scoreA;
         });
 
-        // Generate AI-powered report
+        // Generate AI-powered completeness report
         $report = $reportAssistant->generateReport($demandeAide);
+
+        // Generate AI risk analysis (automatic on demand details page)
+        $riskAnalysis = $riskSupervision->computeDemandeRisk($demandeAide);
         
         return $this->render('demande_aide/show.html.twig', [
             'demande' => $demandeAide,
@@ -336,6 +350,7 @@ final class DemandeAideController extends BaseController
             'aidesSoignantsCompatibles' => $aidesSoignantsCompatibles,
             'aidesRanking' => $aidesRanking,
             'aiReport' => $report,
+            'riskAnalysis' => $riskAnalysis,
             'reportAssistant' => $reportAssistant,
         ]);
     }
@@ -521,7 +536,7 @@ final class DemandeAideController extends BaseController
             $mission = new Mission();
             $mission->setDemandeAide($demandeAide);
             $mission->setTitreM($demandeAide->getTitreD());
-            $mission->setStatutMission('EN_ATTENTE');
+            $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
             $mission->setPrixFinal(0);
             $mission->setDateDebut($demandeAide->getDateDebutSouhaitee());
             $mission->setDateFin($demandeAide->getDateFinSouhaitee());
@@ -594,7 +609,7 @@ final class DemandeAideController extends BaseController
             $mission = new Mission();
             $mission->setDemandeAide($demande);
             $mission->setTitreM($demande->getTitreD());
-            $mission->setStatutMission('EN_ATTENTE');
+            $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
             $mission->setPrixFinal(0);
             $mission->setDateDebut($demande->getDateDebutSouhaitee());
             $mission->setDateFin($demande->getDateFinSouhaitee());
@@ -608,8 +623,19 @@ final class DemandeAideController extends BaseController
 
         $mission->setAideSoignant($aideSoignant);
         $mission->setTitreM($demande->getTitreD());
-        $mission->setStatutMission('ACCEPTÉE');
         $mission->setPrixFinal(0);
+
+        if (!$this->missionWorkflow->can($mission, 'accepter')) {
+            $this->addFlash('error', 'Transition workflow invalide: impossible d\'accepter cette mission depuis son état actuel.');
+            return $this->redirectToRoute('aidesoingnant_demandes');
+        }
+
+        try {
+            $this->missionWorkflow->apply($mission, 'accepter');
+        } catch (LogicException) {
+            $this->addFlash('error', 'Erreur workflow: la mission n\'a pas pu être acceptée.');
+            return $this->redirectToRoute('aidesoingnant_demandes');
+        }
 
         $demande->setStatut('ACCEPTÉE');
 
@@ -644,7 +670,7 @@ final class DemandeAideController extends BaseController
         foreach ($missions as $mission) {
             if (!$mission->getFinalStatus()) {
                 $mission->setAideSoignant(null);
-                $mission->setStatutMission('EN_ATTENTE');
+                $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
                 $mission->setPrixFinal(0);
             }
         }
@@ -912,7 +938,8 @@ final class DemandeAideController extends BaseController
         $start = $demande->getDateDebutSouhaitee();
         $end = $demande->getDateFinSouhaitee() ?? $start;
 
-        if (!$start || !$end || !$aide->isDisponible()) {
+        // Vérifier uniquement les conflits réels de missions, pas le flag disponible
+        if (!$start || !$end) {
             return false;
         }
 

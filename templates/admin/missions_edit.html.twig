@@ -2,20 +2,17 @@
 
 {% block title %}Modifier Mission - Admin{% endblock %}
 
-{% block content %}
-<div class="container py-4">
-    {# Navigation #}
-    {% if navigation %}
-    <nav style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
-        {% for item in navigation %}
-        <a href="{{ item.path }}" 
-           style="padding: 8px 16px; text-decoration: none; border-radius: 6px; {% if app.request.pathinfo starts with '/admin/missions' and item.name == 'Missions' %}background-color: #f0f4ff; color: #2563eb; font-weight: 600;{% else %}color: #6b7280;{% endif %} transition: all 0.3s;">
-            <span style="margin-right: 4px;">{{ item.icon }}</span>{{ item.name }}
-        </a>
-        {% endfor %}
-    </nav>
-    {% endif %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
 
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__content">
+<div class="container py-4">
     <div class="row mb-4">
         <div class="col-auto">
             <a href="{{ path('admin_missions_show', {id: mission.id}) }}" class="btn btn-secondary">← Retour</a>
@@ -40,7 +37,7 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <form method="post" action="{{ path('admin_missions_edit', {id: mission.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('edit-mission-' ~ mission.id) }}">
@@ -48,10 +45,10 @@
                         <div class="mb-3">
                             <label for="statut" class="form-label">Statut</label>
                             <select name="statut" id="statut" class="form-select">
-                                <option value="EN_COURS" {{ mission.statut === 'EN_COURS' ? 'selected' : '' }}>En cours</option>
-                                <option value="ACCEPTÉE" {{ mission.statut === 'ACCEPTÉE' ? 'selected' : '' }}>Acceptée</option>
-                                <option value="TERMINÉE" {{ mission.statut === 'TERMINÉE' ? 'selected' : '' }}>Terminée</option>
-                                <option value="ANNULÉE" {{ mission.statut === 'ANNULÉE' ? 'selected' : '' }}>Annulée</option>
+                                <option value="EN_COURS" {{ mission.statutMission == 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                                <option value="ACCEPTÉE" {{ mission.statutMission == 'ACCEPTÉE' ? 'selected' : '' }}>Acceptée</option>
+                                <option value="TERMINÉE" {{ mission.statutMission == 'TERMINÉE' ? 'selected' : '' }}>Terminée</option>
+                                <option value="ANNULÉE" {{ mission.statutMission == 'ANNULÉE' ? 'selected' : '' }}>Annulée</option>
                             </select>
                         </div>
 
@@ -75,25 +72,25 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card mb-4">
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">📋 Infos Actuelles</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Demande:</strong> {{ mission.demande.titreD }}</p>
-                    <p><strong>Aide:</strong> {{ mission.aide ? (mission.aide.nom ~ ' ' ~ mission.aide.prenom) : 'N/A' }}</p>
+                    <p><strong>Demande:</strong> {{ mission.demandeAide ? mission.demandeAide.titreD : 'N/A' }}</p>
+                    <p><strong>Aide:</strong> {{ mission.aideSoignant ? (mission.aideSoignant.nom ~ ' ' ~ mission.aideSoignant.prenom) : 'N/A' }}</p>
                     <p><strong>Date Début:</strong> {{ mission.dateDebut|date('d/m/Y') }}</p>
-                    <p><strong>Status Actuel:</strong> <span class="badge bg-warning">{{ mission.statut }}</span></p>
+                    <p><strong>Status Actuel:</strong> <span class="badge bg-warning">{{ mission.statutMission }}</span></p>
                 </div>
             </div>
 
-            {% if mission.demande %}
-                <div class="card">
+            {% if mission.demandeAide %}
+                <div class="card shadow-sm border-0">
                     <div class="card-header">
                         <h5 class="mb-0">📋 Demande Liée</h5>
                     </div>
                     <div class="card-body">
-                        <a href="{{ path('admin_demandes_show', {id: mission.demande.id}) }}" class="btn btn-sm btn-link">
+                        <a href="{{ path('admin_demandes_show', {id: mission.demandeAide.id}) }}" class="btn btn-sm btn-link">
                             Voir demande complète →
                         </a>
                     </div>
@@ -101,5 +98,9 @@
             {% endif %}
         </div>
     </div>
+</div>
+
+        </div>
+    </main>
 </div>
 {% endblock %}

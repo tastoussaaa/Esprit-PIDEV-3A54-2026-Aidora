@@ -10,6 +10,38 @@ use App\Entity\DemandeAide;
 #[ORM\Entity(repositoryClass: MissionRepository::class)]
 class Mission
 {
+    public const STATE_EN_ATTENTE = 'en_attente';
+    public const STATE_ACCEPTEE = 'acceptee';
+    public const STATE_EN_COURS = 'en_cours';
+    public const STATE_TERMINEE = 'terminee';
+    public const STATE_EXPIREE = 'expiree';
+    public const STATE_A_REASSIGNER = 'a_reassigner';
+    public const STATE_ANNULEE = 'annulee';
+
+    private const WORKFLOW_TO_LEGACY = [
+        self::STATE_EN_ATTENTE => 'EN_ATTENTE',
+        self::STATE_ACCEPTEE => 'ACCEPTÉE',
+        self::STATE_EN_COURS => 'EN_COURS',
+        self::STATE_TERMINEE => 'TERMINÉE',
+        self::STATE_EXPIREE => 'EXPIRÉE',
+        self::STATE_A_REASSIGNER => 'A_REASSIGNER',
+        self::STATE_ANNULEE => 'ANNULÉE',
+    ];
+
+    private const LEGACY_TO_WORKFLOW = [
+        'EN_ATTENTE' => self::STATE_EN_ATTENTE,
+        'ACCEPTÉE' => self::STATE_ACCEPTEE,
+        'ACCEPTEE' => self::STATE_ACCEPTEE,
+        'EN_COURS' => self::STATE_EN_COURS,
+        'TERMINÉE' => self::STATE_TERMINEE,
+        'TERMINEE' => self::STATE_TERMINEE,
+        'EXPIRÉE' => self::STATE_EXPIREE,
+        'EXPIREE' => self::STATE_EXPIREE,
+        'A_REASSIGNER' => self::STATE_A_REASSIGNER,
+        'ANNULÉE' => self::STATE_ANNULEE,
+        'ANNULEE' => self::STATE_ANNULEE,
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -23,6 +55,9 @@ class Mission
 
     #[ORM\Column(length: 255)]
     private ?string $StatutMission = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $workflowState = null;
 
     #[ORM\Column]
     private ?int $prixFinal = null;
@@ -118,12 +153,41 @@ class Mission
 
     public function getStatutMission(): ?string
     {
+        if ($this->workflowState !== null) {
+            return self::WORKFLOW_TO_LEGACY[$this->workflowState] ?? strtoupper($this->workflowState);
+        }
+
         return $this->StatutMission;
     }
 
     public function setStatutMission(string $StatutMission): static
     {
-        $this->StatutMission = $StatutMission;
+        $workflowState = self::normalizeToWorkflowState($StatutMission);
+        $this->workflowState = $workflowState;
+        $this->StatutMission = self::WORKFLOW_TO_LEGACY[$workflowState] ?? strtoupper($StatutMission);
+
+        return $this;
+    }
+
+    public function getWorkflowState(): string
+    {
+        if ($this->workflowState !== null) {
+            return $this->workflowState;
+        }
+
+        if ($this->StatutMission !== null && $this->StatutMission !== '') {
+            return self::normalizeToWorkflowState($this->StatutMission);
+        }
+
+        return self::STATE_EN_ATTENTE;
+    }
+
+    public function setWorkflowState(string $workflowState): static
+    {
+        $normalized = self::normalizeWorkflowPlace($workflowState);
+        $this->workflowState = $normalized;
+        $this->StatutMission = self::WORKFLOW_TO_LEGACY[$normalized] ?? strtoupper($normalized);
+
         return $this;
     }
 
@@ -352,5 +416,37 @@ class Mission
         $this->archiveReason = $archiveReason;
 
         return $this;
+    }
+
+    private static function normalizeToWorkflowState(string $value): string
+    {
+        $legacyKey = strtoupper(trim($value));
+        if (isset(self::LEGACY_TO_WORKFLOW[$legacyKey])) {
+            return self::LEGACY_TO_WORKFLOW[$legacyKey];
+        }
+
+        return self::normalizeWorkflowPlace($value);
+    }
+
+    private static function normalizeWorkflowPlace(string $value): string
+    {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        $normalized = strtolower(trim($ascii !== false ? $ascii : $value));
+        $normalized = (string) preg_replace('/[^a-z0-9]+/', '_', $normalized);
+        $normalized = trim($normalized, '_');
+
+        if (in_array($normalized, [
+            self::STATE_EN_ATTENTE,
+            self::STATE_ACCEPTEE,
+            self::STATE_EN_COURS,
+            self::STATE_TERMINEE,
+            self::STATE_EXPIREE,
+            self::STATE_A_REASSIGNER,
+            self::STATE_ANNULEE,
+        ], true)) {
+            return $normalized;
+        }
+
+        return self::STATE_EN_ATTENTE;
     }
 }

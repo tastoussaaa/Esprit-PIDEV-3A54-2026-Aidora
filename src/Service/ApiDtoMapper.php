@@ -78,15 +78,19 @@ class ApiDtoMapper
     }
 
     /**
-     * @param array{score:int,level:string,factors:list<string>} $data
+     * @param array{score_deterministe:int,score_ia:?int,score_final:int,level:string,factors:list<string>,justification_ia:?string,pathologie_probable:?string} $data
      */
     public function mapDemandeRisk(int $demandeId, array $data): DemandeRiskOutputDto
     {
         return new DemandeRiskOutputDto(
             demandeId: $demandeId,
-            score: (int) $data['score'],
+            scoreDeterministe: (int) $data['score_deterministe'],
+            scoreIa: $data['score_ia'],
+            scoreFinal: (int) $data['score_final'],
             level: (string) $data['level'],
             factors: $data['factors'],
+            justificationIa: $data['justification_ia'],
+            pathologieProbable: $data['pathologie_probable'],
         );
     }
 

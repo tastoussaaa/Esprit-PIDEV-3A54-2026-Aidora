@@ -17,6 +17,7 @@
         "symfony/flex": "^2",
         "symfony/form": "7.4.*",
         "symfony/framework-bundle": "7.4.*",
+        "symfony/http-client": "7.4.*",
         "symfony/mailer": "7.4.*",
         "symfony/mime": "7.4.*",
         "symfony/routing": "7.4.*",
@@ -25,6 +26,7 @@
         "symfony/serializer": "7.4.*",
         "symfony/twig-bundle": "7.4.*",
         "symfony/validator": "7.4.*",
+        "symfony/workflow": "7.4.*",
         "symfony/yaml": "7.4.*"
     },
     "config": {

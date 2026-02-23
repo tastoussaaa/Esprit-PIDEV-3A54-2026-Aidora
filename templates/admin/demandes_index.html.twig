@@ -2,26 +2,121 @@
 
 {% block title %}Demandes d'Aide - Admin{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    {# Navigation #}
-    {% if navigation %}
-    <nav style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
-        {% for item in navigation %}
-        <a href="{{ item.path }}" 
-           style="padding: 8px 16px; text-decoration: none; border-radius: 6px; {% if app.request.pathinfo starts with '/admin/demandes' and item.name == 'Demandes' %}background-color: #f0f4ff; color: #2563eb; font-weight: 600;{% else %}color: #6b7280;{% endif %} transition: all 0.3s;">
-            <span style="margin-right: 4px;">{{ item.icon }}</span>{{ item.name }}
-        </a>
-        {% endfor %}
-    </nav>
-    {% endif %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .admin-filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 220px auto;
+            gap: 12px;
+            align-items: center;
+        }
 
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>📋 Gestion des Demandes d'Aide</h1>
+        .admin-filter-grid input,
+        .admin-filter-grid select {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .admin-filter-grid button {
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+
+        .admin-table-wrap {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 920px;
+        }
+
+        .admin-table thead th {
+            text-align: left;
+            font-size: 13px;
+            color: #666;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            background: #fafafa;
+        }
+
+        .admin-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #fcfcfc;
+        }
+
+        .actions-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-mini {
+            border: 1px solid transparent;
+            color: #334155;
+            border-radius: 6px;
+            padding: 6px 9px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-mini:hover {
+            filter: brightness(0.98);
+            color: #334155;
+        }
+
+        .btn-mini--view { background: #bfdbfe; border-color: #93c5fd; }
+        .btn-mini--edit { background: #fde68a; border-color: #fcd34d; }
+        .btn-mini--delete { background: #fecaca; border-color: #fca5a5; }
+
+        .status-chip {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-success { background: #bbf7d0; color: #14532d; }
+        .status-warning { background: #fde68a; color: #78350f; }
+        .status-danger { background: #fecaca; color: #7f1d1d; }
+        .status-expired { background: #ddd6fe; color: #4c1d95; }
+
+        @media (max-width: 900px) {
+            .admin-filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">📋 Gestion des Demandes d'Aide</h1>
+                <p class="portal__subtitle">Design aligné sur l'historique côté aide-soignant/patient</p>
+            </div>
         </div>
-    </div>
 
+        <div class="portal__content">
     {# Messages Flash #}
     {% if app.flashes %}
         {% for type, messages in app.flashes %}
@@ -35,14 +130,10 @@
     {% endif %}
 
     {# Filter Form #}
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-6">
-                    <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
-                </div>
-                <div class="col-md-4">
-                    <select name="statut" class="form-select">
+            <div class="box" style="margin-bottom: 16px;">
+                <form method="get" class="admin-filter-grid">
+                    <input type="text" name="search" placeholder="🔍 Rechercher une demande..." value="{{ search }}">
+                    <select name="statut">
                         <option value="">Tous les statuts</option>
                         <option value="EN_ATTENTE" {{ statut === 'EN_ATTENTE' ? 'selected' : '' }}>En attente</option>
                         <option value="ACCEPTÉE" {{ statut === 'ACCEPTÉE' ? 'selected' : '' }}>Acceptée</option>
@@ -50,19 +141,15 @@
                         <option value="EXPIRÉE" {{ statut === 'EXPIRÉE' ? 'selected' : '' }}>Expirée</option>
                         <option value="ANNULÉE" {{ statut === 'ANNULÉE' ? 'selected' : '' }}>Annulée</option>
                     </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
+                    <button type="submit" class="btn btn--primary">Filtrer</button>
+                </form>
+            </div>
 
     {# Demandes Table #}
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <div class="box">
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
                     <tr>
                         <th>Titre</th>
                         <th>Patient</th>
@@ -72,43 +159,46 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                        </thead>
+                        <tbody>
                     {% if demandes|length > 0 %}
                         {% for demande in demandes %}
                             <tr>
                                 <td>
-                                    <strong>{{ demande.titreD|truncate(30) }}</strong>
+                                    <strong>{{ demande.titreD and demande.titreD|length > 30 ? demande.titreD|slice(0, 30) ~ '…' : (demande.titreD ?? 'N/A') }}</strong>
                                 </td>
                                 <td>{{ demande.email }}</td>
                                 <td>
-                                    <span class="badge bg-{{ demande.statut === 'EN_ATTENTE' ? 'warning' : demande.statut === 'ACCEPTÉE' ? 'success' : 'danger' }}">
-                                        {{ demande.statut }}
+                                    {% set statusClass = demande.statut == 'ACCEPTÉE' ? 'status-success' : (demande.statut == 'EN_ATTENTE' ? 'status-warning' : (demande.statut == 'EXPIRÉE' ? 'status-expired' : 'status-danger')) %}
+                                    <span class="status-chip {{ statusClass }}">
+                                        {{ demande.statut|replace({'_': ' '}) }}
                                     </span>
                                 </td>
                                 <td>{{ demande.dateDebutSouhaitee ? demande.dateDebutSouhaitee|date('d/m/Y') : '-' }}</td>
                                 <td>{{ demande.budgetMax ? demande.budgetMax ~ ' DT' : '-' }}</td>
                                 <td>
-                                    <a href="{{ path('admin_demandes_show', {id: demande.id}) }}" class="btn btn-sm btn-info" title="Voir">👁️</a>
-                                    <a href="{{ path('admin_demandes_edit', {id: demande.id}) }}" class="btn btn-sm btn-warning" title="Modifier">✏️</a>
+                                    <div class="actions-inline">
+                                    <a href="{{ path('admin_demandes_show', {id: demande.id}) }}" class="btn-mini btn-mini--view" title="Voir">👁️</a>
+                                    <a href="{{ path('admin_demandes_edit', {id: demande.id}) }}" class="btn-mini btn-mini--edit" title="Modifier">✏️</a>
                                     <form method="post" action="{{ path('admin_demandes_delete', {id: demande.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete-demande-' ~ demande.id) }}">
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">🗑️</button>
+                                        <button type="submit" class="btn-mini btn-mini--delete" title="Supprimer">🗑️</button>
                                     </form>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Aucune demande trouvée</td>
+                            <td colspan="6" style="text-align:center; color:#999; padding: 24px;">Aucune demande trouvée</td>
                         </tr>
                     {% endif %}
                 </tbody>
-            </table>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<style>
-    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
-</style>
+    </main>
+</div>
 {% endblock %}

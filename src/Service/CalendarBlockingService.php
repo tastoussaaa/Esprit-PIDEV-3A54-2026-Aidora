@@ -22,19 +22,20 @@ class CalendarBlockingService
      */
     public function getOccupiedSlots(AideSoignant $aide, DateTime $startDate, DateTime $endDate): array
     {
+        // Vérifier toutes les missions actives: EN_ATTENTE, ACCEPTÉE, EN_COURS
         $missions = $this->missionRepository->createQueryBuilder('m')
             ->andWhere('m.aideSoignant = :aide')
             ->andWhere('m.StatutMission IN (:statuts)')
             ->setParameter('aide', $aide)
-            ->setParameter('statuts', ['EN_COURS', 'TERMINÉE'])
+            ->setParameter('statuts', ['EN_ATTENTE', 'ACCEPTÉE', 'EN_COURS'])
             ->getQuery()
             ->getResult();
 
         $slots = [];
         foreach ($missions as $mission) {
-            if (!$mission->getDemande()) continue;
+            if (!$mission->getDemandeAide()) continue;
 
-            $demande = $mission->getDemande();
+            $demande = $mission->getDemandeAide();
             $missionStart = $demande->getDateDebutSouhaitee();
             $missionEnd = $demande->getDateFinSouhaitee();
 
@@ -80,14 +81,14 @@ class CalendarBlockingService
             ->andWhere('m.aideSoignant = :aide')
             ->andWhere('m.StatutMission IN (:statuts)')
             ->setParameter('aide', $aide)
-            ->setParameter('statuts', ['EN_COURS', 'TERMINÉE'])
+            ->setParameter('statuts', ['EN_ATTENTE', 'ACCEPTÉE', 'EN_COURS'])
             ->getQuery()
             ->getResult();
 
         $lastMissionEnd = $fromDate;
         foreach ($missions as $mission) {
-            if (!$mission->getDemande()) continue;
-            $missionEnd = $mission->getDemande()->getDateFinSouhaitee();
+            if (!$mission->getDemandeAide()) continue;
+            $missionEnd = $mission->getDemandeAide()->getDateFinSouhaitee();
             if ($missionEnd > $lastMissionEnd) {
                 $lastMissionEnd = $missionEnd;
             }

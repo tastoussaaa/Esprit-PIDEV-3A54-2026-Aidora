@@ -1,0 +1,42 @@
+framework:
+    workflows:
+        mission_process:
+            type: state_machine
+            audit_trail:
+                enabled: true
+            supports:
+                - App\Entity\Mission
+            marking_store:
+                type: method
+                property: workflowState
+            initial_marking: en_attente
+            places:
+                - en_attente
+                - acceptee
+                - en_cours
+                - terminee
+                - expiree
+                - a_reassigner
+                - annulee
+            transitions:
+                accepter:
+                    from: en_attente
+                    to: acceptee
+                refuser:
+                    from: en_attente
+                    to: annulee
+                demarrer:
+                    from: acceptee
+                    to: en_cours
+                terminer:
+                    from: en_cours
+                    to: terminee
+                expirer:
+                    from: en_attente
+                    to: expiree
+                annuler:
+                    from: [acceptee, en_cours]
+                    to: a_reassigner
+                reassigner:
+                    from: a_reassigner
+                    to: en_attente

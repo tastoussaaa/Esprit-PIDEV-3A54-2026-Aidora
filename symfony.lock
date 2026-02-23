@@ -191,16 +191,16 @@
             "./config/packages/validator.yaml"
         ]
     },
-    "tattali/calendar-bundle": {
-        "version": "7.0",
+    "symfony/workflow": {
+        "version": "7.4",
         "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
+            "repo": "github.com/symfony/recipes",
             "branch": "main",
-            "version": "1.1",
-            "ref": "0c643e17b5340747b35c2c75e11727fa31bfa9bb"
+            "version": "3.3",
+            "ref": "3b2f8ca32a07fcb00f899649053943fa3d8bbfb6"
         },
         "files": [
-            "./config/routes/calendar.yaml"
+            "./config/packages/workflow.yaml"
         ]
     }
 }

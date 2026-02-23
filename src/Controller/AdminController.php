@@ -317,13 +317,13 @@ final class AdminController extends AbstractController
         $query = $missionRepo->createQueryBuilder('m');
         
         if ($search) {
-            $query->leftJoin('m.demande', 'd')
+            $query->leftJoin('m.demandeAide', 'd')
                   ->where('d.TitreD LIKE :search OR d.email LIKE :search')
                   ->setParameter('search', '%' . $search . '%');
         }
         
         if ($statut) {
-            $query->andWhere('m.statut = :statut')
+            $query->andWhere('m.StatutMission = :statut')
                   ->setParameter('statut', $statut);
         }
         
@@ -370,7 +370,7 @@ final class AdminController extends AbstractController
             // Update statut
             $statut = $request->request->get('statut');
             if ($statut) {
-                $mission->setStatut($statut);
+                $mission->setStatutMission($statut);
             }
             
             // Update date fin
@@ -407,7 +407,7 @@ final class AdminController extends AbstractController
         }
 
         // Récupérer le titre de la demande avant suppression
-        $demande = $mission->getDemande();
+        $demande = $mission->getDemandeAide();
         $titre = $demande ? $demande->getTitreD() : 'Mission #' . $mission->getId();
         
         $em->remove($mission);

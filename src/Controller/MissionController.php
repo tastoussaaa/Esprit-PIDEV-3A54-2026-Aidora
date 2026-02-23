@@ -9,16 +9,21 @@ use App\Service\PDFGenerator;
 use App\Service\TransitionNotificationService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Workflow\Exception\LogicException;
+use Symfony\Component\Workflow\WorkflowInterface;
 
 final class MissionController extends BaseController
 {
     public function __construct(
         UserService $userService,
         private TransitionNotificationService $transitionNotificationService,
+        #[Autowire(service: 'state_machine.mission_process')]
+        private WorkflowInterface $missionWorkflow,
     )
     {
         parent::__construct($userService);
@@ -43,10 +48,10 @@ final class MissionController extends BaseController
         $qb = $entityManager->getRepository(Mission::class)->createQueryBuilder('m')
             ->leftJoin('m.demandeAide', 'd')
             ->select('m, d')
-            ->andWhere('m.StatutMission = :status')
+            ->andWhere('m.StatutMission IN (:statuses)')
             ->andWhere('m.finalStatus IS NULL')
             ->andWhere('m.aideSoignant = :aideSoignant')
-            ->setParameter('status', 'ACCEPTÉE')
+            ->setParameter('statuses', ['ACCEPTÉE', 'EN_COURS'])
             ->setParameter('aideSoignant', $aideSoignant);
 
         if (!empty($search)) {
@@ -344,11 +349,11 @@ final class MissionController extends BaseController
             ], 403);
         }
 
-        if ($mission->getStatutMission() !== 'ACCEPTÉE') {
+        if (!$this->missionWorkflow->can($mission, 'demarrer')) {
             return new JsonResponse([
                 'success' => false,
-                'code' => 'MISSION_NOT_ACCEPTED',
-                'message' => 'Le check-in est uniquement disponible pour les missions acceptées.',
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'message' => 'Transition invalide: impossible de démarrer cette mission depuis son état actuel.',
             ], 422);
         }
 
@@ -428,6 +433,16 @@ final class MissionController extends BaseController
         $mission->setCheckInAt(new \DateTime());
         $mission->setStatusVerification('PENDING');
 
+        try {
+            $this->missionWorkflow->apply($mission, 'demarrer');
+        } catch (LogicException $e) {
+            return new JsonResponse([
+                'success' => false,
+                'code' => 'WORKFLOW_APPLY_FAILED',
+                'message' => 'Impossible d\'appliquer la transition de démarrage.',
+            ], 422);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse([
@@ -481,11 +496,11 @@ final class MissionController extends BaseController
             ], 403);
         }
 
-        if ($mission->getStatutMission() !== 'ACCEPTÉE') {
+        if (!$this->missionWorkflow->can($mission, 'terminer')) {
             return new JsonResponse([
                 'success' => false,
-                'code' => 'MISSION_NOT_ACCEPTED',
-                'message' => 'Le check-out est uniquement disponible pour les missions acceptées.',
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'message' => 'Transition invalide: impossible de terminer cette mission depuis son état actuel.',
             ], 422);
         }
 
@@ -579,6 +594,16 @@ final class MissionController extends BaseController
         $mission->setStatusVerification($statusVerification);
         $mission->setProofPhotoData($proofPhotoData ?: null);
         $mission->setSignatureData($signatureData ?: null);
+
+        try {
+            $this->missionWorkflow->apply($mission, 'terminer');
+        } catch (LogicException $e) {
+            return new JsonResponse([
+                'success' => false,
+                'code' => 'WORKFLOW_APPLY_FAILED',
+                'message' => 'Impossible d\'appliquer la transition de fin de mission.',
+            ], 422);
+        }
 
         $entityManager->flush();
 
@@ -709,9 +734,32 @@ final class MissionController extends BaseController
         $mission->setFinalStatus('ANNULÉE');
         $mission->setArchivedAt(new \DateTime());
         $mission->setArchiveReason('Annulation manuelle par l\'aide-soignant');
-        $mission->setStatutMission('ANNULÉE');
+
+        if (!$this->missionWorkflow->can($mission, 'annuler')) {
+            $this->addFlash('error', 'Annulation refusée: transition invalide pour cet état de mission.');
+            return $this->redirectToRoute('aidesoingnant_missions');
+        }
+
+        try {
+            $this->missionWorkflow->apply($mission, 'annuler');
+        } catch (LogicException) {
+            $this->addFlash('error', 'Impossible d\'annuler la mission via workflow.');
+            return $this->redirectToRoute('aidesoingnant_missions');
+        }
 
         if ($dateDebut && $now < $dateDebut) {
+            if (!$this->missionWorkflow->can($mission, 'reassigner')) {
+                $this->addFlash('error', 'Réassignation refusée: transition workflow non autorisée.');
+                return $this->redirectToRoute('aidesoingnant_missions');
+            }
+
+            try {
+                $this->missionWorkflow->apply($mission, 'reassigner');
+            } catch (LogicException) {
+                $this->addFlash('error', 'La transition workflow de réassignation a échoué.');
+                return $this->redirectToRoute('aidesoingnant_missions');
+            }
+
             // avant début: proposer un remplacement
             $demande->setAideChoisie(null);
             $demande->setStatut('A_REASSIGNER');

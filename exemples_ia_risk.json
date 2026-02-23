@@ -1,0 +1,170 @@
+{
+  "exemple_prompt": {
+    "description": "Exemple de prompt envoyé au modèle Mistral-7B-Instruct",
+    "format": "mistral_instruction",
+    "content": "[INST]\nTu es un expert médical spécialisé dans l'évaluation des besoins en soins à domicile.\n\nAnalyse la description suivante d'une demande de soins et détermine :\n1. Le niveau de risque médical (faible, moyen, élevé)\n2. Un score de risque entre 0 et 100\n3. La pathologie probable ou situation médicale\n4. Une justification courte de ton analyse\n\nDescription du patient :\n\"Patient diabétique type 2, mobilité réduite suite à AVC récent. Nécessite aide pour toilette et prise de repas. Isolement social.\"\n\nIMPORTANT : Réponds UNIQUEMENT avec un objet JSON valide au format suivant, sans texte avant ou après :\n{\n  \"niveau_risque\": \"faible|moyen|élevé\",\n  \"score_risque\": 0-100,\n  \"pathologie_probable\": \"description courte\",\n  \"justification\": \"explication en 1-2 phrases\"\n}\n[/INST]"
+  },
+
+  "exemple_requete_http": {
+    "method": "POST",
+    "url": "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
+    "headers": {
+      "Authorization": "Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "inputs": "[INST]...[/INST]",
+      "parameters": {
+        "max_new_tokens": 500,
+        "temperature": 0.3,
+        "top_p": 0.9,
+        "do_sample": true,
+        "return_full_text": false
+      }
+    }
+  },
+
+  "exemple_reponse_huggingface": {
+    "format": "HuggingFace retourne un tableau avec generated_text",
+    "raw_response": [
+      {
+        "generated_text": "{\n  \"niveau_risque\": \"élevé\",\n  \"score_risque\": 85,\n  \"pathologie_probable\": \"Diabète type 2 avec séquelles d'AVC\",\n  \"justification\": \"Risque élevé de complications métaboliques et de chutes. Isolement social augmente le risque de décompensation.\"\n}"
+      }
+    ]
+  },
+
+  "mocks_pour_tests": {
+    "risque_eleve": {
+      "niveau_risque": "élevé",
+      "score_risque": 85,
+      "pathologie_probable": "Diabète type 2 avec séquelles d'AVC",
+      "justification": "Risque élevé de complications métaboliques et de chutes. Isolement social augmente le risque de décompensation."
+    },
+    "risque_moyen": {
+      "niveau_risque": "moyen",
+      "score_risque": 55,
+      "pathologie_probable": "Arthrose avec difficultés de mobilité",
+      "justification": "Besoin d'assistance quotidienne stable. Suivi régulier nécessaire mais pas d'urgence vitale."
+    },
+    "risque_faible": {
+      "niveau_risque": "faible",
+      "score_risque": 25,
+      "pathologie_probable": "Convalescence post-opératoire simple",
+      "justification": "Situation temporaire avec amélioration progressive attendue. Autonomie partielle préservée."
+    },
+    "pathologie_cardiaque": {
+      "niveau_risque": "élevé",
+      "score_risque": 90,
+      "pathologie_probable": "Insuffisance cardiaque avec dyspnée",
+      "justification": "Risque vital avec surveillance 24/7 requise. Décompensation cardiaque possible à tout moment."
+    },
+    "soins_palliatifs": {
+      "niveau_risque": "élevé",
+      "score_risque": 95,
+      "pathologie_probable": "Cancer en phase palliative",
+      "justification": "Soins de confort prioritaires. Gestion de la douleur et accompagnement de fin de vie nécessaires."
+    },
+    "personne_agee": {
+      "niveau_risque": "moyen",
+      "score_risque": 48,
+      "pathologie_probable": "Vieillissement avec perte d'autonomie progressive",
+      "justification": "Aide quotidienne nécessaire pour activités de base. Risque de dénutrition et d'isolement."
+    },
+    "fracture_recente": {
+      "niveau_risque": "moyen",
+      "score_risque": 60,
+      "pathologie_probable": "Fracture du col du fémur post-opératoire",
+      "justification": "Rééducation intensive requise. Risque d'escarre et de phlébite pendant l'alitement."
+    },
+    "demence": {
+      "niveau_risque": "élevé",
+      "score_risque": 78,
+      "pathologie_probable": "Démence type Alzheimer stade modéré",
+      "justification": "Surveillance permanente nécessaire. Risques d'errance, de chutes et de troubles du comportement."
+    }
+  },
+
+  "exemple_reponse_api_complete": {
+    "avec_ia": {
+      "demandeId": 42,
+      "scoreDeterministe": 45,
+      "scoreIa": 85,
+      "scoreFinal": 73,
+      "level": "HIGH",
+      "factors": [
+        "Urgence élevée",
+        "Date de début dépassée",
+        "IA: Diabète type 2 avec séquelles d'AVC"
+      ],
+      "justificationIa": "Risque élevé de complications métaboliques et de chutes. Isolement social augmente le risque de décompensation.",
+      "pathologieProbable": "Diabète type 2 avec séquelles d'AVC"
+    },
+    "sans_ia_fallback": {
+      "demandeId": 42,
+      "scoreDeterministe": 45,
+      "scoreIa": null,
+      "scoreFinal": 45,
+      "level": "MEDIUM",
+      "factors": [
+        "Urgence élevée",
+        "Date de début dépassée"
+      ],
+      "justificationIa": null,
+      "pathologieProbable": null
+    }
+  },
+
+  "calcul_score_final": {
+    "formule": "scoreFinal = (scoreIa * 0.7) + (scoreDeterministe * 0.3)",
+    "exemple": {
+      "scoreIa": 85,
+      "scoreDeterministe": 45,
+      "calcul": "(85 * 0.7) + (45 * 0.3) = 59.5 + 13.5 = 73",
+      "scoreFinal": 73
+    }
+  },
+
+  "niveaux_risque": {
+    "HIGH": "score >= 70",
+    "MEDIUM": "40 <= score < 70",
+    "LOW": "score < 40"
+  },
+
+  "gestion_erreurs": {
+    "timeout": {
+      "delai": "15 secondes",
+      "comportement": "Retourne null, fallback sur scoring déterministe"
+    },
+    "api_key_manquante": {
+      "comportement": "isAvailable() retourne false, fallback direct"
+    },
+    "erreur_http": {
+      "status_codes": [500, 503, 429],
+      "comportement": "Log warning, retourne null, fallback"
+    },
+    "json_invalide": {
+      "comportement": "Parse avec regex pour trouver JSON, sinon null"
+    },
+    "champs_manquants": {
+      "comportement": "Validation stricte, retourne null si champ requis absent"
+    }
+  },
+
+  "logs_exemples": {
+    "success": "Pas de log (mode silencieux en cas de succès)",
+    "api_key_missing": {
+      "level": "warning",
+      "message": "HuggingFace API key not configured, AI analysis skipped"
+    },
+    "timeout": {
+      "level": "error",
+      "message": "HuggingFace API transport error",
+      "context": {"error": "Timeout reached"}
+    },
+    "invalid_json": {
+      "level": "warning",
+      "message": "Failed to parse AI response as JSON",
+      "context": {"response": "first 500 chars..."}
+    }
+  }
+}
