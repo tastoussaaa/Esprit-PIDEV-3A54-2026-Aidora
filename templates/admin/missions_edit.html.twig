@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Mission - Admin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__content">
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-auto">
+            <a href="{{ path('admin_missions_show', {id: mission.id}) }}" class="btn btn-secondary">← Retour</a>
+        </div>
+        <div class="col">
+            <h1>✏️ Modifier Mission</h1>
+            <p class="text-muted">Mission #{{ mission.id }}</p>
+        </div>
+    </div>
+
+    {# Messages Flash #}
+    {% if app.flashes %}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type === 'success' ? 'success' : 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_missions_edit', {id: mission.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('edit-mission-' ~ mission.id) }}">
+
+                        <div class="mb-3">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select name="statut" id="statut" class="form-select">
+                                <option value="EN_COURS" {{ mission.statutMission == 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                                <option value="ACCEPTÉE" {{ mission.statutMission == 'ACCEPTÉE' ? 'selected' : '' }}>Acceptée</option>
+                                <option value="TERMINÉE" {{ mission.statutMission == 'TERMINÉE' ? 'selected' : '' }}>Terminée</option>
+                                <option value="ANNULÉE" {{ mission.statutMission == 'ANNULÉE' ? 'selected' : '' }}>Annulée</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dateFin" class="form-label">Date Fin</label>
+                            <input type="datetime-local" name="dateFin" id="dateFin" class="form-control" 
+                                   value="{{ mission.dateFin ? mission.dateFin|date('Y-m-d\\TH:i') : '' }}">
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>ℹ️ Info:</strong> Vous pouvez modifier le statut et la date de fin. Les autres informations sont gérées par les workflows métier.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">💾 Enregistrer</button>
+                            <a href="{{ path('admin_missions_show', {id: mission.id}) }}" class="btn btn-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📋 Infos Actuelles</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Demande:</strong> {{ mission.demandeAide ? mission.demandeAide.titreD : 'N/A' }}</p>
+                    <p><strong>Aide:</strong> {{ mission.aideSoignant ? (mission.aideSoignant.nom ~ ' ' ~ mission.aideSoignant.prenom) : 'N/A' }}</p>
+                    <p><strong>Date Début:</strong> {{ mission.dateDebut|date('d/m/Y') }}</p>
+                    <p><strong>Status Actuel:</strong> <span class="badge bg-warning">{{ mission.statutMission }}</span></p>
+                </div>
+            </div>
+
+            {% if mission.demandeAide %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 Demande Liée</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ path('admin_demandes_show', {id: mission.demandeAide.id}) }}" class="btn btn-sm btn-link">
+                            Voir demande complète →
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

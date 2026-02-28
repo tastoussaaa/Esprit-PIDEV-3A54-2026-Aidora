@@ -146,7 +146,7 @@
             border: 1px solid rgba(106, 27, 154, 0.15);
         }
 
-        .status--pending {
+        .status--en_attente {
             background: #FFF9C4;
             color: #F57F17;
             border: 1px solid rgba(245, 127, 23, 0.15);
@@ -162,6 +162,24 @@
             background: #FFCCCC;
             color: #D32F2F;
             border: 1px solid rgba(211, 47, 47, 0.15);
+        }
+
+        .status--completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+
+        .status--expired {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+
+        .status--cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid rgba(198, 40, 40, 0.15);
         }
 
         .card__info {
@@ -205,10 +223,18 @@
                         <div class="card">
                             <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
                                 <div>
-                                    <h3 style="margin: 0 0 12px 0;">#{{ mission.demandeAide.id }}</h3>
+                                    <h3 style="margin: 0 0 12px 0;">{{ mission.demandeAide.titreD }}</h3>
                                     <span class="card__status status--{{ mission.demandeAide.typeDemande|lower }}">{{ mission.demandeAide.typeDemande }}</span>
                                 </div>
-                                <span class="card__status status--{{ mission.statutMission|lower }}">{{ mission.statutMission }}</span>
+                                {% set missionStatusClass = {
+                                    'EN_ATTENTE': 'en_attente',
+                                    'ACCEPTÉE': 'accepted',
+                                    'REFUSÉE': 'refused',
+                                    'TERMINÉE': 'completed',
+                                    'EXPIRÉE': 'expired',
+                                    'ANNULÉE': 'cancelled'
+                                }[mission.statutMission] ?? mission.statutMission|lower|replace({'_': '_'}) %}
+                                <span class="card__status status--{{ missionStatusClass }}">{{ mission.statutMission|replace({'_': ' '}) }}</span>
                             </div>
 
                             <p style="margin: 12px 0; color: #666; line-height: 1.5;">{{ mission.demandeAide.descriptionBesoin|length > 120 ? mission.demandeAide.descriptionBesoin|slice(0, 120) ~ '…' : mission.demandeAide.descriptionBesoin }}</p>

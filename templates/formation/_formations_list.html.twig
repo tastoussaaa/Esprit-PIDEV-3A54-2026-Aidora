@@ -1,0 +1,39 @@
+<div id="formations-container">
+    {% if formations is empty %}
+        <div class="box">
+            <p>Aucune formation disponible pour le moment.</p>
+        </div>
+    {% else %}
+        <div class="cards">
+            <div class="cards__grid">
+                {% for formation in formations %}
+                    <div class="card">
+                        <h3>{{ formation.title }}</h3>
+                        {% if formation.objective %}
+                            <p class="objective" style="font-style:italic; color:#555;">
+                                {{ formation.objective|striptags|length > 100
+                                    ? formation.objective|striptags|slice(0, 100) ~ '…'
+                                    : formation.objective|striptags }}
+                            </p>
+                        {% endif %}
+                        <p>
+                            {# normalize HTML description to plain text for summary #}
+                            {% set plainDesc = formation.description|striptags %}
+                            {{ plainDesc|length > 100
+                                ? plainDesc|slice(0, 100) ~ '…'
+                                : plainDesc }}
+                        </p>
+                        <div class="card__footer">
+                            <span class="pill">{{ formation.category }}</span>
+                            <span>
+                                {{ formation.startDate ? formation.startDate|date('d/m/Y') : '' }}
+                                -
+                                {{ formation.endDate ? formation.endDate|date('d/m/Y') : '' }}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>

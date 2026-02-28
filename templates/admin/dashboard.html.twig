@@ -18,20 +18,15 @@
             </div>
         </div>
 
-        <nav style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
-            {% for item in navigation|default([]) %}
-            <a href="{{ item.path }}" 
-               style="padding: 8px 16px; text-decoration: none; border-radius: 6px; {% if app.request.pathinfo == item.path or (item.name == 'Validation des Comptes' and app.request.pathinfo starts with '/admin') %}background-color: #f0f4ff; color: #2563eb; font-weight: 600;{% else %}color: #6b7280;{% endif %} transition: all 0.3s;">
-                <span style="margin-right: 4px;">{{ item.icon }}</span>{{ item.name }}
-            </a>
-            {% endfor %}
-        </nav>
-
         <div class="portal__content">
-            {% for message in app.flashes('success') %}
-            <div class="pill" style="margin-bottom: 16px; color: #059669; background-color: #ecfdf5; border: 1px solid #6ee7b7;">
-                ✓ {{ message }}
-            </div>
+            {# Messages Flash #}
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ type === 'success' ? 'success' : 'danger' }} alert-dismissible fade show" style="margin-bottom: 16px;" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
             {% endfor %}
 
             <!-- PENDING MEDECINS -->

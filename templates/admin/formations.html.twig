@@ -1,0 +1,39 @@
+{# templates/admin/formations.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Formations
+{% endblock %}
+
+{% block body %}
+	<h1>Formations</h1>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Title</th>
+				<th>Description</th>
+				<th>Statut</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for formation in formations %}
+				<tr>
+					<td>{{ formation.title }}</td>
+					<td>{{ formation.description }}</td>
+					<td>{{ formation.statut }}</td>
+					<td>
+						<a href="{{ path('admin_formation_resources', {'id': formation.id}) }}">Voir Ressources</a>
+						{# Add other actions if needed #}
+					</td>
+				</tr>
+				
+
+			{% else %}
+				<tr>
+					<td colspan="4">Aucune formation disponible.</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

@@ -1,40 +1,28 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier la consultation{% endblock %}
+{% block title %}Edit Consultation{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
-{% endblock %}
-
-{% block javascripts %}
-    <script src="{{ asset('assets/js/consultation-slots.js') }}"></script>
 {% endblock %}
 
 {% block body %}
 <div class="portal__content portal__card">
 
     <header class="portal__header">
-        <h1 class="portal__title">Modifier la consultation</h1>
-        <p class="portal__subtitle">Mettre à jour les détails de la consultation.</p>
+        <h1 class="portal__title">Edit Consultation</h1>
+        <p class="portal__subtitle">Update the consultation details.</p>
     </header>
 
-    {{ form_start(form, {'attr': {'class': 'form', 'novalidate': 'novalidate'}}) }}
+    {{ form_start(form, {'attr': {'class': 'form'}}) }}
 
         <div class="form__fields">
-            {{ form_row(form.dateConsultation) }}
-            {{ form_row(form.timeSlot) }}
-            {% include 'consultation/slots-helper.html.twig' %}
-            {{ form_row(form.motif) }}
-            {{ form_row(form.name) }}
-            {{ form_row(form.familyName) }}
-            {{ form_row(form.email) }}
-            {{ form_row(form.sex) }}
-            {{ form_row(form.age) }}
+            {{ form_widget(form) }}
         </div>
 
         <div class="form__actions">
-            <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Annuler</a>
-            <button type="submit" class="btn btn--primary">Mettre à jour la consultation</button>
+            <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Cancel</a>
+            <button type="submit" class="btn btn--primary">Update Consultation</button>
         </div>
 
     {{ form_end(form) }}

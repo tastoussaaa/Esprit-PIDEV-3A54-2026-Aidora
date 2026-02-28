@@ -4,153 +4,6 @@
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
-    <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .stats-box {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(7, 19, 31, 0.06);
-        }
-
-        .calendar-box {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(7, 19, 31, 0.06);
-        }
-
-        .upcoming-consultations {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(7, 19, 31, 0.06);
-            grid-column: 1 / -1;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(45, 230, 215, 0.1));
-            border: 1px solid rgba(0, 123, 255, 0.2);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .stat-card-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #007bff;
-            margin: 8px 0;
-        }
-
-        .stat-card-label {
-            font-size: 12px;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        .fc {
-            font-family: inherit;
-            font-size: 13px;
-        }
-
-        .fc .fc-button-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-
-        .fc .fc-button-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .fc .fc-button-primary.fc-button-active {
-            background-color: #0056b3;
-        }
-
-        .consultation-item {
-            border-left: 4px solid #007bff;
-            padding: 12px;
-            margin-bottom: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
-
-        .consultation-item.pending {
-            border-left-color: #ffc107;
-        }
-
-        .consultation-item.accepted {
-            border-left-color: #28a745;
-        }
-
-        .consultation-item.declined {
-            border-left-color: #dc3545;
-        }
-
-        .consultation-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .consultation-meta {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .consultation-status {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .consultation-status.pending {
-            background: rgba(255, 193, 7, 0.2);
-            color: #856404;
-        }
-
-        .consultation-status.accepted {
-            background: rgba(40, 167, 69, 0.2);
-            color: #155724;
-        }
-
-        .consultation-status.declined {
-            background: rgba(220, 53, 69, 0.2);
-            color: #721c24;
-        }
-
-        .no-consultations {
-            text-align: center;
-            padding: 32px;
-            color: var(--muted);
-        }
-
-        h4 {
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-    </style>
 {% endblock %}
 
 {% block body %}
@@ -175,7 +28,7 @@
             <div>
                 <h1 class="portal__title">Dashboard</h1>
                 <p class="portal__subtitle">
-                    Vue d'ensemble de votre activité médicale
+                    Vue d’ensemble de votre activité médicale
                 </p>
             </div>
 
@@ -184,60 +37,18 @@
 
         <div class="portal__content">
 
-            <!-- Statistics -->
-            <div class="dashboard-grid">
-                <div class="stats-box">
-                    <h4 style="margin-top: 0;">Statistiques</h4>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-card-label">Consultations</div>
-                            <div class="stat-card-value">{{ consultations|length }}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-label">À venir</div>
-                            <div class="stat-card-value">{{ upcomingConsultations|length }}</div>
-                        </div>
+            <div class="box">
+                <h3>Statistiques</h3>
+                <div class="boxGrid">
+                    <div class="mini">
+                        <div class="mini__title">Consultations</div>
+                        <div class="mini__value">24</div>
+                    </div>
+                    <div class="mini">
+                        <div class="mini__title">Formations</div>
+                        <div class="mini__value">5</div>
                     </div>
                 </div>
-
-                <!-- Calendar -->
-                <div class="calendar-box">
-                    <h4 style="margin-top: 0;">Calendrier</h4>
-                    <div id="calendar" style="height: 400px;"></div>
-                </div>
-            </div>
-
-            <!-- Upcoming Consultations -->
-            <div class="upcoming-consultations">
-                <h4>Consultations à venir (7 prochains jours)</h4>
-                {% if upcomingConsultations|length > 0 %}
-                    <div>
-                        {% for consultation in upcomingConsultations %}
-                            <div class="consultation-item {{ consultation.status }}">
-                                <div class="consultation-title">{{ consultation.motif }}</div>
-                                <div class="consultation-meta">
-                                    <strong>Patient:</strong> {{ consultation.name }} {{ consultation.familyName }}<br>
-                                    <strong>Date & Heure:</strong> {{ consultation.dateConsultation|date('d/m/Y') }} 
-                                    {% if consultation.timeSlot %}à {{ consultation.timeSlot }}{% endif %}<br>
-                                    <strong>Email:</strong> {{ consultation.email }}
-                                </div>
-                                <span class="consultation-status {{ consultation.status }}">
-                                    {% if consultation.status == 'pending' %}
-                                        ⏳ En attente
-                                    {% elseif consultation.status == 'accepted' %}
-                                        ✅ Acceptée
-                                    {% else %}
-                                        ❌ Refusée
-                                    {% endif %}
-                                </span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="no-consultations">
-                        <p>Aucune consultation prévue pour les 7 prochains jours.</p>
-                    </div>
-                {% endif %}
             </div>
 
         </div>
@@ -245,56 +56,6 @@
     </main>
 
 </div>
-
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
-    
-    // Prepare events from consultations
-    const events = [
-        {% for consultation in consultations %}
-            {
-                id: '{{ consultation.id }}',
-                title: '{{ consultation.motif|escape('js') }}',
-                date: '{{ consultation.dateConsultation|date('Y-m-d') }}',
-                {% if consultation.timeSlot %}
-                    time: '{{ consultation.timeSlot }}',
-                {% endif %}
-                backgroundColor: '{% if consultation.status == "accepted" %}#28a745{% elseif consultation.status == "pending" %}#ffc107{% else %}#dc3545{% endif %}',
-                borderColor: '{% if consultation.status == "accepted" %}#28a745{% elseif consultation.status == "pending" %}#ffc107{% else %}#dc3545{% endif %}',
-                extendedProps: {
-                    patient: '{{ consultation.name }} {{ consultation.familyName }}',
-                    status: '{{ consultation.status }}',
-                    email: '{{ consultation.email }}'
-                }
-            },
-        {% endfor %}
-    ];
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'fr',
-        events: events,
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,dayGridWeek,listMonth'
-        },
-        eventClick: function(info) {
-            const event = info.event;
-            const props = event.extendedProps;
-            const message = `Consultation: ${event.title}\nPatient: ${props.patient}\nDate: ${event.startStr}\nStatut: ${props.status}`;
-            // You can open a modal or redirect here
-        },
-        datesSet: function(info) {
-            // Calendar date changed
-        }
-    });
-
-    calendar.render();
-});
-</script>
 
 {% endblock %}
 

@@ -15,20 +15,44 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-
+use App\Service\AiDescriptionService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 class MedecinController extends BaseController
 {
     private RiskScoringService $riskService;
+    private AiDescriptionService $aiService;
 
-    public function __construct(UserService $userService, private MailerInterface $mailer, RiskScoringService $riskService)
+    public function __construct(UserService $userService, private MailerInterface $mailer, RiskScoringService $riskService, AiDescriptionService $aiService)
     {
         parent::__construct($userService);
         $this->riskService = $riskService;
+        $this->aiService = $aiService;
     }
 
+
+        
+    
+
     #[Route('/medecin/dashboard', name: 'app_medecin_dashboard')]
-    public function dashboard(ConsultationRepository $consultationRepository): Response
+    public function dashboard(): Response
     {
+        // Ensure user is authenticated
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        // Ensure only medecins can access this dashboard
+        if (!$this->isCurrentUserMedecin()) {
+            $userType = $this->getCurrentUserType();
+            return match ($userType) {
+                'patient' => $this->redirectToRoute('app_patient_dashboard'),
+                'aidesoignant' => $this->redirectToRoute('app_aide_soignant_dashboard'),
+                'admin' => $this->redirectToRoute('app_admin_dashboard'),
+                default => $this->redirectToRoute('app_login'),
+            };
+        }
+
+        $medecin = $this->getCurrentMedecin();
+        $userId = $this->getCurrentUserId();
+
         $medecin = $this->getCurrentMedecin();
         $userId = $this->getCurrentUserId();
         
@@ -52,8 +76,6 @@ class MedecinController extends BaseController
         return $this->render('medecin/dashboard.html.twig', [
             'medecin' => $medecin,
             'userId' => $userId,
-            'consultations' => $consultations,
-            'upcomingConsultations' => $upcomingConsultations,
         ]);
     }
 
@@ -135,11 +157,11 @@ class MedecinController extends BaseController
 
             // Chronic count heuristic from patient.pathologie (comma separated)
             $chronic = 0;
-            $patient = $c->getPatient();
+        /*     $patient = $c->getPatient();
             if ($patient && $patient->getPathologie()) {
                 $parts = preg_split('/[,;]+/', $patient->getPathologie());
                 $chronic = count(array_filter(array_map('trim', $parts)));
-            }
+            } */
 
             // AI probability heuristic (higher if urgent keywords present)
             $aiProb = 0.15;
@@ -171,11 +193,13 @@ class MedecinController extends BaseController
         ]);
     }
 
-    #[Route('/medecin/formations/new', name: 'medecin_formation_new')]
+ #[Route('/medecin/formations/new', name: 'medecin_formation_new')]
     public function newFormation(
         Request $request,
         EntityManagerInterface $em
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $medecin = $this->getCurrentMedecin();
         if (!$medecin) {
             throw $this->createAccessDeniedException('You must be a medecin to create formations');
@@ -191,6 +215,13 @@ class MedecinController extends BaseController
             $em->persist($formation);
             $em->flush();
 
+            $this->addFlash('formation_success', [
+                'title' => $formation->getTitle(),
+                'description' => $formation->getDescription(),
+                'start' => $formation->getStartDate()->format('Ymd\THis') . 'Z',
+                'end' => $formation->getEndDate()->format('Ymd\THis') . 'Z',
+            ]);
+
             return $this->redirectToRoute('medecin_formations');
         }
 
@@ -204,16 +235,10 @@ class MedecinController extends BaseController
         Consultation $consultation,
         EntityManagerInterface $em
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $consultation->setStatus('accepted');
         $em->flush();
-
-        // Send email notification to patient
-        try {
-            $this->sendConsultationStatusEmail($consultation, 'accepted');
-        } catch (\Exception $e) {
-            // Log the error but don't fail the acceptance
-            error_log('Failed to send acceptance email: ' . $e->getMessage());
-        }
 
         $this->addFlash('success', 'Consultation accepted successfully!');
         return $this->redirectToRoute('medecin_consultations');
@@ -224,16 +249,10 @@ class MedecinController extends BaseController
         Consultation $consultation,
         EntityManagerInterface $em
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $consultation->setStatus('declined');
         $em->flush();
-
-        // Send email notification to patient
-        try {
-            $this->sendConsultationStatusEmail($consultation, 'declined');
-        } catch (\Exception $e) {
-            // Log the error but don't fail the decline
-            error_log('Failed to send decline email: ' . $e->getMessage());
-        }
 
         $this->addFlash('success', 'Consultation declined successfully!');
         return $this->redirectToRoute('medecin_consultations');
@@ -245,6 +264,8 @@ class MedecinController extends BaseController
         Consultation $consultation,
         EntityManagerInterface $em
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         if ($this->isCsrfTokenValid('delete' . $consultation->getId(), $request->request->get('_token'))) {
             $em->remove($consultation);
             $em->flush();
@@ -274,6 +295,23 @@ class MedecinController extends BaseController
             ]));
 
         $this->mailer->send($email);
+    }
+
+
+    #[Route('/medecin/generate-description', name: 'medecin_formation_generate_description', methods: ['POST'])]   
+     public function generateDescription(Request $request): JsonResponse
+    {
+        $data = [
+            'title' => $request->request->get('title', ''),
+            'category' => $request->request->get('category', ''),
+            'startDate' => $request->request->get('startDate', ''),
+            'endDate' => $request->request->get('endDate', ''),
+        ];
+
+        // Generate AI description
+       $description = $this->aiService->generateDescription($data);
+
+        return new JsonResponse(['description' => $description]);
     }
 }
 

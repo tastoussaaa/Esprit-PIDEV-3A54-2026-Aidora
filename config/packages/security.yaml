@@ -39,14 +39,13 @@ security:
         # Public routes
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/medecin, roles: PUBLIC_ACCESS }
-        - { path: ^/patient, roles: PUBLIC_ACCESS }
-        - { path: ^/consultation, roles: PUBLIC_ACCESS }
-        - { path: ^/ordonnance, roles: PUBLIC_ACCESS }
-        - { path: ^/Ordonnance, roles: PUBLIC_ACCESS }
         
         # Admin routes
         - { path: ^/admin, roles: ROLE_ADMIN }
+        
+        
+        # Patient routes
+        - { path: ^/patient, roles: ROLE_USER }
         
         # AideSoignant routes
         - { path: ^/aidesoingnant, roles: ROLE_USER }
@@ -54,8 +53,7 @@ security:
         - { path: ^/aidesoignant, roles: ROLE_USER }
         - { path: ^/aide-soignant, roles: ROLE_USER }
         
-        # Make the application public for development (disable login requirement)
-        - { path: ^/, roles: PUBLIC_ACCESS }
+
 
 when@test:
     security:

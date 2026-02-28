@@ -203,6 +203,14 @@
 
         <div class="box" style="max-width: 900px; margin: 0 auto;">
             <form id="demandeForm" method="POST" action="{{ path('app_demande_aide_edit', {id: demande.id}) }}" novalidate>
+                <!-- Titre de la demande -->
+                <div class="form-group">
+                    <label for="titreD">Titre de la demande * <span class="char-count" id="titreCharCount">({{ demande.titreD|length }}/5000)</span></label>
+                    <input type="text" id="titreD" name="demande_aide[TitreD]" minlength="10" maxlength="5000" required value="{{ demande.titreD }}">
+                    <div class="error-message"></div>
+                    <div class="success-message">Valide</div>
+                </div>
+
                 <!-- Type de demande -->
                 <div class="form-group">
                     <label for="typeDemande">Type de demande *</label>
@@ -218,7 +226,7 @@
 
                 <!-- Description du besoin -->
                 <div class="form-group">
-                    <label for="descriptionBesoin">Description du besoin * <span class="char-count">({{ demande.descriptionBesoin|length }}/5000)</span></label>
+                    <label for="descriptionBesoin">Description du besoin * <span class="char-count" id="descCharCount">({{ demande.descriptionBesoin|length }}/5000)</span></label>
                     <textarea id="descriptionBesoin" name="demande_aide[descriptionBesoin]" minlength="10" maxlength="5000" required rows="4">{{ demande.descriptionBesoin }}</textarea>
                     <div class="error-message"></div>
                     <div class="success-message">Valide</div>
@@ -319,6 +327,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
     const validations = {
+        titreD: {
+            required: true,
+            validate: (val) => val.length >= 10 && val.length <= 5000,
+            errorMsg: (val) => {
+                if (!val) return 'Obligatoire';
+                if (val.length < 10) return `Min 10 caractères (${val.length}/10)`;
+                return 'Valide';
+            }
+        },
         typeDemande: {
             required: true,
             validate: (val) => ['URGENT', 'NORMAL', 'ECONOMIE'].includes(val),
@@ -502,9 +519,15 @@
     }
 
     // Char count
+    const titreField = document.getElementById('titreD');
+    titreField.addEventListener('input', function() {
+        document.getElementById('titreCharCount').textContent = `(${this.value.length}/5000)`;
+        if (this.classList.contains('error')) validateField('titreD', true);
+    });
+
     const descField = document.getElementById('descriptionBesoin');
     descField.addEventListener('input', function() {
-        document.querySelector('.char-count').textContent = `(${this.value.length}/5000)`;
+        document.getElementById('descCharCount').textContent = `(${this.value.length}/5000)`;
         if (this.classList.contains('error')) validateField('descriptionBesoin', true);
     });
 

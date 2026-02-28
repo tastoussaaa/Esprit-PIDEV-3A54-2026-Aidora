@@ -6,126 +6,6 @@
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn-modal {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .btn-modal--primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-modal--primary:hover {
-            background: #0056b3;
-        }
-
-        .btn-modal--secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-modal--secondary:hover {
-            background: #545b62;
-        }
-
-        .alert {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .alert--success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert--error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
         #map {
             height: 400px;
             border-radius: 8px;
@@ -257,12 +137,95 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(245, 127, 23, 0.2);
         }
+
+        .traceability-message {
+            margin: 16px 0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .traceability-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 280px;
+            max-width: 420px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            display: none;
+        }
+
+        .traceability-toast--success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+        }
+
+        .traceability-toast--error {
+            background: #F8D7DA;
+            color: #721C24;
+            border: 1px solid #F5C6CB;
+        }
+
+        .traceability-message--success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+        }
+
+        .traceability-message--error {
+            background: #F8D7DA;
+            color: #721C24;
+            border: 1px solid #F5C6CB;
+        }
+
+        .traceability-meta {
+            margin: 16px 0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            border-left: 4px solid #13B8C2;
+            font-size: 13px;
+            color: #444;
+        }
+
+        .actions button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status--completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+
+        .status--expired {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+
+        .status--cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid rgba(198, 40, 40, 0.15);
+        }
     </style>
 {% endblock %}
 
 {% block body %}
 
 <div class="portal">
+    <div id="traceabilityToast" class="traceability-toast"></div>
+
     {% include 'side_bar.html.twig' %}
 
     <main class="portal__main">
@@ -276,18 +239,31 @@
         <div class="box" style="max-width: 900px; margin: 0 auto;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
                 <div>
-                    <h2 style="margin: 0 0 12px 0;">{{ demande.typeDemande }}</h2>
+                    <h2 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h2>
                     <span class="status-badge status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
                 </div>
                 <div style="text-align: right;">
                     <h3 style="margin: 0 0 8px 0;">Statut</h3>
-                    <span class="status-badge status--{{ demande.statut|lower|replace({'_': '_'}) }}">{{ demande.statut|replace({'_': ' '}) }}</span>
+                    {% set statusClass = {
+                        'ACCEPTÉE': 'accepted',
+                        'EN_ATTENTE': 'en_attente',
+                        'A_REASSIGNER': 'en_attente',
+                        'REFUSÉE': 'refused',
+                        'TERMINÉE': 'completed',
+                        'EXPIRÉE': 'expired',
+                        'ANNULÉE': 'cancelled'
+                    }[demande.statut] ?? demande.statut|lower|replace({'_': '_'}) %}
+                    <span class="status-badge status--{{ statusClass }}">{{ demande.statut|replace({'_': ' '}) }}</span>
                 </div>
             </div>
 
             <div class="details-grid">
                 <div class="detail-section">
                     <h3>📋 Informations générales</h3>
+                    <div class="detail-item">
+                        <div class="detail-label">Titre de la demande</div>
+                        <div class="detail-value">{{ demande.titreD }}</div>
+                    </div>
                     <div class="detail-item">
                         <div class="detail-label">Description du besoin</div>
                         <div class="detail-value">{{ demande.descriptionBesoin }}</div>
@@ -321,8 +297,8 @@
                         <div class="detail-value">{{ demande.dateCreation ? demande.dateCreation|date('d/m/Y à H:i') : 'N/A' }}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Début souhaitée</div>
-                        <div class="detail-value">{{ demande.dateDebutSouhaitee ? demande.dateDebutSouhaitee|date('d/m/Y à H:i') : 'N/A' }}</div>
+                        <div class="detail-label">Début mission (RDV)</div>
+                        <div class="detail-value">{{ mission and mission.dateDebut ? mission.dateDebut|date('d/m/Y à H:i') : (demande.dateDebutSouhaitee ? demande.dateDebutSouhaitee|date('d/m/Y à H:i') : 'N/A') }}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Fin souhaitée</div>
@@ -354,11 +330,70 @@
                 </div>
             {% endif %}
 
+            <div id="traceabilityMessage" class="traceability-message"></div>
+
+            {% if mission %}
+                <div class="traceability-meta">
+                    <strong>Traçabilité mission:</strong>
+                    Check-in: {{ mission.checkInAt ? mission.checkInAt|date('d/m/Y H:i:s') : 'Non effectué' }} |
+                    Check-out: {{ mission.checkOutAt ? mission.checkOutAt|date('d/m/Y H:i:s') : 'Non effectué' }} |
+                    Vérification: {{ mission.statusVerification ?? 'PENDING' }}
+                </div>
+            {% endif %}
+
+            {% if mission and (demande.statut == 'ACCEPTÉE' or mission.statutMission == 'ACCEPTÉE') and not mission.checkOutAt %}
+                <div class="detail-section" style="margin-bottom: 12px;">
+                    <h3>📎 Preuves optionnelles (check-out)</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label for="proofPhotoInput" style="display:block; font-weight:600; margin-bottom: 6px;">Photo preuve</label>
+                            <input id="proofPhotoInput" type="file" accept="image/*" style="width:100%;">
+                        </div>
+                        <div>
+                            <label for="signatureInput" style="display:block; font-weight:600; margin-bottom: 6px;">Signature (image)</label>
+                            <input id="signatureInput" type="file" accept="image/*" style="width:100%;">
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
             <div class="actions">
                 <a href="{{ path('aidesoingnant_missions') }}" class="btn-back">← Retour</a>
-                <form method="POST" action="{{ path('aidesoingnant_missions_delete', {'id': demande.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette mission ? Cette action est irréversible.');">
-                    <button type="submit" class="btn-danger">🗑️ Supprimer</button>
-                </form>
+                {% if mission and (demande.statut == 'ACCEPTÉE' or mission.statutMission == 'ACCEPTÉE') %}
+                    <button
+                        type="button"
+                        id="checkinBtn"
+                        class="btn-success"
+                        data-url="{{ path('mission_checkin', {'id': mission.id}) }}"
+                        {% if mission.checkInAt %}disabled{% endif %}
+                    >📍 Check-in</button>
+                    <button
+                        type="button"
+                        id="checkoutBtn"
+                        class="btn-warning"
+                        data-url="{{ path('mission_checkout', {'id': mission.id}) }}"
+                        {% if not mission.checkInAt or mission.checkOutAt %}disabled{% endif %}
+                    >✅ Check-out</button>
+                    {% if mission.checkOutAt %}
+                        <a href="{{ path('mission_pdf_download', {'id': mission.id}) }}" class="btn-success" style="text-decoration: none;">
+                            📄 Télécharger PDF
+                        </a>
+                    {% endif %}
+                    {% if mission.finalStatus != 'ANNULÉE' %}
+                        <form method="POST" action="{{ path('aidesoingnant_missions_cancel', {'id': demande.id}) }}" style="margin-left: auto; display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette mission ?');">
+                            <button type="submit" class="btn-danger" {% if mission.finalStatus %}disabled{% endif %}>✗ Annuler</button>
+                        </form>
+                    {% endif %}
+                {% elseif mission %}
+                    <div style="background: #FFF9C4; padding: 12px 16px; border-radius: 6px; border-left: 4px solid #FBC02D; margin-left: auto;">
+                        <strong style="color: #F57F17;">⚠️ Check-in/out disponible uniquement pour les missions acceptées</strong>
+                    </div>
+                    {% if mission.finalStatus != 'ANNULÉE' %}
+                        <form method="POST" action="{{ path('aidesoingnant_missions_cancel', {'id': demande.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette mission ?');">
+                            <button type="submit" class="btn-danger" {% if mission.finalStatus %}disabled{% endif %}>✗ Annuler</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </main>
@@ -366,128 +401,156 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-    // Initialiser la carte
-    const map = L.map('map').setView([{{ demande.latitude }}, {{ demande.longitude }}], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 19
-    }).addTo(map);
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+        const map = L.map('map').setView([{{ demande.latitude }}, {{ demande.longitude }}], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
 
-    // Ajouter le marker
-    L.marker([{{ demande.latitude }}, {{ demande.longitude }}]).addTo(map)
-        .bindPopup('<b>{{ demande.lieu ?? 'Demande d\'aide' }}</b>');
-
-    // Price proposal modal functions
-    let currentDemandeId = null;
-    let maxBudget = 0;
-
-    function openPriceModal(demandeId, budgetMax) {
-        currentDemandeId = demandeId;
-        maxBudget = budgetMax;
-
-        document.getElementById('proposedPrice').value = budgetMax;
-        document.getElementById('proposedPrice').max = budgetMax;
-        document.getElementById('priceModal').style.display = 'block';
-        document.getElementById('alertContainer').style.display = 'none';
-
-        // Focus on input
-        setTimeout(() => {
-            document.getElementById('proposedPrice').focus();
-        }, 100);
+        L.marker([{{ demande.latitude }}, {{ demande.longitude }}]).addTo(map)
+            .bindPopup('<b>{{ demande.lieu ?? 'Demande d\'aide' }}</b>');
     }
 
-    function closePriceModal() {
-        document.getElementById('priceModal').style.display = 'none';
-        document.getElementById('priceForm').reset();
-        currentDemandeId = null;
-        maxBudget = 0;
+    function showTraceabilityMessage(type, message) {
+        const messageBox = document.getElementById('traceabilityMessage');
+        const toast = document.getElementById('traceabilityToast');
+
+        if (!messageBox) return;
+
+        messageBox.className = 'traceability-message';
+        messageBox.classList.add(type === 'success' ? 'traceability-message--success' : 'traceability-message--error');
+        messageBox.textContent = message;
+        messageBox.style.display = 'block';
+
+        if (toast) {
+            toast.className = 'traceability-toast';
+            toast.classList.add(type === 'success' ? 'traceability-toast--success' : 'traceability-toast--error');
+            toast.textContent = message;
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
     }
 
-    document.getElementById('priceForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const proposedPrice = parseFloat(document.getElementById('proposedPrice').value);
-        const alertContainer = document.getElementById('alertContainer');
-
-        // Validation
-        if (isNaN(proposedPrice) || proposedPrice <= 0) {
-            showAlert('Le prix doit être un nombre positif.', 'error');
-            return;
-        }
-
-        if (proposedPrice >= maxBudget) {
-            showAlert('Le prix proposé doit être inférieur au budget maximum.', 'error');
-            return;
-        }
-
-        // Send AJAX request
-        fetch('/aidesoingnant/missions/propose-price/' + currentDemandeId, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                proposedPrice: proposedPrice
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('Prix proposé avec succès!', 'success');
-                setTimeout(() => {
-                    closePriceModal();
-                    location.reload(); // Refresh to show updated price
-                }, 1500);
-            } else {
-                showAlert(data.message || 'Erreur lors de la proposition du prix.', 'error');
+    function getCurrentPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('La géolocalisation n\'est pas supportée par votre navigateur.'));
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Erreur lors de la communication avec le serveur.', 'error');
-        });
-    });
 
-    function showAlert(message, type) {
-        const alertContainer = document.getElementById('alertContainer');
-        alertContainer.textContent = message;
-        alertContainer.className = 'alert alert--' + type;
-        alertContainer.style.display = 'block';
+            navigator.geolocation.getCurrentPosition(
+                (position) => resolve(position),
+                (error) => {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        reject(new Error('Vous devez autoriser la géolocalisation pour continuer.'));
+                    } else {
+                        reject(new Error('Impossible de récupérer votre position actuelle.'));
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
     }
 
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('priceModal');
-        if (event.target == modal) {
-            closePriceModal();
+    async function submitTraceabilityAction(buttonElement, actionLabel) {
+        try {
+            buttonElement.disabled = true;
+            const originalText = buttonElement.textContent;
+            buttonElement.textContent = actionLabel + ' en cours...';
+
+            const position = await getCurrentPosition();
+            const payload = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                consent: true
+            };
+
+            if (actionLabel === 'Check-out') {
+                const proofPhotoInput = document.getElementById('proofPhotoInput');
+                const signatureInput = document.getElementById('signatureInput');
+
+                if (proofPhotoInput && proofPhotoInput.files && proofPhotoInput.files[0]) {
+                    payload.proofPhotoData = await fileToDataUrl(proofPhotoInput.files[0]);
+                }
+
+                if (signatureInput && signatureInput.files && signatureInput.files[0]) {
+                    payload.signatureData = await fileToDataUrl(signatureInput.files[0]);
+                }
+            }
+
+            const response = await fetch(buttonElement.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const rawBody = await response.text();
+            let data = null;
+
+            try {
+                data = JSON.parse(rawBody);
+            } catch (_e) {
+                data = {
+                    success: false,
+                    message: response.ok
+                        ? 'Réponse serveur invalide (JSON attendu).'
+                        : 'Erreur serveur inattendue. Veuillez réessayer.'
+                };
+            }
+
+            if (!response.ok || !data.success) {
+                showTraceabilityMessage('error', data.message || 'Une erreur est survenue.');
+                buttonElement.disabled = false;
+                buttonElement.textContent = originalText;
+                return;
+            }
+
+            showTraceabilityMessage('success', data.message || 'Action enregistrée avec succès.');
+            setTimeout(() => window.location.reload(), 1200);
+        } catch (error) {
+            showTraceabilityMessage('error', error.message || 'Une erreur est survenue.');
+            buttonElement.disabled = false;
+            if (actionLabel === 'Check-in') {
+                buttonElement.textContent = '📍 Check-in';
+            } else {
+                buttonElement.textContent = '✅ Check-out';
+            }
         }
     }
+
+    const checkinBtn = document.getElementById('checkinBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    function fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('Impossible de lire le fichier de preuve.'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (checkinBtn) {
+        checkinBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            submitTraceabilityAction(checkinBtn, 'Check-in');
+        });
+    }
+
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            submitTraceabilityAction(checkoutBtn, 'Check-out');
+        });
+    }
+
 </script>
-
-<!-- Price Proposal Modal -->
-<div id="priceModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Proposer un prix</h3>
-            <span class="close" onclick="closePriceModal()">&times;</span>
-        </div>
-
-        <div id="alertContainer" class="alert" style="display: none;"></div>
-
-        <form id="priceForm">
-            <div class="form-group">
-                <label for="proposedPrice">Prix proposé (DT)</label>
-                <input type="number" id="proposedPrice" name="proposedPrice" min="0" step="0.01" required>
-                <small style="color: #666; font-size: 12px;">Le prix doit être positif et inférieur au budget maximum.</small>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn-modal btn-modal--secondary" onclick="closePriceModal()">Annuler</button>
-                <button type="submit" class="btn-modal btn-modal--primary">Proposer</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 {% endblock %}

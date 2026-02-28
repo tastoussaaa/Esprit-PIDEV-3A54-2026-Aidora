@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Missions - Admin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .admin-filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 220px auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .admin-filter-grid input,
+        .admin-filter-grid select {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .admin-filter-grid button {
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+
+        .admin-table-wrap {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .admin-table thead th {
+            text-align: left;
+            font-size: 13px;
+            color: #666;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            background: #fafafa;
+        }
+
+        .admin-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #fcfcfc;
+        }
+
+        .actions-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-mini {
+            border: 1px solid transparent;
+            color: #334155;
+            border-radius: 6px;
+            padding: 6px 9px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-mini:hover {
+            filter: brightness(0.98);
+            color: #334155;
+        }
+
+        .btn-mini--view { background: #bfdbfe; border-color: #93c5fd; }
+        .btn-mini--edit { background: #fde68a; border-color: #fcd34d; }
+        .btn-mini--delete { background: #fecaca; border-color: #fca5a5; }
+
+        .status-chip {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-success { background: #bbf7d0; color: #14532d; }
+        .status-warning { background: #fde68a; color: #78350f; }
+        .status-danger { background: #fecaca; color: #7f1d1d; }
+        .status-expired { background: #ddd6fe; color: #4c1d95; }
+        .status-dark { background: #e2e8f0; color: #1e293b; }
+
+        @media (max-width: 900px) {
+            .admin-filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">🎯 Gestion des Missions</h1>
+                <p class="portal__subtitle">Même style que l’historique aide-soignant/patient, côté admin</p>
+            </div>
+        </div>
+
+        <div class="portal__content">
+    {# Messages Flash #}
+    {% if app.flashes %}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type === 'success' ? 'success' : 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    {# Filter Form #}
+            <div class="box" style="margin-bottom: 16px;">
+                <form method="get" class="admin-filter-grid">
+                    <input type="text" name="search" placeholder="🔍 Rechercher une mission..." value="{{ search }}">
+                    <select name="statut">
+                        <option value="">Tous les statuts</option>
+                        <option value="EN_COURS" {{ statut === 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                        <option value="ACCEPTÉE" {{ statut === 'ACCEPTÉE' ? 'selected' : '' }}>Acceptée</option>
+                        <option value="TERMINÉE" {{ statut === 'TERMINÉE' ? 'selected' : '' }}>Terminée</option>
+                        <option value="ANNULÉE" {{ statut === 'ANNULÉE' ? 'selected' : '' }}>Annulée</option>
+                    </select>
+                    <button type="submit" class="btn btn--primary">Filtrer</button>
+                </form>
+            </div>
+
+    {# Missions Table #}
+            <div class="box">
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                    <tr>
+                        <th>Demande</th>
+                        <th>Aide-Soignant</th>
+                        <th>Statut</th>
+                        <th>Date Début</th>
+                        <th>Date Fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                        </thead>
+                        <tbody>
+                    {% if missions|length > 0 %}
+                        {% for mission in missions %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {% if mission.demandeAide and mission.demandeAide.titreD %}
+                                            {{ mission.demandeAide.titreD|length > 30 ? mission.demandeAide.titreD|slice(0, 30) ~ '…' : mission.demandeAide.titreD }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                                <td>{{ mission.aideSoignant ? (mission.aideSoignant.nom ~ ' ' ~ mission.aideSoignant.prenom) : 'Non attribuée' }}</td>
+                                <td>
+                                    {% set statusClass = mission.statutMission == 'ACCEPTÉE' ? 'status-success' : (mission.statutMission == 'TERMINÉE' ? 'status-dark' : (mission.statutMission == 'EXPIRÉE' ? 'status-expired' : (mission.statutMission == 'ANNULÉE' ? 'status-danger' : 'status-warning'))) %}
+                                    <span class="status-chip {{ statusClass }}">
+                                        {{ mission.statutMission|replace({'_': ' '}) }}
+                                    </span>
+                                </td>
+                                <td>{{ mission.dateDebut ? mission.dateDebut|date('d/m/Y') : '-' }}</td>
+                                <td>{{ mission.dateFin ? mission.dateFin|date('d/m/Y') : '-' }}</td>
+                                <td>
+                                    <div class="actions-inline">
+                                    <a href="{{ path('admin_missions_show', {id: mission.id}) }}" class="btn-mini btn-mini--view" title="Voir">👁️</a>
+                                    <a href="{{ path('admin_missions_edit', {id: mission.id}) }}" class="btn-mini btn-mini--edit" title="Modifier">✏️</a>
+                                    <form method="post" action="{{ path('admin_missions_delete', {id: mission.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-mission-' ~ mission.id) }}">
+                                        <button type="submit" class="btn-mini btn-mini--delete" title="Supprimer">🗑️</button>
+                                    </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; color:#999; padding: 24px;">Aucune mission trouvée</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

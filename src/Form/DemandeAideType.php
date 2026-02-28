@@ -20,6 +20,16 @@ class DemandeAideType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('TitreD', TextType::class, [
+                'label' => 'Titre de la demande',
+                'attr' => [
+                    'minlength' => 10,
+                    'maxlength' => 5000,
+                    'placeholder' => 'Donnez un titre clair à votre demande...',
+                    'required' => true
+                ]
+            ])
+
             ->add('typeDemande', ChoiceType::class, [
                 'label' => 'Type de demande',
                 'choices' => [

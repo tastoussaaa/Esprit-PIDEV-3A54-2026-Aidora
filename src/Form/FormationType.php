@@ -10,6 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class FormationType extends AbstractType
 {
@@ -30,7 +31,7 @@ class FormationType extends AbstractType
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description',
-                'attr' => ['rows' => 4],
+                'attr' => ['rows' => 4, 'class' => 'ckeditor'],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La description est obligatoire.']),
                     new Assert\Length([
@@ -38,6 +39,11 @@ class FormationType extends AbstractType
                         'minMessage' => 'La description doit contenir au moins {{ limit }} caractères.'
                     ])
                 ]
+            ])
+            ->add('objective', TextareaType::class, [
+                'label' => 'Objectif',
+                'attr' => ['rows' => 4, 'class' => 'ckeditor'],
+                'required' => false
             ])
             ->add('category', TextType::class, [
                 'label' => 'Catégorie',
@@ -74,6 +80,16 @@ class FormationType extends AbstractType
                     })
                 ]
             ]);
+        ;
+
+        // Optionally include statut field when controller requests it
+        if (!empty($options['include_status'])) {
+            $builder->add('statut', ChoiceType::class, [
+                'label' => 'Statut',
+                'choices' => array_combine(Formation::STATUTS, Formation::STATUTS),
+                'required' => true,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -81,5 +97,8 @@ class FormationType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Formation::class,
         ]);
+        $resolver->setDefined(['include_status']);
+        $resolver->setAllowedTypes('include_status', ['bool']);
+        $resolver->setDefault('include_status', false);
     }
 }

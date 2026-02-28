@@ -1,0 +1,14 @@
+{% if navigation %}
+    <ul class="nav nav-pills mb-4 border-bottom pb-3">
+        {% for item in navigation %}
+            {% set isActive = item.path == '/admin'
+                ? app.request.pathinfo == '/admin'
+                : app.request.pathinfo starts with item.path %}
+            <li class="nav-item">
+                <a href="{{ item.path }}" class="nav-link {{ isActive ? 'active' : '' }}">
+                    <span class="me-1">{{ item.icon }}</span>{{ item.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

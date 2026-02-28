@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Missions{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+{% set navigation = [
+    {'name': 'Dashboard', 'path': path('aidesoingnant_dashboard'), 'icon': '🏠'},
+    {'name': 'Mes Missions', 'path': path('aidesoingnant_missions'), 'icon': '📋'},
+    {'name': 'Formation', 'path': path('aidesoingnant_formations'), 'icon': '📚'},
+] %}
+
+<div class="portal">
+
+    {% include 'side_bar.html.twig' %}
+
+    <!-- MAIN CONTENT -->
+    <main class="portal__main">
+        <div class="portal__content">
+            <h1>Mes Missions Disponibles</h1>
+
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+
+            {% if demandes is empty %}
+                <p>Aucune mission disponible pour le moment.</p>
+            {% else %}
+                <div class="missions-list">
+                    {% for demande in demandes %}
+                        <div class="mission-card">
+                            <h3>{{ demande.typeDemande }} - {{ demande.typePatient }}</h3>
+                            <p><strong>Description:</strong> {{ demande.descriptionBesoin }}</p>
+                            <p><strong>Adresse:</strong> {{ demande.adresse }}, {{ demande.ville }}</p>
+                            <p><strong>Budget Max:</strong> {{ demande.budgetMax }} DT</p>
+                            <p><strong>Date de début:</strong> {{ demande.dateDebutSouhaitee ? demande.dateDebutSouhaitee|date('d/m/Y') : 'Non spécifiée' }}</p>
+                            {% if demande.besoinCertifie %}
+                                <p><strong>Certifié requis</strong></p>
+                            {% endif %}
+
+                            <div class="mission-actions">
+                                <a href="{{ path('aidesoingnant_missions_accept', {'id': demande.id}) }}" class="btn btn-success">Accepter</a>
+                                <a href="{{ path('aidesoingnant_missions_refuse', {'id': demande.id}) }}" class="btn btn-danger">Refuser</a>
+                                <a href="{{ path('aidesoingnant_missions_details', {'id': demande.id}) }}" class="btn btn-info">Détails</a>
+                                <form method="post" action="{{ path('aidesoingnant_missions_delete', {'id': demande.id}) }}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette mission ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ demande.id) }}">
+                                    <button type="submit" class="btn btn-warning">Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+</div>
+
+<style>
+.missions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mission-card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.mission-actions {
+    margin-top: 15px;
+}
+
+.btn {
+    padding: 8px 16px;
+    margin-right: 10px;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.btn-success { background-color: #28a745; color: white; }
+.btn-danger { background-color: #dc3545; color: white; }
+.btn-info { background-color: #17a2b8; color: white; }
+.btn-warning { background-color: #ffc107; color: black; }
+
+.alert {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+</style>
+
+{% endblock %}

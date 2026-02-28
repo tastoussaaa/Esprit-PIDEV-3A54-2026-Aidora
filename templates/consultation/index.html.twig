@@ -16,11 +16,11 @@
 
         <div class="portal__top">
             <div>
-                <h1 class="portal__title">Toutes les consultations</h1>
-                <p class="portal__subtitle">Voir et gérer toutes les consultations du système.</p>
+                <h1 class="portal__title">All Consultations</h1>
+                <p class="portal__subtitle">View and manage all consultations in the system.</p>
             </div>
 
-            <a href="{{ path('consultation_new') }}" class="btn btn--primary">Nouvelle consultation</a>
+            <a href="{{ path('consultation_new') }}" class="btn btn--primary">New Consultation</a>
         </div>
 
         <div class="portal__content">
@@ -28,43 +28,43 @@
             <div class="portal__card">
                 <div style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end">
                     <form method="get" style="display:flex;gap:8px;flex:1">
-                        <input type="text" name="search" placeholder="Rechercher par motif ou patient..." value="{{ search }}" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;flex:1;font-size:14px">
+                        <input type="text" name="search" placeholder="Search by motif or patient..." value="{{ search }}" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;flex:1;font-size:14px">
                         <select name="sort" style="padding:10px 12px;border:1px solid rgba(7,19,31,.10);border-radius:10px;font-size:14px">
-                            <option value="date" {% if sort == 'date' %}selected{% endif %}>Plus récent en premier</option>
+                            <option value="date" {% if sort == 'date' %}selected{% endif %}>Newest First</option>
                             <option value="motif" {% if sort == 'motif' %}selected{% endif %}>Motif A-Z</option>
                         </select>
-                        <button type="submit" class="btn btn--primary">Rechercher</button>
+                        <button type="submit" class="btn btn--primary">Search</button>
                         {% if search or sort != 'date' %}
-                            <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Réinitialiser</a>
+                            <a href="{{ path('consultation_index') }}" class="btn btn--ghost">Reset</a>
                         {% endif %}
                     </form>
                 </div>
                 {% if consultations is empty %}
-                    <p>Aucune consultation pour le moment.</p>
+                    <p>No consultations yet.</p>
                 {% else %}
                     <div class="list">
                         {% for consultation in consultations %}
                             <div class="rowItem">
                                 <div>
-                                    <div class="rowItem__title">{{ consultation.motif }} — {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d') ~ ' ' ~ consultation.timeSlot : 'À confirmer' }}</div>
+                                    <div class="rowItem__title">{{ consultation.motif }} — {{ consultation.dateConsultation ? consultation.dateConsultation|date('Y-m-d H:i') : 'TBD' }}</div>
                                     <div class="rowItem__meta">
-                                        Patient : {{ consultation.name }} {{ consultation.familyName }} · 
-                                        Statut : 
+                                        Patient: {{ consultation.name }} {{ consultation.familyName }} · 
+                                        Status: 
                                         {% if consultation.status == 'pending' %}
-                                            <span style="color:var(--muted)">⏳ En attente</span>
+                                            <span style="color:var(--muted)">⏳ Pending</span>
                                         {% elseif consultation.status == 'accepted' %}
-                                            <span style="color:rgb(19,184,194)">✅ Accepté</span>
+                                            <span style="color:rgb(19,184,194)">✅ Accepted</span>
                                         {% else %}
-                                            <span style="color:rgb(255,107,107)">❌ Refusé</span>
+                                            <span style="color:rgb(255,107,107)">❌ Declined</span>
                                         {% endif %}
                                     </div>
                                 </div>
                                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                                    <a href="{{ path('consultation_show', {'id': consultation.id}) }}" class="btn btn--ghost">Détails</a>
-                                    <a href="{{ path('consultation_edit', {'id': consultation.id}) }}" class="btn btn--primary">Modifier</a>
+                                    <a href="{{ path('consultation_show', {'id': consultation.id}) }}" class="btn btn--ghost">Details</a>
+                                    <a href="{{ path('consultation_edit', {'id': consultation.id}) }}" class="btn btn--primary">Edit</a>
                                     <form method="post" action="{{ path('consultation_delete', {'id': consultation.id}) }}">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ consultation.id) }}">
-                                        <button type="submit" class="btn btn--ghost" onclick="return confirm('Supprimer cette consultation ?')">Supprimer</button>
+                                        <button type="submit" class="btn btn--ghost" onclick="return confirm('Delete this consultation?')">Delete</button>
                                     </form>
                                 </div>
                             </div>

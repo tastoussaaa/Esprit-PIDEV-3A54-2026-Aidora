@@ -40,6 +40,16 @@ class RegistrationController extends AbstractController
                 $error = "Email invalide.";
             } elseif (strlen($plainPassword) < 6) {
                 $error = "Mot de passe trop court (min 6).";
+            } elseif (
+                $userType === 'aidesoignant' && (
+                    trim((string)$request->request->get('sexe')) === '' ||
+                    trim((string)$request->request->get('villeIntervention')) === '' ||
+                    trim((string)$request->request->get('typePatientsAcceptes')) === '' ||
+                    !is_numeric($request->request->get('rayonInterventionKm')) || (int)$request->request->get('rayonInterventionKm') < 0 ||
+                    !is_numeric($request->request->get('tarifMin')) || (float)$request->request->get('tarifMin') < 0
+                )
+            ) {
+                $error = "Veuillez remplir correctement tous les champs aide-soignant.";
             } else {
                 // Vérifier si email existe déjà
                 $existing = $em->getRepository(User::class)->findOneBy(['email' => $email]);
@@ -82,6 +92,11 @@ class RegistrationController extends AbstractController
                         $aidesoignant->setEmail($email);
                         $aidesoignant->setUser($user);
                         $aidesoignant->setAdeli((string)$request->request->get('adeli') ?: null);
+                        $aidesoignant->setSexe((string)$request->request->get('sexe'));
+                        $aidesoignant->setVilleIntervention(trim((string)$request->request->get('villeIntervention')));
+                        $aidesoignant->setRayonInterventionKm((int)$request->request->get('rayonInterventionKm'));
+                        $aidesoignant->setTypePatientsAcceptes(trim((string)$request->request->get('typePatientsAcceptes')));
+                        $aidesoignant->setTarifMin((float)$request->request->get('tarifMin'));
                         $aidesoignant->setDisponible(true);
                         $aidesoignant->setIsValidated(false); // Must be validated by admin
                         $aidesoignant->setMdp($hasher->hashPassword($user, $plainPassword));

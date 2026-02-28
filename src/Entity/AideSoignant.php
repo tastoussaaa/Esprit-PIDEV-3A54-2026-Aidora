@@ -60,6 +60,20 @@ class AideSoignant
     #[ORM\Column]
     private ?bool $isValidated = false;
 
+    #[ORM\Column(length: 255)]
+    private ?string $Sexe = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $villeIntervention = null;
+
+    #[ORM\Column]
+    private ?int $rayonInterventionKm = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $typePatientsAcceptes = null;
+
+    #[ORM\Column]
+    private ?float $tarifMin = null;
     #[ORM\Column]
     private bool $isActive = true;
 
@@ -254,6 +268,66 @@ class AideSoignant
     public function setIsValidated(bool $isValidated): static
     {
         $this->isValidated = $isValidated;
+
+        return $this;
+    }
+
+    public function getSexe(): ?string
+    {
+        return $this->Sexe;
+    }
+
+    public function setSexe(string $Sexe): static
+    {
+        $this->Sexe = $Sexe;
+
+        return $this;
+    }
+
+    public function getVilleIntervention(): ?string
+    {
+        return $this->villeIntervention;
+    }
+
+    public function setVilleIntervention(string $villeIntervention): static
+    {
+        $this->villeIntervention = $villeIntervention;
+
+        return $this;
+    }
+
+    public function getRayonInterventionKm(): ?int
+    {
+        return $this->rayonInterventionKm;
+    }
+
+    public function setRayonInterventionKm(int $rayonInterventionKm): static
+    {
+        $this->rayonInterventionKm = $rayonInterventionKm;
+
+        return $this;
+    }
+
+    public function getTypePatientsAcceptes(): ?string
+    {
+        return $this->typePatientsAcceptes;
+    }
+
+    public function setTypePatientsAcceptes(string $typePatientsAcceptes): static
+    {
+        $this->typePatientsAcceptes = $typePatientsAcceptes;
+
+        return $this;
+    }
+
+    public function getTarifMin(): ?float
+    {
+        return $this->tarifMin;
+    }
+
+    public function setTarifMin(float $tarifMin): static
+    {
+        $this->tarifMin = $tarifMin;
 
         return $this;
     }

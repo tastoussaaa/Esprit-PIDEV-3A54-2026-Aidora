@@ -3,9 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\OrdonnanceRepository;
-use App\Validator\ValidMedication;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -18,19 +15,23 @@ class Ordonnance
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $medicament = null;
 
+    #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $dosage = null;
 
+    #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $duree = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\NotBlank]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $instructions = null;
 
     #[ORM\Column]
@@ -41,6 +42,7 @@ class Ordonnance
     #[ORM\JoinColumn(nullable: false)]
     private ?Consultation $consultation = null;
 
+<<<<<<< HEAD
     #[ORM\OneToMany(mappedBy: 'ordonnance', targetEntity: Medicament::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $medicaments;
 
@@ -51,6 +53,8 @@ class Ordonnance
         $this->medicament = null;
     }
 
+=======
+>>>>>>> 59f550461b34612d3973810c3419a14324a0a0eb
     public function getId(): ?int
     {
         return $this->id;
@@ -61,7 +65,7 @@ class Ordonnance
         return $this->medicament;
     }
 
-    public function setMedicament(?string $medicament): static
+    public function setMedicament(string $medicament): static
     {
         $this->medicament = $medicament;
 
@@ -73,7 +77,7 @@ class Ordonnance
         return $this->dosage;
     }
 
-    public function setDosage(?string $dosage): static
+    public function setDosage(string $dosage): static
     {
         $this->dosage = $dosage;
 
@@ -85,7 +89,7 @@ class Ordonnance
         return $this->duree;
     }
 
-    public function setDuree(?string $duree): static
+    public function setDuree(string $duree): static
     {
         $this->duree = $duree;
 
@@ -97,7 +101,7 @@ class Ordonnance
         return $this->instructions;
     }
 
-    public function setInstructions(?string $instructions): static
+    public function setInstructions(string $instructions): static
     {
         $this->instructions = $instructions;
 
@@ -109,7 +113,7 @@ class Ordonnance
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -127,34 +131,9 @@ class Ordonnance
 
         return $this;
     }
+    public function __construct()
+{
+    $this->createdAt = new \DateTimeImmutable();
+}
 
-    /**
-     * @return Collection<int, Medicament>
-     */
-    public function getMedicaments(): Collection
-    {
-        return $this->medicaments;
-    }
-
-    public function addMedicament(Medicament $medicament): static
-    {
-        if (!$this->medicaments->contains($medicament)) {
-            $this->medicaments->add($medicament);
-            $medicament->setOrdonnance($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMedicament(Medicament $medicament): static
-    {
-        if ($this->medicaments->removeElement($medicament)) {
-            // set the owning side to null (unless already changed)
-            if ($medicament->getOrdonnance() === $this) {
-                $medicament->setOrdonnance(null);
-            }
-        }
-
-        return $this;
-    }
 }

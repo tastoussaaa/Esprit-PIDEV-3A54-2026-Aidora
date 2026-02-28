@@ -1,0 +1,209 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail Mission - Admin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .detail-shell {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .detail-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .detail-card__head {
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+        }
+
+        .detail-card__body {
+            padding: 18px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .meta-item {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .meta-item strong { display: block; color: #475569; font-size: 12px; margin-bottom: 4px; }
+
+        .status-chip { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .status-success { background: #bbf7d0; color: #14532d; }
+        .status-warning { background: #fde68a; color: #78350f; }
+        .status-danger { background: #fecaca; color: #7f1d1d; }
+        .status-expired { background: #ddd6fe; color: #4c1d95; }
+        .status-dark { background: #e2e8f0; color: #1e293b; }
+
+        .action-stack { display: grid; gap: 12px; }
+        .action-btn { width: 100%; border: 1px solid transparent; border-radius: 8px; padding: 11px 12px; font-weight: 600; display: block; text-align: center; }
+        .action-btn--edit { background: #fde68a; border-color: #fcd34d; color: #78350f; }
+        .action-btn--delete { background: #fecaca; border-color: #fca5a5; color: #7f1d1d; }
+        .action-btn--link { background: #bfdbfe; border-color: #93c5fd; color: #1e3a8a; text-align: center; text-decoration: none; }
+
+        .detail-page { padding: 8px 0 20px; }
+        .section-gap { margin-bottom: 18px; }
+
+        @media (max-width: 992px) {
+            .detail-shell { grid-template-columns: 1fr; }
+            .meta-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">🎯 Détail Mission #{{ mission.id }}</h1>
+                <p class="portal__subtitle">{{ mission.demandeAide ? mission.demandeAide.titreD : 'Mission sans demande liée' }}</p>
+            </div>
+        </div>
+
+        <div class="portal__content">
+<div class="container detail-page">
+    <div class="section-gap">
+        <div>
+            <a href="{{ path('admin_missions') }}" class="btn btn-secondary">← Retour</a>
+        </div>
+    </div>
+
+    {# Messages Flash #}
+    {% if app.flashes %}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type === 'success' ? 'success' : 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="detail-shell">
+        <div>
+            {# Informations Mission #}
+            <div class="detail-card section-gap">
+                <div class="detail-card__head">📋 Informations de la Mission</div>
+                <div class="detail-card__body">
+                    <div class="meta-grid mb-3">
+                        <div class="meta-item">
+                            <strong>Statut</strong>
+                            {% set missionStatusClass = mission.statutMission == 'ACCEPTÉE' ? 'status-success' : (mission.statutMission == 'TERMINÉE' ? 'status-dark' : (mission.statutMission == 'EXPIRÉE' ? 'status-expired' : (mission.statutMission == 'ANNULÉE' ? 'status-danger' : 'status-warning'))) %}
+                            <span class="status-chip {{ missionStatusClass }}">{{ mission.statutMission|replace({'_': ' '}) }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Archivée</strong>
+                            {{ mission.archivedAt ? 'Oui' : 'Non' }}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Date début</strong>
+                            {{ mission.dateDebut ? mission.dateDebut|date('d/m/Y H:i') : '-' }}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Date fin</strong>
+                            {{ mission.dateFin ? mission.dateFin|date('d/m/Y H:i') : '-' }}
+                        </div>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <strong>Check-in</strong>
+                            {{ mission.checkInAt ? mission.checkInAt|date('d/m/Y H:i') : 'Non effectué' }}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Check-out</strong>
+                            {{ mission.checkOutAt ? mission.checkOutAt|date('d/m/Y H:i') : 'Non effectué' }}
+                        </div>
+                    </div>
+
+                    {% if mission.statusVerification %}
+                        <div class="mt-3">
+                            <strong>Vérification: </strong>
+                            <span class="status-chip {{ mission.statusVerification == 'VALIDÉE' ? 'status-success' : 'status-warning' }}">{{ mission.statusVerification }}</span>
+                        </div>
+                    {% endif %}
+
+                    {% if mission.proofPhotoData or mission.signatureData %}
+                        <div class="mt-3">
+                            <strong>Preuves:</strong>
+                            {% if mission.proofPhotoData %}<span class="status-chip status-dark">📷 Photo</span>{% endif %}
+                            {% if mission.signatureData %}<span class="status-chip status-dark">✍️ Signature</span>{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Aide-Soignant #}
+            {% if mission.aideSoignant %}
+                <div class="detail-card">
+                    <div class="detail-card__head">👨‍⚕️ Aide-Soignant</div>
+                    <div class="detail-card__body">
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <strong>Nom</strong>
+                                {{ mission.aideSoignant.nom }} {{ mission.aideSoignant.prenom }}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Email</strong>
+                                {{ mission.aideSoignant.user ? mission.aideSoignant.user.email : '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            {# Actions #}
+            <div class="detail-card mb-4">
+                <div class="detail-card__head">⚙️ Actions</div>
+                <div class="detail-card__body action-stack">
+                    <a href="{{ path('admin_missions_edit', {id: mission.id}) }}" class="action-btn action-btn--edit">✏️ Modifier</a>
+                    
+                    <form method="post" action="{{ path('admin_missions_delete', {id: mission.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette mission ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete-mission-' ~ mission.id) }}">
+                        <button type="submit" class="action-btn action-btn--delete">🗑️ Supprimer</button>
+                    </form>
+                </div>
+            </div>
+
+            {# Demande Liée #}
+            {% if mission.demandeAide %}
+                <div class="detail-card">
+                    <div class="detail-card__head">📋 Demande Liée</div>
+                    <div class="detail-card__body">
+                        <p><strong>Titre:</strong> {{ mission.demandeAide.titreD }}</p>
+                        {% set demandeStatusClass = mission.demandeAide.statut == 'ACCEPTÉE' ? 'status-success' : (mission.demandeAide.statut == 'EN_ATTENTE' ? 'status-warning' : (mission.demandeAide.statut == 'EXPIRÉE' ? 'status-expired' : 'status-danger')) %}
+                        <p><strong>Statut:</strong> <span class="status-chip {{ demandeStatusClass }}">{{ mission.demandeAide.statut|replace({'_':' '}) }}</span></p>
+                        <a href="{{ path('admin_demandes_show', {id: mission.demandeAide.id}) }}" class="action-btn action-btn--link">Voir Demande</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

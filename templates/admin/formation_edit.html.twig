@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Formation{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+
+{% set navigation = [
+    {'name': 'Formations', 'path': path('admin_formations'), 'icon': '📚'},
+    {'name': 'Modifier Formation', 'path': path('admin_formation_edit', {id: formation.id}), 'icon': '✏️'}
+] %}
+
+<div class="portal">
+
+    {# Sidebar #}
+    {% include 'side_bar.html.twig' %}
+
+    <!-- MAIN CONTENT -->
+    <main class="portal__main">
+
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Modifier la formation</h1>
+                <p class="portal__subtitle">
+                    Mettez à jour les informations de la formation
+                </p>
+            </div>
+        </div>
+
+        <div class="box" style="max-width:600px; margin:40px auto;">
+
+            {{ form_start(form) }}
+
+            <div class="form-group">
+                {{ form_label(form.title, 'Titre de la formation') }}
+                {{ form_widget(form.title) }}
+                {{ form_errors(form.title) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.category, 'Catégorie') }}
+                {{ form_widget(form.category) }}
+                {{ form_errors(form.category) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.description, 'Description') }}
+                {{ form_widget(form.description) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.objective, 'Objectif') }}
+                {{ form_widget(form.objective) }}
+                {{ form_errors(form.objective) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.startDate, 'Date de début') }}
+                {{ form_widget(form.startDate) }}
+                {{ form_errors(form.startDate) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.endDate, 'Date de fin') }}
+                {{ form_widget(form.endDate) }}
+                {{ form_errors(form.endDate) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.statut, 'Statut') }}
+                {{ form_widget(form.statut) }}
+                {{ form_errors(form.statut) }}
+            </div>
+
+            <div style="margin-top:16px; display:flex; gap:10px">
+                <button type="submit" class="btn btn--primary">💾 Mettre à jour</button>
+                <a href="{{ path('admin_formations') }}" class="btn btn--ghost">Annuler</a>
+            </div>
+
+            {{ form_end(form) }}
+
+        </div>
+
+    </main>
+
+</div>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.ckeditor').forEach((element) => {
+        ClassicEditor
+            .create(element)
+            .catch(error => {
+                console.error(error);
+            });
+    });
+});
+</script>
+{% endblock %}

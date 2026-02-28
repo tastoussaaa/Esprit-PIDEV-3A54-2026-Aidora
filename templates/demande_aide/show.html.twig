@@ -69,52 +69,51 @@
             flex-wrap: wrap;
         }
         
+        .actions button,
+        .actions a {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 12px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        
         .btn-back {
-            padding: 12px 20px;
             background: #F5F5F5;
             color: #333;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            cursor: pointer;
         }
         
         .btn-back:hover {
             background: #E8E8E8;
             border-color: #999;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .btn-edit {
-            padding: 12px 20px;
-            background: #B2DFDB;
-            color: #00695C;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: #FFD8B8;
+            color: #D27600;
         }
-        
+
         .btn-edit:hover {
-            background: #80DEEA;
+            background: #FFCCA3;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 150, 136, 0.2);
+            box-shadow: 0 4px 12px rgba(210, 118, 0, 0.2);
         }
         
         .btn-delete {
-            padding: 12px 20px;
             background: #FFCCCC;
             color: #C62828;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            padding: 10px 12px;
+            font-size: 13px;
+            min-width: 100px;
         }
         
         .btn-delete:hover {
@@ -122,7 +121,50 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
         }
-        
+
+        .aide-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .badge-dispo {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-dispo--ok {
+            background: #C8E6C9;
+            color: #1B5E20;
+        }
+
+        .badge-dispo--ko {
+            background: #FFCCCC;
+            color: #C62828;
+        }
+
+        .status--completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+
+        .status--expired {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+
+        .status--cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid rgba(198, 40, 40, 0.15);
+        }
+
         /* small button helpers moved to global stylesheet */
     </style>
 {% endblock %}
@@ -148,18 +190,31 @@
         <div class="box" style="max-width: 900px; margin: 0 auto;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
                 <div>
-                    <h2 style="margin: 0 0 12px 0;">{{ demande.typeDemande }}</h2>
+                    <h2 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h2>
                     <span class="status-badge status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
                 </div>
                 <div style="text-align: right;">
                     <h3 style="margin: 0 0 8px 0;">Statut</h3>
-                    <span class="status-badge status--{{ demande.statut|lower|replace({'_': '_'}) }}">{{ demande.statut|replace({'_': ' '}) }}</span>
+                    {% set statusClass = {
+                        'ACCEPTÉE': 'accepted',
+                        'EN_ATTENTE': 'en_attente',
+                        'A_REASSIGNER': 'en_attente',
+                        'REFUSÉE': 'refused',
+                        'TERMINÉE': 'completed',
+                        'EXPIRÉE': 'expired',
+                        'ANNULÉE': 'cancelled'
+                    }[demande.statut] ?? demande.statut|lower|replace({'_': '_'}) %}
+                    <span class="status-badge status--{{ statusClass }}">{{ demande.statut|replace({'_': ' '}) }}</span>
                 </div>
             </div>
 
             <div class="details-grid">
                 <div class="detail-section">
                     <h3>📋 Informations générales</h3>
+                    <div class="detail-item">
+                        <div class="detail-label">Titre de la demande</div>
+                        <div class="detail-value">{{ demande.titreD }}</div>
+                    </div>
                     <div class="detail-item">
                         <div class="detail-label">Description du besoin</div>
                         <div class="detail-value">{{ demande.descriptionBesoin }}</div>
@@ -226,20 +281,210 @@
                 </div>
             {% endif %}
 
+            {# AI-powered completeness and report #}
+            {% if aiReport is defined %}
+                <div class="detail-section" style="margin-bottom: 24px; border-left-color: #9C27B0;">
+                    <h3>🤖 Analyse IA de votre demande</h3>
+                    
+                    {# Completeness score #}
+                    <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <strong>Complétude de la demande:</strong>
+                            <span style="font-size: 24px; font-weight: 700; color: {{ reportAssistant.getCompletenessColor(aiReport.completeness.level) }};">
+                                {{ aiReport.completeness.score }}%
+                            </span>
+                        </div>
+                        <div style="height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: {{ reportAssistant.getCompletenessColor(aiReport.completeness.level) }}; width: {{ aiReport.completeness.score }}%; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 13px; color: #666;">
+                            Niveau: <span style="font-weight: 600; color: {{ reportAssistant.getCompletenessColor(aiReport.completeness.level) }};">{{ aiReport.completeness.level }}</span>
+                        </div>
+                    </div>
+
+                    {# Missing fields and suggestions #}
+                    {% if aiReport.completeness.suggestions is not empty %}
+                        <div style="background: #FFF9C4; padding: 12px; border-radius: 8px; border-left: 4px solid #FBC02D; margin-bottom: 16px;">
+                            <strong style="display: block; margin-bottom: 8px; color: #F57F17;">💡 Suggestions pour améliorer votre demande:</strong>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                                {% for suggestion in aiReport.completeness.suggestions %}
+                                    <li style="margin-bottom: 4px;">{{ suggestion }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Timeline analysis #}
+                    {% if aiReport.timeline.status is defined %}
+                        <div style="background: {% if aiReport.timeline.status == 'OVERDUE' %}#FFEBEE{% elseif aiReport.timeline.status == 'IMMINENT' %}#FFF3E0{% else %}#E8F5E9{% endif %}; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <strong>⏱️ {{ aiReport.timeline.message }}</strong>
+                        </div>
+                    {% endif %}
+
+                    {# Budget analysis #}
+                    {% if aiReport.budget is defined %}
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <strong>💰 Budget:</strong> {{ aiReport.budget.total }} TND pour {{ aiReport.budget.duration }} jour(s)
+                            <br><em style="font-size: 13px; color: #666;">Moyenne journalière: {{ aiReport.budget.dailyAverage }} TND/jour</em>
+                        </div>
+                    {% endif %}
+
+                    {# Recommendations #}
+                    {% if aiReport.recommendations is not empty %}
+                        <div style="background: #E3F2FD; padding: 12px; border-radius: 8px; border-left: 4px solid #2196F3; margin-bottom: 16px;">
+                            <strong style="display: block; margin-bottom: 8px; color: #1976D2;">📋 Recommandations:</strong>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                                {% for recommendation in aiReport.recommendations %}
+                                    <li style="margin-bottom: 4px;">{{ recommendation|raw }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Global recommendation #}
+                    {% if aiReport.globalRecommendation is defined %}
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 8px; font-weight: 600; text-align: center;">
+                            ✨ {{ aiReport.globalRecommendation }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if riskAnalysis is defined %}
+                <div class="detail-section" style="margin-bottom: 24px; border-left-color: #7E57C2;">
+                    <h3>🧠 Score de risque médical (IA)</h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px;">
+                        <div style="background: #fff; border: 1px solid #EDE7F6; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Score déterministe</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #5E35B1;">{{ riskAnalysis.score_deterministe }}/100</div>
+                        </div>
+                        <div style="background: #fff; border: 1px solid #EDE7F6; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Score IA</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #5E35B1;">{{ riskAnalysis.score_ia is not null ? riskAnalysis.score_ia ~ '/100' : 'N/A' }}</div>
+                        </div>
+                        <div style="background: #fff; border: 1px solid #EDE7F6; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Score final</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #5E35B1;">{{ riskAnalysis.score_final }}/100</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #F8F5FF; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <strong>Niveau:</strong> {{ riskAnalysis.level }}
+                        {% if riskAnalysis.pathologie_probable %}
+                            <br><strong>Pathologie probable:</strong> {{ riskAnalysis.pathologie_probable }}
+                        {% endif %}
+                        {% if riskAnalysis.justification_ia %}
+                            <br><strong>Justification IA:</strong> {{ riskAnalysis.justification_ia }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="detail-section" style="margin-bottom: 24px; border-left-color: #4CAF50;">
+                <h3>👩‍⚕️ Aides-soignants compatibles</h3>
+                {% if aidesSoignantsCompatibles is empty %}
+                    <p style="margin: 8px 0 0; color: #666;">Aucun aide-soignant compatible trouvé pour le moment.</p>
+                {% else %}
+                    <div class="aides-grid">
+                        {% for aide in aidesSoignantsCompatibles %}
+                            {% set rank = aidesRanking[aide.id] ?? {'score': 0, 'available': false} %}
+                            <div class="aide-card">
+                                <h4>{{ aide.nom }} {{ aide.prenom }}</h4>
+                                <div class="aide-meta">📧 {{ aide.email }}</div>
+                                <div class="aide-meta">📱 {{ aide.telephone ?? 'Non renseigné' }}</div>
+                                <div class="aide-meta">⚧ Sexe: {{ aide.sexe }}</div>
+                                <div class="aide-meta">📍 {{ aide.villeIntervention }} ({{ aide.rayonInterventionKm }} km)</div>
+                                <div class="aide-meta">🧑‍🦳 Patients: {{ aide.typePatientsAcceptes }}</div>
+                                <div class="aide-meta">💰 Tarif min: {{ aide.tarifMin }} DT</div>
+                                <div class="aide-meta">⭐ Expérience: {{ aide.niveauExperience ?? 0 }}</div>
+                                <div class="aide-meta">🎯 Score compatibilité: <strong>{{ rank.score }}/100</strong></div>
+                                <span class="badge-dispo {{ rank.available ? 'badge-dispo--ok' : 'badge-dispo--ko' }}">
+                                    {{ rank.available ? 'Disponible sur ce créneau' : 'Indisponible sur ce créneau' }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if demande.aideChoisie %}
+            <div class="detail-section" style="margin-bottom: 24px; border-left-color: #2E7D32;">
+                <h3>✓ Aide-soignant sélectionné</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 12px 0;">
+                    <div class="detail-item">
+                        <div class="detail-label">Nom</div>
+                        <div class="detail-value">{{ demande.aideChoisie.nom|capitalize }} {{ demande.aideChoisie.prenom|capitalize }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Sexe</div>
+                        <div class="detail-value">
+                            {% if demande.aideChoisie.Sexe == 'HOMME' %}
+                                Homme
+                            {% else %}
+                                Femme
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Expérience</div>
+                        <div class="detail-value">{{ demande.aideChoisie.niveauExperience }} ans</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Localisation</div>
+                        <div class="detail-value">{{ demande.aideChoisie.villeIntervention }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Rayon</div>
+                        <div class="detail-value">{{ demande.aideChoisie.rayonInterventionKm }} km</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Disponibilité</div>
+                        <div class="detail-value">
+                            {% if demande.aideChoisie.disponible %}
+                                ✓ Disponible
+                            {% else %}
+                                ✗ Non disponible
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value"><a href="mailto:{{ demande.aideChoisie.email }}" style="color: var(--primary); text-decoration: none;">{{ demande.aideChoisie.email }}</a></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Téléphone</div>
+                        <div class="detail-value"><a href="tel:{{ demande.aideChoisie.telephone }}" style="color: var(--primary); text-decoration: none;">{{ demande.aideChoisie.telephone }}</a></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Types de patients</div>
+                        <div class="detail-value">{{ demande.aideChoisie.typePatientsAcceptes }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tarif minimum</div>
+                        <div class="detail-value">{{ demande.aideChoisie.tarifMin }} DT/h</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="actions">
                 <a href="{{ path('app_demandes_index') }}" class="btn-back">← Retour</a>
-                {% if demande.statut == 'EN_ATTENTE' %}
+                {% if demande.statut in ['EN_ATTENTE', 'A_REASSIGNER'] %}
                     <a href="{{ path('app_demande_aide_edit', {id: demande.id}) }}" class="btn-edit">✏️ Modifier</a>
                 {% endif %}
-                <form method="POST" action="{{ path('app_demande_aide_delete', {id: demande.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette demande ?');" style="margin-left: auto;">
-                    <button type="submit" class="btn-delete">❌ Annuler</button>
-                </form>
+                {% if demande.statut and demande.statut not in ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE'] %}
+                    <form method="POST" action="{{ path('app_demande_aide_delete', {id: demande.id}) }}" style="margin-left: auto;" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette demande ?');">
+                        <button type="submit" class="btn-delete">✗ Annuler</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </main>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+{% if demande.lieu or (demande.latitude and demande.longitude) %}
 <script>
     // Initialiser la carte
     const map = L.map('map').setView([{{ demande.latitude }}, {{ demande.longitude }}], 15);
@@ -252,5 +497,6 @@
     L.marker([{{ demande.latitude }}, {{ demande.longitude }}]).addTo(map)
         .bindPopup('<b>{{ demande.lieu ?? 'Demande d\'aide' }}</b>');
 </script>
+{% endif %}
 
 {% endblock %}

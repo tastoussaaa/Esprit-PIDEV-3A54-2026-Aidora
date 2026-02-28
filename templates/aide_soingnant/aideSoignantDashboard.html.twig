@@ -1,18 +1,41 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Médecin{% endblock %}
+{% block title %}Dashboard Aide-Soignant{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .portal__tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 24px;
+        }
+        
+        .portal__tabs a {
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .portal__tabs a.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        
+        .portal__tabs a:hover {
+            color: #007bff;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-{% set navigation = [
-    {'name': 'Dashboard', 'path': path('aidesoingnant_dashboard'), 'icon': '🏠'},
-    {'name': 'Mes Missions', 'path': path('aidesoingnant_missions'), 'icon': '📋'},
-    {'name': 'Formation', 'path': path('aidesoingnant_formations'), 'icon': '📚'},
-
-] %}
 
 <div class="portal">
 
@@ -21,10 +44,31 @@
     <!-- MAIN CONTENT -->
     <main class="portal__main">
 
-        
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Dashboard Aide-Soignant</h1>
+                <p class="portal__subtitle">Bienvenue sur votre espace de gestion</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="portal__tabs">
+            {% for nav in navigation %}
+                <a href="{{ nav.path }}" 
+                   {% if (nav.name == 'Dashboard' and app.request.attributes.get('_route') == 'app_aide_soignant_dashboard')
+                        or (nav.name == 'Demandes' and app.request.attributes.get('_route') == 'aidesoingnant_demandes')
+                        or (nav.name == 'Missions' and app.request.attributes.get('_route') == 'aidesoingnant_missions')
+                        or (nav.name == 'Formation' and app.request.attributes.get('_route') == 'aidesoingnant_formation') %}
+                       class="active"
+                   {% endif %}>
+                    {{ nav.icon }} {{ nav.name }}
+                </a>
+            {% endfor %}
+        </div>
+
         <div class="portal__content">   
-            <h1>Dashboard Aide Soignant</h1>
-            <!-- Contenu du dashboard de l'aide soignant -->
+            <h2>Bienvenue</h2>
+            <p>Naviguez à travers les onglets ci-dessus pour gérer vos demandes d'aide, vos missions acceptées et vos formations.</p>
         </div>
     </main>
 

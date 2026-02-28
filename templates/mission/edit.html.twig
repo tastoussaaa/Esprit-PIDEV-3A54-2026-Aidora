@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier mission{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Modifier la mission</h1>
+                <p class="portal__subtitle">Mise à jour des informations mission</p>
+            </div>
+        </div>
+
+        <div class="box" style="max-width: 760px; margin: 0 auto;">
+            <form method="POST" action="{{ path('aidesoingnant_missions_edit', {id: mission.id}) }}" style="display: grid; gap: 16px;">
+                <div>
+                    <label style="display:block; font-weight:600; margin-bottom: 6px;">Titre mission</label>
+                    <input type="text" name="titreM" value="{{ mission.titreM }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom: 6px;">Date début</label>
+                        <input type="datetime-local" name="dateDebut" value="{{ mission.dateDebut ? mission.dateDebut|date('Y-m-d\\TH:i') : '' }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom: 6px;">Date fin</label>
+                        <input type="datetime-local" name="dateFin" value="{{ mission.dateFin ? mission.dateFin|date('Y-m-d\\TH:i') : '' }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block; font-weight:600; margin-bottom: 6px;">Prix final (DT)</label>
+                    <input type="number" name="prixFinal" min="0" step="1" value="{{ mission.prixFinal ?? 0 }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                </div>
+
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 8px;">
+                    <a href="{{ path('aidesoingnant_missions') }}" class="btn btn--ghost" style="text-decoration:none;">Annuler</a>
+                    <button type="submit" class="btn btn--primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

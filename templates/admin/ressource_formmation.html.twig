@@ -1,0 +1,102 @@
+{# {% extends 'base.html.twig' %}
+
+{% block title %}Ressources de
+	{{ formation.title }}
+{% endblock %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+
+	{% set navigation = [
+    {'name': 'Formations', 'path': path('admin_formations'), 'icon': '📚'},
+    {'name': 'Ressources', 'path': path('admin_formation_resources', {id: formation.id}), 'icon': '📂'}
+] %}
+
+	<div class="portal">
+		{% include 'side_bar.html.twig' %}
+
+		<main class="portal__main">
+			<div class="portal__top">
+				<div>
+					<h1 class="portal__title">Ressources pour :
+						{{ formation.title }}</h1>
+					<p class="portal__subtitle">{{ formation.description|default('—') }}</p>
+				</div>
+			</div>
+
+			<div class="box">
+				<h2>Liste des ressources</h2>
+				<table class="portal__table">
+					<thead>
+						<tr>
+							<th>Titre</th>
+							<th>Description</th>
+							<th>URL</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for ressource in ressources %}
+							<tr>
+								<td>{{ ressource.title }}</td>
+								<td>{{ ressource.description|default('—') }}</td>
+								<td>
+									{% if ressource.url %}
+										<a href="{{ ressource.url }}" target="_blank">Lien</a>
+									{% else %}
+										—
+									{% endif %}
+								</td>
+								<td style="display:flex; gap:6px; flex-wrap:wrap;">
+									<a href="{{ path('admin_ressource_edit', {id: ressource.id}) }}" class="btn btn--primary">✏️ Modifier</a>
+									<form action="{{ path('admin_ressource_delete', {id: ressource.id}) }}" method="post" style="display:inline-block;">
+										<input type="hidden" name="_token" value="{{ csrf_token('delete-ressource-' ~ ressource.id) }}">
+										<button class="btn btn--danger" type="submit" onclick="return confirm('Supprimer cette ressource ?')">🗑️ Supprimer</button>
+									</form>
+								</td>
+							</tr>
+						{% else %}
+							<tr>
+								<td colspan="4" style="text-align:center;">Aucune ressource</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="box" style="margin-top:20px; max-width:600px;">
+				<h2>Ajouter une nouvelle ressource</h2>
+				{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+
+				<div class="form-group">
+					{{ form_label(form.title, 'Titre de la ressource') }}
+					{{ form_widget(form.title) }}
+				</div>
+
+				<div class="form-group">
+					{{ form_label(form.description, 'Description') }}
+					{{ form_widget(form.description) }}
+				</div>
+
+				{% if form.pdfFile is defined %}
+					<div class="form-group">
+						{{ form_label(form.pdfFile, 'Fichier PDF') }}
+						{{ form_widget(form.pdfFile) }}
+					</div>
+				{% endif %}
+
+				<div style="margin-top:16px; display:flex; gap:10px;">
+					<button type="submit" class="btn btn--primary">➕ Ajouter</button>
+				</div>
+
+				{{ form_end(form) }}
+			</div>
+
+		</main>
+	</div>
+
+{% endblock %}
+ #}

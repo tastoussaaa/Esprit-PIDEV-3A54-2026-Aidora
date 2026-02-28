@@ -15,13 +15,13 @@
 
 		<header class="portal__header">
 			<h1 class="portal__title">Ordonnances</h1>
-			<p class="portal__subtitle">Toutes les ordonnances créées dans le système.</p>
+			<p class="portal__subtitle">All prescriptions created in the system.</p>
 		</header>
 
 		<section class="portal__content">
 			<div class="portal__card">
 				{% if ordonnances is empty %}
-					<p>Aucune ordonnance trouvée.</p>
+					<p>No ordonnances found.</p>
 				{% else %}
 					<div class="list">
 						{% for o in ordonnances %}
@@ -31,8 +31,8 @@
 									<div class="rowItem__meta">Duration: {{ o.duree }} · Created: {{ o.createdAt ? o.createdAt|date('Y-m-d') : '—' }}</div>
 								</div>
 								<div>
-									<a href="{{ path('Ordonnance_show', {'id': o.id}) }}" class="btn btn--ghost">Voir</a>
-									<a href="{{ path('Ordonnance_edit', {'id': o.id}) }}" class="btn btn--primary">Modifier</a>
+									<a href="{{ path('Ordonnance_show', {'id': o.id}) }}" class="btn btn--ghost">View</a>
+									<a href="{{ path('Ordonnance_edit', {'id': o.id}) }}" class="btn btn--primary">Edit</a>
 								</div>
 							</div>
 						{% endfor %}

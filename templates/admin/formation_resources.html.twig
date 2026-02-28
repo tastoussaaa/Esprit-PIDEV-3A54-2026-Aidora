@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ressources de
+	{{ formation.title }}
+{% endblock %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+	<style>
+
+
+	.popup-success {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+		/* Form styling for resources */
+		.form-group {
+			display: flex;
+			flex-direction: column;
+			margin-bottom: 18px;
+		}
+
+		.form-group label {
+			font-weight: 700;
+			color: rgba(7, 19, 31, .8);
+			margin-bottom: 6px;
+			font-size: 14px;
+		}
+
+		.form-group input,
+		.form-group textarea,
+		.form-group select {
+			padding: 10px 12px;
+			border-radius: 12px;
+			border: 1px solid rgba(7, 19, 31, .2);
+			font-size: 14px;
+			background: #fff;
+			transition: border-color 0.2s ease, box-shadow 0.2s ease;
+		}
+
+		.form-group input:focus,
+		.form-group textarea:focus,
+		.form-group select:focus {
+			border-color: rgba(19, 184, 194, 0.8);
+			box-shadow: 0 0 0 4px rgba(19, 184, 194, 0.1);
+			outline: none;
+		}
+
+		.form__actions button {
+			min-width: 120px;
+		}
+	</style>
+{% endblock %}
+
+{% block body %}
+	{% set navigation = [
+    {'name': 'Formations', 'path': path('admin_formations'), 'icon': '📚'},
+    {'name': 'Ressources', 'path': path('admin_formation_resources', {id: formation.id}), 'icon': '📂'}
+] %}
+
+	<div class="portal">
+		{% include 'side_bar.html.twig' %}
+
+		<main class="portal__main">
+			<div class="portal__top">
+				<h1 class="portal__title">Ressources pour la formation :
+					{{ formation.title }}</h1>
+				<p class="portal__subtitle">{{ formation.description|raw }}</p>
+			</div>
+
+			<div class="box">
+				<h2>Liste des ressources</h2>
+				<table class="portal__table">
+					<thead>
+						<tr>
+							<th>Titre</th>
+							<th>Description</th>
+							<th>Classe</th>
+							<th>Matériels</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						{% for ressource in ressources %}
+							<tr>
+								<td>{{ ressource.title }}</td>
+								<td>{{ ressource.description|slice(0,80)|default('—') }}...</td>
+								<td>{{ ressource.classe|default('—') }}</td>
+								<td>{{ ressource.materiels|slice(0,60)|default('—') }}...</td>
+								<td style="display:flex; gap:6px; flex-wrap:wrap;">
+									<a href="{{ path('admin_ressource_edit', {id: ressource.id}) }}" class="btn btn--primary">✏️ Edit</a>
+
+									<form action="{{ path('admin_ressource_delete', {id: ressource.id}) }}" method="post" style="display:inline-block;">
+										<input type="hidden" name="_token" value="{{ csrf_token('delete-ressource-' ~ ressource.id) }}">
+										<button class="btn btn--danger" type="submit" onclick="return confirm('Supprimer cette ressource ?')">🗑️ Delete</button>
+									</form>
+								</td>
+							</tr>
+						{% else %}
+							<tr>
+								<td colspan="5" style="text-align:center;">Aucune ressource</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+
+				</table>
+			</div>
+
+			<div class="box" style="margin-top:20px; max-width:600px;">
+				<h2>Ajouter une nouvelle ressource</h2>
+
+				{{ form_start(form, {
+    'action': path('admin_ressource_new', {'id': formation.id}),
+    'attr': {'enctype': 'multipart/form-data'}
+}) }}
+				<div class="form__fields">
+					<div class="form-group">
+						{{ form_label(form.title, 'Titre de la ressource') }}
+						{{ form_widget(form.title) }}
+						{{ form_errors(form.title) }}
+					</div>
+					<div class="form-group">
+						{{ form_label(form.classe, 'Classe') }}
+						{{ form_widget(form.classe) }}
+						{{ form_errors(form.classe) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.materiels, 'Matériels nécessaires') }}
+						{{ form_widget(form.materiels) }}
+						{{ form_errors(form.materiels) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.description, 'Description') }}
+						{{ form_widget(form.description) }}
+						{{ form_errors(form.description) }}
+					</div>
+
+					{# ✅ Fixed: was form.file, must match RessourceType field name #}
+					{% if form.pdfFile is defined %}
+						<div class="form-group">
+							{{ form_label(form.pdfFile, 'Fichier PDF') }}
+							{{ form_widget(form.pdfFile) }}
+							{{ form_errors(form.pdfFile) }}
+						</div>
+					{% endif %}
+				</div>
+
+				<div class="form__actions" style="margin-top:16px; display:flex; gap:10px;">
+					<a href="{{ path('admin_ressource_new', {id: formation.id}) }}" class="btn btn--ghost">Annuler</a>
+					<button type="submit" class="btn btn--primary">➕ Ajouter</button>
+				</div>
+
+				{{ form_end(form) }}
+			</div>
+		</main>
+	</div>
+
+
+	{# Popup for newly added resource #}
+{% for data in app.flashes('ressource_success') %}
+<div id="ressource-popup" class="popup-success">
+    <div class="popup-content">
+        <h3 style="color:green;">✅ Ressource ajoutée avec succès</h3>
+        <p><strong>{{ data.title }}</strong></p>
+        <p>{{ data.description|slice(0,100) ~ '...' }}</p>
+        <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+            <button onclick="closeRessourcePopup()" class="btn btn--ghost">Fermer</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function closeRessourcePopup() {
+    const popup = document.getElementById('ressource-popup');
+    if(popup) popup.style.display = 'none';
+}
+
+// Auto-close after 5 seconds
+setTimeout(() => {
+    const popup = document.getElementById('ressource-popup');
+    if(popup) popup.style.display = 'none';
+}, 5000);
+</script>
+{% endblock %}
+

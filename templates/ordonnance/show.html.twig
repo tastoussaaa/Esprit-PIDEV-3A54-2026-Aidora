@@ -30,9 +30,9 @@
                         <option value="medicament" {% if sort == 'medicament' %}selected{% endif %}>Médicaments de A à Z</option>
                         <option value="consultation" {% if sort == 'consultation' %}selected{% endif %}>Nom de la Consultation</option>
                     </select>
-                    <button type="submit" class="btn btn--primary">Rechercher</button>
+                    <button type="submit" class="btn btn--primary">Search</button>
                     {% if search or sort != 'date' %}
-                        <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost">Réinitialiser</a>
+                        <a href="{{ path('Ordonnance_show_all') }}" class="btn btn--ghost">Reset</a>
                     {% endif %}
                 </form>
             </div>

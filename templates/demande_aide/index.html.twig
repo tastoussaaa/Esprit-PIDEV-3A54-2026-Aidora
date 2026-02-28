@@ -46,30 +46,47 @@
         .card p {
             margin: 12px 0;
             color: #666;
-            line-height: 1.6;
+            line-height: 1;
             flex-grow: 1;
         }
         
-        .card__actions {
+         .card__actions {
             display: flex;
             gap: 12px;
             margin-top: auto;
             padding-top: 16px;
         }
-        
+
+        .card__actions a,
         .card__actions button,
-        .card__actions a {
+        .card__actions form {
             flex: 1;
+            min-width: 0;
+        }
+
+        .card__actions form {
+            display: flex;
+            margin: 0;
+        }
+
+        .card__actions form button {
+            flex: 1;
+        }
+
+        .card__actions a,
+        .card__actions button {
             padding: 12px 16px;
             font-size: 14px;
-            border: none;
             border-radius: 6px;
-            cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
             text-decoration: none;
             text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         
         .btn--info {
             background: #B3E5FC;
@@ -84,15 +101,27 @@
         }
 
         .btn--edit {
-            background: #B2DFDB;
-            color: #00695C;
+            background: #FFD8B8;
+            color: #D27600;
             border: none;
         }
 
         .btn--edit:hover {
-            background: #80DEEA;
+            background: #FFCCA3;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 150, 136, 0.2);
+            box-shadow: 0 4px 12px rgba(210, 118, 0, 0.2);
+        }
+
+        .btn--select {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: none;
+        }
+
+        .btn--select:hover {
+            background: #A5D6A7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
         }
 
         .btn--danger {
@@ -151,6 +180,34 @@
             color: #D32F2F;
             border: 1px solid rgba(211, 47, 47, 0.15);
         }
+
+        .status--completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+
+        .status--expired {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+
+        .status--cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid rgba(198, 40, 40, 0.15);
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         
         .card__info {
             display: grid;
@@ -172,12 +229,8 @@
 {% block body %}
 
 {% set navigation = [
-    {'name': 'Dashboard', 'path': path('app_patient_dashboard'), 'icon': '🏠'},
-    {'name': 'Consultations', 'path': path('patient_consultations'), 'icon': '🩺'},
-    {'name': 'Nouvelle consultation', 'path': path('consultation_new'), 'icon': '➕'},
-    {'name': 'Demandes', 'path': path('app_demandes_index'), 'icon': '📝'},
-    {'name': 'Produits', 'path': path('produit_list'), 'icon': '🛒'},
-    {'name': 'Mes commandes', 'path': path('commande_index'), 'icon': '📋'}
+    { path: '/demandes', name: 'Mes demandes', icon: '📋' },
+    { path: '/demande/aide', name: 'Créer une demande d\'aide', icon: '➕' }
 ] %}
 
 <div class="portal">
@@ -189,108 +242,11 @@
                 <h1 class="portal__title">Mes demandes d'aide</h1>
                 <p class="portal__subtitle">Consultez et gérez toutes vos demandes d'aide</p>
             </div>
-            <a href="{{ path('app_demande_aide') }}" class="btn btn--primary">+ Créer une demande</a>
+            <div style="display: flex; gap: 12px;">
+                <a href="{{ path('app_demande_aide') }}" class="btn btn--primary">+ Créer une demande</a>
+                <a href="{{ path('app_demandes_history') }}" class="btn btn--info" style="background: #17a2b8; color: white; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px;">📚 Historique</a>
+            </div>
         </div>
-
-        <!-- Search and Sort Form -->
-        <div class="portal__filters" style="margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-            <form method="GET" id="searchForm" style="display: flex; gap: 12px; align-items: center; flex: 1;">
-                <div style="flex: 1; max-width: 400px;">
-                    <input type="text" name="search" value="{{ search }}" id="searchInput" placeholder="Rechercher par description, type..." class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                </div>
-                <select name="sort_by" id="sortBySelect" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                    <option value="dateCreation" {{ sort_by == 'dateCreation' ? 'selected' : '' }}>Trier par date</option>
-                    <option value="typeDemande" {{ sort_by == 'typeDemande' ? 'selected' : '' }}>Trier par type</option>
-                    <option value="statut" {{ sort_by == 'statut' ? 'selected' : '' }}>Trier par statut</option>
-                    <option value="budgetMax" {{ sort_by == 'budgetMax' ? 'selected' : '' }}>Trier par budget</option>
-                </select>
-                <select name="sort_order" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                    <option value="desc" {{ sort_order == 'desc' ? 'selected' : '' }}>Décroissant</option>
-                    <option value="asc" {{ sort_order == 'asc' ? 'selected' : '' }}>Croissant</option>
-                </select>
-                <button type="submit" class="btn btn--primary" style="padding: 10px 16px;">Rechercher</button>
-                <a href="{{ path('app_demandes_index') }}" class="btn btn--secondary" style="padding: 10px 16px; background: #6c757d; color: white; text-decoration: none;">Réinitialiser</a>
-            </form>
-        </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const sortBySelect = document.getElementById('sortBySelect');
-                const searchInput = document.getElementById('searchInput');
-                const searchForm = document.getElementById('searchForm');
-
-                function updatePlaceholder() {
-                    const selectedValue = sortBySelect.value;
-                    switch(selectedValue) {
-                        case 'dateCreation':
-                            searchInput.placeholder = 'Rechercher par date (YYYY-MM-DD ou DD/MM/YYYY)';
-                            searchInput.type = 'text';
-                            searchInput.pattern = '\\d{4}-\\d{2}-\\d{2}|\\d{2}/\\d{2}/\\d{4}';
-                            break;
-                        case 'budgetMax':
-                            searchInput.placeholder = 'Rechercher par budget (nombre entier)';
-                            searchInput.type = 'number';
-                            searchInput.min = '0';
-                            searchInput.step = '1';
-                            break;
-                        case 'typeDemande':
-                            searchInput.placeholder = 'Rechercher par type de demande';
-                            searchInput.type = 'text';
-                            searchInput.removeAttribute('pattern');
-                            searchInput.removeAttribute('min');
-                            searchInput.removeAttribute('step');
-                            break;
-                        case 'statut':
-                            searchInput.placeholder = 'Rechercher par statut';
-                            searchInput.type = 'text';
-                            searchInput.removeAttribute('pattern');
-                            searchInput.removeAttribute('min');
-                            searchInput.removeAttribute('step');
-                            break;
-                        default:
-                            searchInput.placeholder = 'Rechercher par description, type...';
-                            searchInput.type = 'text';
-                            searchInput.removeAttribute('pattern');
-                            searchInput.removeAttribute('min');
-                            searchInput.removeAttribute('step');
-                    }
-                }
-
-                function validateInput() {
-                    const selectedValue = sortBySelect.value;
-                    const value = searchInput.value.trim();
-
-                    if (value === '') return true; // Empty is allowed
-
-                    switch(selectedValue) {
-                        case 'dateCreation':
-                            const dateRegex = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/;
-                            if (!dateRegex.test(value)) {
-                                alert('Format de date invalide. Utilisez YYYY-MM-DD ou DD/MM/YYYY');
-                                return false;
-                            }
-                            break;
-                        case 'budgetMax':
-                            if (!Number.isInteger(Number(value)) || Number(value) < 0) {
-                                alert('Le budget doit être un nombre entier positif');
-                                return false;
-                            }
-                            break;
-                    }
-                    return true;
-                }
-
-                sortBySelect.addEventListener('change', updatePlaceholder);
-                searchForm.addEventListener('submit', function(e) {
-                    if (!validateInput()) {
-                        e.preventDefault();
-                        return false;
-                    }
-                });
-
-                updatePlaceholder(); // Initialize on page load
-            });
-        </script>
 
         {% if demandesAide is empty %}
             <div class="box">
@@ -306,14 +262,30 @@
                         <div class="card">
                             <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
                                 <div>
-                                    <h3 style="margin: 0 0 12px 0;">#{{ demande.id }}</h3>
+                                    <h3 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h3>
                                     <span class="card__status status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
+                                    {% if demande.urgencyScore is not null %}
+                                        {% set urgencyLevel = demande.urgencyScore >= 80 ? 'CRITICAL' : (demande.urgencyScore >= 60 ? 'HIGH' : (demande.urgencyScore >= 40 ? 'MEDIUM' : 'LOW')) %}
+                                        {% set urgencyColor = demande.urgencyScore >= 80 ? '#DC3545' : (demande.urgencyScore >= 60 ? '#FD7E14' : (demande.urgencyScore >= 40 ? '#FFC107' : '#28A745')) %}
+                                        <span class="urgency-badge" style="background: {{ urgencyColor }}15; color: {{ urgencyColor }}; border: 1px solid {{ urgencyColor }}30; margin-left: 8px;">
+                                            🔥 {{ urgencyLevel }} ({{ demande.urgencyScore }})
+                                        </span>
+                                    {% endif %}
                                 </div>
-                                <span class="card__status status--{{ demande.statut|lower|replace({'_': '_'}) }}">{{ demande.statut|replace({'_': ' '}) }}</span>
+                                {% set statusClass = {
+                                    'ACCEPTÉE': 'accepted',
+                                    'EN_ATTENTE': 'en_attente',
+                                    'A_REASSIGNER': 'en_attente',
+                                    'REFUSÉE': 'refused',
+                                    'TERMINÉE': 'completed',
+                                    'EXPIRÉE': 'expired',
+                                    'ANNULÉE': 'cancelled'
+                                }[demande.statut] ?? demande.statut|lower|replace({'_': '_'}) %}
+                                <span class="card__status status--{{ statusClass }}">{{ demande.statut|replace({'_': ' '}) }}</span>
                             </div>
-
+                            
                             <p style="margin: 12px 0; color: #666; line-height: 1.5;">{{ demande.descriptionBesoin|length > 120 ? demande.descriptionBesoin|slice(0, 120) ~ '…' : demande.descriptionBesoin }}</p>
-
+                            
                             <div class="card__info">
                                 <div>
                                     <strong>Type de patient:</strong><br>{{ demande.typePatient|replace({'_': ' '}) }}
@@ -328,41 +300,25 @@
                                     <strong>Créée:</strong><br>{{ demande.dateCreation ? demande.dateCreation|date('d/m/Y H:i') : 'N/A' }}
                                 </div>
                             </div>
-
+                            
                             <div class="card__actions">
-                                {% if demande.statut == 'EN_ATTENTE' %}
+                                {% if demande.statut in ['EN_ATTENTE', 'A_REASSIGNER'] and not demande.aideChoisie %}
+                                    <a href="{{ path('app_demande_select_aide', {id: demande.id}) }}" class="btn btn--select">👥 Sélectionner un aide</a>
+                                {% endif %}
+                                {% if demande.statut in ['EN_ATTENTE', 'A_REASSIGNER'] %}
                                     <a href="{{ path('app_demande_aide_edit', {id: demande.id}) }}" class="btn btn--edit">✏️ Modifier</a>
                                 {% endif %}
                                 <a href="{{ path('app_demande_aide_show', {id: demande.id}) }}" class="btn btn--info">👁️ Suivre</a>
-                                <form method="POST" action="{{ path('app_demande_aide_delete', {id: demande.id}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette demande ?');">
-                                    <button type="submit" class="btn btn--danger" style="width: 100%;">❌ Annuler</button>
-                                </form>
+                                {% if demande.statut not in ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE'] %}
+                                    <form method="POST" action="{{ path('app_demande_aide_delete', {id: demande.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette demande ?');">
+                                        <button type="submit" class="btn btn--danger">❌ Annuler</button>
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
                 </div>
             </div>
-
-            <!-- Pagination -->
-            {% if total_pages > 1 %}
-                <div class="pagination" style="margin-top: 32px; display: flex; justify-content: center; gap: 8px;">
-                    {% if current_page > 1 %}
-                        <a href="{{ path('app_demandes_index', {'page': current_page - 1, 'search': search, 'sort_by': sort_by, 'sort_order': sort_order}) }}" class="btn btn--secondary" style="padding: 8px 12px;">Précédent</a>
-                    {% endif %}
-
-                    {% for page_num in range(max(1, current_page - 2), min(total_pages, current_page + 2)) %}
-                        {% if page_num == current_page %}
-                            <span class="btn btn--primary" style="padding: 8px 12px; background: #007bff;">{{ page_num }}</span>
-                        {% else %}
-                            <a href="{{ path('app_demandes_index', {'page': page_num, 'search': search, 'sort_by': sort_by, 'sort_order': sort_order}) }}" class="btn btn--secondary" style="padding: 8px 12px;">{{ page_num }}</a>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if current_page < total_pages %}
-                        <a href="{{ path('app_demandes_index', {'page': current_page + 1, 'search': search, 'sort_by': sort_by, 'sort_order': sort_order}) }}" class="btn btn--secondary" style="padding: 8px 12px;">Suivant</a>
-                    {% endif %}
-                </div>
-            {% endif %}
         {% endif %}
     </main>
 </div>

@@ -429,6 +429,44 @@ tbody td {
     margin: 0;
     display: inline-block;
 }
+.action-buttons button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Status badges */
+.status-badge,
+.card__status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status--accepted,
+.status--accept\00e9 e {
+  background: #C8E6C9;
+  color: #2E7D32;
+  border: 1px solid rgba(46, 125, 50, 0.15);
+}
+
+.status--en_attente,
+.status--pending {
+  background: #FFE0B2;
+  color: #E65100;
+  border: 1px solid rgba(230, 81, 0, 0.15);
+}
+
+.status--refused,
+.status--refus\00e9 e {
+  background: #FFCCCC;
+  color: #C62828;
+  border: 1px solid rgba(198, 40, 40, 0.15);
 
 .action-buttons .btn {
     font-size: 0.75rem;

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de Mission #{{ mission.id }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #4A90E2;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #4A90E2;
+            font-size: 24pt;
+            margin-bottom: 5px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 10pt;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            background: #4A90E2;
+            color: white;
+            padding: 8px 12px;
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .info-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-row {
+            display: table-row;
+        }
+        
+        .info-label {
+            display: table-cell;
+            font-weight: bold;
+            width: 35%;
+            padding: 6px 10px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        
+        .info-value {
+            display: table-cell;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-validee {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-suspecte {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #ccc;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+        }
+        
+        .coordinates {
+            font-family: 'Courier New', monospace;
+            background: #f9f9f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rapport de Mission</h1>
+        <div class="subtitle">Aidora — Plateforme de gestion des soins</div>
+        <div class="subtitle">Généré le {{ "now"|date("d/m/Y à H:i") }}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Informations Générales</div>
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-label">ID Mission</div>
+                <div class="info-value">#{{ mission.id }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Titre</div>
+                <div class="info-value">{{ mission.titreM }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Statut</div>
+                <div class="info-value">{{ mission.statutMission }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Date début</div>
+                <div class="info-value">{{ mission.dateDebut|date("d/m/Y") }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Date fin</div>
+                <div class="info-value">{{ mission.dateFin|date("d/m/Y") }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Prix final</div>
+                <div class="info-value">{{ mission.prixFinal }} TND</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Intervenants</div>
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-label">Aide-Soignant</div>
+                <div class="info-value">
+                    {% if mission.aideSoignant %}
+                        {{ mission.aideSoignant.nom }} {{ mission.aideSoignant.prenom }}
+                    {% else %}
+                        Non assigné
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Email Aide-Soignant</div>
+                <div class="info-value">
+                    {% if mission.aideSoignant %}
+                        {{ mission.aideSoignant.email }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Patient (email)</div>
+                <div class="info-value">
+                    {% if mission.demandeAide %}
+                        {{ mission.demandeAide.email }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Adresse intervention</div>
+                <div class="info-value">
+                    {% if mission.demandeAide %}
+                        {{ mission.demandeAide.adresse ?? 'Non renseignée' }}
+                        {% if mission.demandeAide.ville %}, {{ mission.demandeAide.ville }}{% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if mission.checkInAt or mission.checkOutAt %}
+    <div class="section">
+        <div class="section-title">Traçabilité Géographique</div>
+        <div class="info-grid">
+            {% if mission.checkInAt %}
+            <div class="info-row">
+                <div class="info-label">Check-In</div>
+                <div class="info-value">{{ mission.checkInAt|date("d/m/Y à H:i:s") }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Coordonnées Check-In</div>
+                <div class="info-value">
+                    <span class="coordinates">
+                        {{ mission.latitudeCheckin|number_format(6, '.', '') }}, 
+                        {{ mission.longitudeCheckin|number_format(6, '.', '') }}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if mission.checkOutAt %}
+            <div class="info-row">
+                <div class="info-label">Check-Out</div>
+                <div class="info-value">{{ mission.checkOutAt|date("d/m/Y à H:i:s") }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Coordonnées Check-Out</div>
+                <div class="info-value">
+                    <span class="coordinates">
+                        {{ mission.latitudeCheckout|number_format(6, '.', '') }}, 
+                        {{ mission.longitudeCheckout|number_format(6, '.', '') }}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if mission.statusVerification %}
+            <div class="info-row">
+                <div class="info-label">Statut Vérification</div>
+                <div class="info-value">
+                    <span class="status-badge status-{{ mission.statusVerification|lower }}">
+                        {{ mission.statusVerification }}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if mission.note or mission.commentaire %}
+    <div class="section">
+        <div class="section-title">Évaluation</div>
+        <div class="info-grid">
+            {% if mission.note %}
+            <div class="info-row">
+                <div class="info-label">Note</div>
+                <div class="info-value">{{ mission.note }} / 5</div>
+            </div>
+            {% endif %}
+            
+            {% if mission.commentaire %}
+            <div class="info-row">
+                <div class="info-label">Commentaire</div>
+                <div class="info-value">{{ mission.commentaire }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if mission.proofPhotoData or mission.signatureData %}
+    <div class="section">
+        <div class="section-title">Preuves fournies</div>
+        <div class="info-grid">
+            {% if mission.proofPhotoData %}
+            <div class="info-row">
+                <div class="info-label">Photo preuve</div>
+                <div class="info-value">
+                    <img src="{{ mission.proofPhotoData }}" alt="Photo preuve" style="max-width: 260px; max-height: 180px; border:1px solid #ddd; padding:4px;">
+                </div>
+            </div>
+            {% endif %}
+
+            {% if mission.signatureData %}
+            <div class="info-row">
+                <div class="info-label">Signature</div>
+                <div class="info-value">
+                    <img src="{{ mission.signatureData }}" alt="Signature" style="max-width: 260px; max-height: 120px; border:1px solid #ddd; padding:4px;">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p><strong>Aidora</strong> — Plateforme de mise en relation patients et aides-soignants</p>
+        <p>Ce document est généré automatiquement et certifie la traçabilité de la mission.</p>
+    </div>
+</body>
+</html>

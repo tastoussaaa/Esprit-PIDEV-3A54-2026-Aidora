@@ -1,0 +1,216 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des missions{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 4px solid #999;
+        }
+
+        .history-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .history-item.completed {
+            border-left-color: #4CAF50;
+        }
+
+        .history-item.expired {
+            border-left-color: #FF9800;
+        }
+
+        .history-item.cancelled {
+            border-left-color: #f44336;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+
+        .history-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .history-status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .history-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-delete {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid #EF9A9A;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover {
+            background: #EF9A9A;
+        }
+
+        .status-completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+        }
+
+        .status-expired {
+            background: #FFE0B2;
+            color: #E65100;
+        }
+
+        .status-cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .pagination a:hover {
+            background: #f5f5f5;
+        }
+
+        .pagination .current {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">📚 Historique des missions</h1>
+                <p class="portal__subtitle">Vos missions terminées, expirées ou annulées</p>
+            </div>
+        </div>
+
+        <div class="box">
+            {% if missions|length > 0 %}
+                <div class="history-list">
+                    {% for mission in missions %}
+                        <div class="history-item {{ mission.finalStatus|lower }}">
+                            <div class="history-info">
+                                <h3 class="history-title">{{ mission.titreM }}</h3>
+                                <div class="history-meta">
+                                    <span>📅 {{ mission.dateDebut|date('d/m/Y') }} - {{ mission.dateFin|date('d/m/Y') }}</span>
+                                    <span>💰 {{ mission.prixFinal }} TND</span>
+                                    {% if mission.note %}
+                                        <span>⭐ {{ mission.note }}/5</span>
+                                    {% endif %}
+                                    {% if mission.archivedAt %}
+                                        <span>🕐 {{ mission.archivedAt|date('d/m/Y à H:i') }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if mission.archiveReason %}
+                                    <p style="font-size: 13px; color: #666; margin: 8px 0 0 0;">{{ mission.archiveReason }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="history-actions">
+                                <span class="history-status status-{{ mission.finalStatus|lower }}">
+                                    {% if mission.finalStatus == 'TERMINÉE' %}
+                                        ✓ Terminée
+                                    {% elseif mission.finalStatus == 'EXPIRÉE' %}
+                                        ⏰ Expirée
+                                    {% elseif mission.finalStatus == 'ANNULÉE' %}
+                                        ✕ Annulée
+                                    {% endif %}
+                                </span>
+                                <form method="POST" action="{{ path('aidesoingnant_missions_delete', {id: mission.id}) }}" onsubmit="return confirm('Supprimer définitivement cette mission de la base ?');">
+                                    <button type="submit" class="btn-delete">🗑️ Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if total_pages > 1 %}
+                    <div class="pagination">
+                        {% if current_page > 1 %}
+                            <a href="{{ path('aidesoingnant_history', {page: current_page - 1}) }}">← Précédent</a>
+                        {% endif %}
+
+                        {% for page_num in 1..total_pages %}
+                            {% if page_num == current_page %}
+                                <span class="current">{{ page_num }}</span>
+                            {% else %}
+                                <a href="{{ path('aidesoingnant_history', {page: page_num}) }}">{{ page_num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if current_page < total_pages %}
+                            <a href="{{ path('aidesoingnant_history', {page: current_page + 1}) }}">Suivant →</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <p style="font-size: 18px; margin-bottom: 12px;">📭 Aucune mission archivée</p>
+                    <p>Vous n'avez pas encore de missions terminées, expirées ou annulées.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+{% endblock %}

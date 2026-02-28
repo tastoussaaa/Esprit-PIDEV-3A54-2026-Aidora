@@ -1,0 +1,260 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la demande d'aide{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        #map {
+            height: 400px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 2px solid #ddd;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .detail-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .detail-section h3 {
+            margin-top: 0;
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .detail-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-back {
+            padding: 12px 20px;
+            background: #F5F5F5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-back:hover {
+            background: #E8E8E8;
+            border-color: #999;
+        }
+
+        .btn-success {
+            padding: 12px 20px;
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-success:hover {
+            background: #A5D6A7;
+        }
+
+        .status--completed {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+
+        .status--expired {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+
+        .status--cancelled {
+            background: #FFCDD2;
+            color: #C62828;
+            border: 1px solid rgba(198, 40, 40, 0.15);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Détails de la demande</h1>
+                <p class="portal__subtitle">Informations sur la demande d'aide</p>
+            </div>
+        </div>
+
+        <div class="box" style="max-width: 900px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+                <div>
+                    <h2 style="margin: 0 0 12px 0;">{{ demande.titreD }}</h2>
+                    <span class="status-badge status--{{ demande.typeDemande|lower }}">{{ demande.typeDemande }}</span>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0 0 8px 0;">Statut</h3>
+                    {% set statusClass = {
+                        'ACCEPTÉE': 'accepted',
+                        'EN_ATTENTE': 'en_attente',
+                        'A_REASSIGNER': 'en_attente',
+                        'REFUSÉE': 'refused',
+                        'TERMINÉE': 'completed',
+                        'EXPIRÉE': 'expired',
+                        'ANNULÉE': 'cancelled'
+                    }[demande.statut] ?? demande.statut|lower|replace({'_': '_'}) %}
+                    <span class="status-badge status--{{ statusClass }}">{{ demande.statut|replace({'_': ' '}) }}</span>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-section">
+                    <h3>📋 Informations générales</h3>
+                    <div class="detail-item">
+                        <div class="detail-label">Titre de la demande</div>
+                        <div class="detail-value">{{ demande.titreD }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Description du besoin</div>
+                        <div class="detail-value">{{ demande.descriptionBesoin }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Type de patient</div>
+                        <div class="detail-value">{{ demande.typePatient }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Sexe préféré</div>
+                        <div class="detail-value">
+                            {% if demande.sexe == 'M' %}
+                                Homme
+                            {% elseif demande.sexe == 'F' %}
+                                Femme
+                            {% else %}
+                                Peu importe
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Budget maximum</div>
+                        <div class="detail-value">{{ demande.budgetMax }} TND</div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📅 Dates et durées</h3>
+                    <div class="detail-item">
+                        <div class="detail-label">Créée le</div>
+                        <div class="detail-value">{{ demande.dateCreation ? demande.dateCreation|date('d/m/Y à H:i') : 'N/A' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Début souhaité</div>
+                        <div class="detail-value">{{ demande.dateDebutSouhaitee ? demande.dateDebutSouhaitee|date('d/m/Y à H:i') : 'N/A' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Fin souhaitée</div>
+                        <div class="detail-value">{{ demande.dateFinSouhaitee ? demande.dateFinSouhaitee|date('d/m/Y à H:i') : 'Non définie' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Aide certifiée requise</div>
+                        <div class="detail-value">
+                            {% if demande.besoinCertifie %}
+                                ✅ Oui
+                            {% else %}
+                                ❌ Non
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if demande.lieu or (demande.latitude and demande.longitude) %}
+                <div style="margin-bottom: 24px;">
+                    <h3 style="margin-top: 0;">📍 Localisation</h3>
+                    {% if demande.lieu %}
+                        <p><strong>Lieu:</strong> {{ demande.lieu }}</p>
+                    {% endif %}
+                    <div id="map"></div>
+                    <p style="font-size: 13px; color: #999; margin-top: 8px;">
+                        Latitude: {{ demande.latitude|number_format(6) }}, Longitude: {{ demande.longitude|number_format(6) }}
+                    </p>
+                </div>
+            {% endif %}
+
+            <div class="actions">
+                <a href="{{ path('aidesoingnant_demandes') }}" class="btn-back">← Retour aux demandes</a>
+                {% if demande.statut == 'EN_ATTENTE' %}
+                    <form method="POST" action="{{ path('aidesoingnant_accept_mission', {id: demande.id}) }}" style="display: inline;">
+                        <button type="submit" class="btn-success">✓ Accepter cette demande</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+    {% if demande.latitude and demande.longitude %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const map = L.map('map').setView([{{ demande.latitude }}, {{ demande.longitude }}], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        L.marker([{{ demande.latitude }}, {{ demande.longitude }}]).addTo(map)
+            .bindPopup('{{ demande.lieu|escape('js') }}')
+            .openPopup();
+    });
+    {% endif %}
+</script>
+{% endblock %}

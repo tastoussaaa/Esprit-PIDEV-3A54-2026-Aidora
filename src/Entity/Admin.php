@@ -5,8 +5,6 @@ namespace App\Entity;
 use App\Repository\AdminRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\User;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: AdminRepository::class)]
 class Admin
@@ -24,12 +22,6 @@ class Admin
 
     #[ORM\ManyToOne(inversedBy: 'admins')]
     private ?Formation $formation = null;
-
-    /**
-     * @var Collection<int, Formation>
-     */
-    #[ORM\OneToMany(targetEntity: Formation::class, mappedBy: 'admin')]
-    private Collection $formations;
 
     #[ORM\Column(length: 255)]
     private ?string $mdp = null;

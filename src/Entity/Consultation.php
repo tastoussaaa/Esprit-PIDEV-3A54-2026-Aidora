@@ -14,8 +14,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: ConsultationRepository::class)]
 #[UniqueEntity(fields: ['dateConsultation', 'timeSlot'])]
-// #[Assert\Callback(callback: 'validateWorkingHours')]
-// #[Assert\Callback(callback: 'validateFutureDate')]
+#[Assert\Callback(callback: 'validateWorkingHours')]
+#[Assert\Callback(callback: 'validateFutureDate')]
 class Consultation
 {
     #[ORM\Id]
@@ -69,6 +69,20 @@ class Consultation
     private ?\DateTimeImmutable $createdAt = null;
 
     // -----------------------
+    // Relation with Patient
+    // -----------------------
+    #[ORM\ManyToOne(targetEntity: Patient::class, inversedBy: 'consultations')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Patient $patient = null;
+
+    // -----------------------
+    // Relation with Medecin
+    // -----------------------
+    #[ORM\ManyToOne(targetEntity: Medecin::class, inversedBy: 'consultations')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Medecin $medecin = null;
+
+    // -----------------------
     // Relation with Ordonnance
     // -----------------------
     // One Consultation can have many Ordonnances
@@ -80,12 +94,6 @@ class Consultation
      */
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'consultation')]
     private Collection $feedbacks;
-
-    #[ORM\ManyToOne(targetEntity: Medecin::class, inversedBy: 'consultations')]
-    private ?Medecin $medecin = null;
-
-    #[ORM\ManyToOne(targetEntity: Patient::class, inversedBy: 'consultations')]
-    private ?Patient $patient = null;
 
     public function __construct()
     {
@@ -110,7 +118,7 @@ class Consultation
         return $this->dateConsultation;
     }
 
-    public function setDateConsultation(?\DateTimeInterface $dateConsultation): static
+    public function setDateConsultation(\DateTimeInterface $dateConsultation): static
     {
         $this->dateConsultation = $dateConsultation;
         return $this;
@@ -215,17 +223,6 @@ class Consultation
         return $this;
     }
 
-    public function getMedecin(): ?Medecin
-    {
-        return $this->medecin;
-    }
-
-    public function setMedecin(?Medecin $medecin): static
-    {
-        $this->medecin = $medecin;
-        return $this;
-    }
-
     public function getPatient(): ?Patient
     {
         return $this->patient;
@@ -234,6 +231,17 @@ class Consultation
     public function setPatient(?Patient $patient): static
     {
         $this->patient = $patient;
+        return $this;
+    }
+
+    public function getMedecin(): ?Medecin
+    {
+        return $this->medecin;
+    }
+
+    public function setMedecin(?Medecin $medecin): static
+    {
+        $this->medecin = $medecin;
         return $this;
     }
 

@@ -3,7 +3,158 @@
 {% block title %}Nouvelle formation{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+<style>
+    /* Popup Google Calendar */
+    .popup-success {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .popup-content {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        width: 400px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    /* PAGE LAYOUT */
+    .portal {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* MAIN AREA */
+    .portal__main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* centre verticalement le contenu */
+        align-items: center;     /* centre horizontalement */
+        background-image: url('{{ asset('assets/images/form.jpg') }}');
+        background-size: cover;
+        background-position: center;
+        padding: 20px;
+        position: relative;
+    }
+
+    /* TOP BAR */
+/* PAGE LAYOUT */
+.portal {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* MAIN AREA */
+.portal__main {
+    flex: 1;
+    display: flex;
+    justify-content: center;  /* centre horizontalement */
+    align-items: center;      /* centre verticalement */
+    background-image: url('{{ asset('assets/images/form.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    padding: 20px;
+}
+.ck-editor__editable_inline.description-field {
+    text-align: left !important;
+}
+/* TOP BAR */
+.portal__top {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-xl, 15px);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 10; /* au-dessus du formulaire */
+}
+
+.portal__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #333);
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary-color, #1976d2), var(--primary-dark, #115293));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.portal__subtitle {
+    color: var(--text-secondary, #555);
+    font-size: 1rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+/* FORMULAIRE */
+.form-box {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(255,255,255,0.97); /* plus opaque pour bien ressortir */
+    padding: 30px;
+    border-radius: 22px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    text-align: left;
+    z-index: 5; /* au-dessus du background */
+    position: relative;
+}
+
+/* Form group spacing */
+.form-box .form-group {
+    margin-bottom: 15px;
+}
+
+.form-box .btn {
+    width: 48%;
+}
+
+
+
+
+    /* FORMULAIRE */
+    .form-box {
+        width: 100%;
+        max-width: 600px;
+        background: rgba(255,255,255,0.9);
+        padding: 30px;
+        border-radius: 22px;
+        box-shadow: var(--shadow2);
+        text-align: left;
+        z-index: 1;
+    }
+
+    .form-box h1, .form-box p {
+        text-align: center;
+    }
+
+    .form-box .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-box .btn {
+        width: 48%;
+    }
+
+</style>
 {% endblock %}
 
 {% block body %}
@@ -11,71 +162,157 @@
 {% set navigation = [
     {'name': 'Dashboard', 'path': path('app_medecin_dashboard'), 'icon': '🏠'},
     {'name': 'Consultations', 'path': path('medecin_consultations'), 'icon': '🩺'},
+    {'name': 'Ordonnances', 'path': path('Ordonnance_new'), 'icon': '💊'},
     {'name': 'Formations', 'path': path('medecin_formations'), 'icon': '📚'},
     {'name': 'Nouvelle Formation', 'path': path('medecin_formation_new'), 'icon': '➕'}
 ] %}
 
-
 <div class="portal">
 
-    {# Inclure le sidebar #}
+    {# SIDEBAR #}
     {% include 'side_bar.html.twig' %}
 
-    <!-- MAIN CONTENT -->
     <main class="portal__main">
 
+        {# TOP BAR #}
         <div class="portal__top">
-            <div>
-                <h1 class="portal__title">Créer une formation</h1>
-                <p class="portal__subtitle">
-                    Ajoutez une nouvelle formation médicale
-                </p>
-            </div>
+            <h1>Créer une formation</h1>
+            <p>Ajoutez une nouvelle formation médicale</p>
         </div>
 
-        <div class="box" style="max-width:600px">
+		<br><br>
+		<br><br>
+        <br><br>
+		<br><br>
 
-            {{ form_start(form) }}
+        {# FORMULAIRE #}
+        <div class="form-box">
+            {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
 
             <div class="form-group">
                 {{ form_label(form.title) }}
                 {{ form_widget(form.title) }}
-                {{ form_errors(form.title) }}
             </div>
 
             <div class="form-group">
                 {{ form_label(form.category) }}
                 {{ form_widget(form.category) }}
-                {{ form_errors(form.category) }}
             </div>
+<div class="form-group">
+    {{ form_label(form.description) }}
+    {{ form_widget(form.description) }}
+    <button type="button" id="generate-description-btn" class="btn btn--secondary" style="margin-top:5px;">
+        Générer description
+    </button>
+</div>
 
             <div class="form-group">
-                {{ form_label(form.description) }}
-                {{ form_widget(form.description) }}
-                {{ form_errors(form.description) }}
+                {{ form_label(form.objective) }}
+                {{ form_widget(form.objective) }}
             </div>
 
             <div class="form-group">
                 {{ form_label(form.startDate) }}
                 {{ form_widget(form.startDate) }}
-                {{ form_errors(form.startDate) }}
             </div>
 
             <div class="form-group">
                 {{ form_label(form.endDate) }}
                 {{ form_widget(form.endDate) }}
-                {{ form_errors(form.endDate) }}
             </div>
 
-            <div style="margin-top:16px; display:flex; gap:10px">
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
                 <button type="submit" class="btn btn--primary">Créer</button>
                 <a href="{{ path('medecin_formations') }}" class="btn btn--ghost">Annuler</a>
             </div>
 
             {{ form_end(form) }}
-
         </div>
-    </main>
 
+    </main>
 </div>
+
+{# Popup Google Calendar #}
+{% for data in app.flashes('formation_success') %}
+<div id="calendar-popup" class="popup-success">
+    <div class="popup-content">
+        <h3>✅ Formation créée avec succès</h3>
+        <p>Voulez-vous l'ajouter à votre Google Calendar ?</p>
+
+        <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+            <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ data.title|url_encode }}&details={{ data.description|url_encode }}&dates={{ data.start }}/{{ data.end }}" target="_blank" class="btn btn--primary">
+                🗓 Ajouter
+            </a>
+
+            <button onclick="closeCalendarPopup()" class="btn btn--ghost">Plus tard</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function closeCalendarPopup() {
+    const popup = document.getElementById('calendar-popup');
+    if(popup) popup.style.display = 'none';
+}
+</script>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.ckeditor').forEach((element) => {
+        ClassicEditor
+            .create(element)
+            .catch(error => {
+                console.error(error);
+            });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const generateBtn = document.getElementById('generate-description-btn');
+
+    generateBtn.addEventListener('click', function() {
+        // Get form values
+        const title = document.getElementById('{{ form.title.vars.id }}').value;
+        const category = document.getElementById('{{ form.category.vars.id }}').value;
+        const startDate = document.getElementById('{{ form.startDate.vars.id }}').value;
+        const endDate = document.getElementById('{{ form.endDate.vars.id }}').value;
+
+        // Prepare data
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('category', category);
+        formData.append('startDate', startDate);
+        formData.append('endDate', endDate);
+
+        // Call your Symfony route via fetch
+     fetch('{{ path("medecin_formation_generate_description") }}', {
+    method: 'POST',
+    body: formData,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+})
+        .then(response => response.json())
+        .then(data => {
+            // Populate the description field
+            const descriptionField = document.getElementById('{{ form.description.vars.id }}');
+
+            // If using CKEditor
+            if (descriptionField.classList.contains('ckeditor')) {
+                ClassicEditor
+                    .create(descriptionField)
+                    .then(editor => {
+                        editor.setData(data.description);
+                    })
+                    .catch(error => console.error(error));
+            } else {
+                descriptionField.value = data.description;
+            }
+        })
+        .catch(error => console.error('Error generating description:', error));
+    });
+});
+</script>
 {% endblock %}

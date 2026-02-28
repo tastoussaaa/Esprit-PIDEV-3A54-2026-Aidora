@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Mission;
+use App\Entity\AideSoignant;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DemandeAideRepository::class)]
@@ -88,6 +89,24 @@ class DemandeAide
 
     #[ORM\OneToMany(mappedBy: "demandeAide", targetEntity: Mission::class, cascade: ['remove'])]
     private Collection $missions;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre de la demande est obligatoire')]
+    #[Assert\Length(min: 10, minMessage: 'Le titre doit contenir au moins 10 caractères', max: 5000, maxMessage: 'Le titre ne peut pas dépasser 5000 caractères')]
+    private ?string $TitreD = null;
+
+    #[ORM\ManyToOne(targetEntity: AideSoignant::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?AideSoignant $aideChoisie = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $urgencyScore = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $suggestedAideIds = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $autoMatchingTriggeredAt = null;
 
     public function __construct()
     {
@@ -293,7 +312,7 @@ class DemandeAide
 
     public function __toString(): string
     {
-        return $this->typeDemande . ' - ' . $this->descriptionBesoin;
+        return $this->TitreD . ' - ' . $this->typeDemande;
     }
 
     public function getEmail(): ?string
@@ -304,6 +323,62 @@ class DemandeAide
     public function setEmail(string $email): static
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getTitreD(): ?string
+    {
+        return $this->TitreD;
+    }
+
+    public function setTitreD(string $TitreD): static
+    {
+        $this->TitreD = $TitreD;
+
+        return $this;
+    }
+
+    public function getAideChoisie(): ?AideSoignant
+    {
+        return $this->aideChoisie;
+    }
+
+    public function setAideChoisie(?AideSoignant $aideChoisie): static
+    {
+        $this->aideChoisie = $aideChoisie;
+        return $this;
+    }
+
+    public function getUrgencyScore(): ?int
+    {
+        return $this->urgencyScore;
+    }
+
+    public function setUrgencyScore(?int $urgencyScore): static
+    {
+        $this->urgencyScore = $urgencyScore;
+        return $this;
+    }
+
+    public function getSuggestedAideIds(): ?string
+    {
+        return $this->suggestedAideIds;
+    }
+
+    public function setSuggestedAideIds(?string $suggestedAideIds): static
+    {
+        $this->suggestedAideIds = $suggestedAideIds;
+        return $this;
+    }
+
+    public function getAutoMatchingTriggeredAt(): ?\DateTimeInterface
+    {
+        return $this->autoMatchingTriggeredAt;
+    }
+
+    public function setAutoMatchingTriggeredAt(?\DateTimeInterface $autoMatchingTriggeredAt): static
+    {
+        $this->autoMatchingTriggeredAt = $autoMatchingTriggeredAt;
         return $this;
     }
 }

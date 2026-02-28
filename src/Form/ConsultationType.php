@@ -20,13 +20,12 @@ class ConsultationType extends AbstractType
         $builder
             ->add('dateConsultation', DateType::class, [
                 'widget' => 'single_text',
-                'label' => 'Date de consultation',
-                'required' => false,
+                'label' => 'Consultation date',
                 'row_attr' => ['class' => 'form__field'],
                 'attr' => ['class' => 'form__input']
             ])
             ->add('timeSlot', ChoiceType::class, [
-                'label' => 'Créneau horaire',
+                'label' => 'Time slot',
                 'choices' => [
                     // Morning shift
                     '9:00' => '09:00',
@@ -43,51 +42,44 @@ class ConsultationType extends AbstractType
                     '16:00' => '16:00',
                     '16:30' => '16:30',
                 ],
-                'placeholder' => 'Choisir un créneau horaire',
-                'required' => false,
+                'placeholder' => 'Choose a time slot',
                 'row_attr' => ['class' => 'form__field'],
                 'attr' => ['class' => 'form__select']
             ])
             ->add('motif', TextType::class, [
                 'label' => 'Motif',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'Motif de la consultation'],
-                'required' => false,
+                'attr' => ['class' => 'form__input', 'placeholder' => 'Reason for consultation']
             ])
             ->add('name', TextType::class, [
-                'label' => 'Prénom',
+                'label' => 'First name',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'Prénom'],
-                'required' => false,
+                'attr' => ['class' => 'form__input', 'placeholder' => 'Given name']
             ])
             ->add('familyName', TextType::class, [
-                'label' => 'Nom de famille',
+                'label' => 'Family name',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'Nom'],
-                'required' => false,
+                'attr' => ['class' => 'form__input', 'placeholder' => 'Surname']
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'patient@exemple.com'],
-                'required' => false,
+                'attr' => ['class' => 'form__input', 'placeholder' => 'patient@example.com']
             ])
             ->add('sex', ChoiceType::class, [
-                'label' => 'Sexe',
+                'label' => 'Sex',
                 'choices' => [
-                    'Homme' => 'male',
-                    'Femme' => 'female',
+                    'Male' => 'male',
+                    'Female' => 'female',
                 ],
-                'placeholder' => 'Choisir',
+                'placeholder' => 'Choose',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__select'],
-                'required' => false,
+                'attr' => ['class' => 'form__select']
             ])
             ->add('age', IntegerType::class, [
-                'label' => 'Âge',
+                'label' => 'Age',
                 'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'min' => 0, 'max' => 150],
-                'required' => false,
+                'attr' => ['class' => 'form__input', 'min' => 0]
             ]);
     }
 

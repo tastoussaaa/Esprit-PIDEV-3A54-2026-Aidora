@@ -1,385 +1,532 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Formation Applicants - {{ formation.title }}{% endblock %}
+{% block title %}Formation Applicants -
+	{{ formation.title }}
+{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
-    <style>
-        .applicants-container {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+	<link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+	<style>
+		/* === Container and header === */
 
-        .formation-header {
-            background: #1976d2;
-            color: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
+		/* ==============================
+   RESSOURCES SECTION
+============================== */
 
-        .formation-header h2 {
-            margin: 0 0 10px 0;
-            font-size: 1.8em;
-        }
+.ressources-section{
+  background: rgba(255,255,255,.9);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:20px;
+  box-shadow: var(--shadow2);
+  margin-top:20px;
+}
 
-        .formation-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            font-size: 0.95em;
-        }
+.ressources-section h3{
+  margin:0 0 16px;
+  font-weight:980;
+  letter-spacing:-.3px;
+}
 
-        .info-item {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 4px;
-        }
+/* list container */
+.ressources-list{
+  display:grid;
+  gap:12px;
+}
 
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #ddd;
-            margin-bottom: 20px;
-            gap: 0;
-        }
+/* each resource card */
+.ressource-item{
+  padding:16px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background: rgba(233,253,255,.55);
+  transition:.18s ease;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-        .tab-button {
-            background: none;
-            border: none;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-size: 1em;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
+.ressource-item:hover{
+  transform:translateY(-4px);
+  box-shadow: var(--shadow2);
+}
 
-        .tab-button.active {
-            color: #1976d2;
-            border-bottom-color: #1976d2;
-        }
+/* text part */
+.ressource-info{
+  display:grid;
+  gap:6px;
+}
 
-        .tab-button:hover:not(.active) {
-            color: #333;
-            background: #f5f5f5;
-        }
+.ressource-title{
+  font-weight:950;
+  font-size:14px;
+}
 
-        .tab-content {
-            display: none;
-        }
+.ressource-desc{
+  font-size:13px;
+  color:var(--muted);
+}
 
-        .tab-content.active {
-            display: block;
-        }
+/* download / action button */
+.ressource-action a{
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  text-decoration:none;
+  background: linear-gradient(135deg, rgba(24,191,234,.22), rgba(168,120,255,.18));
+  border:1px solid rgba(24,191,234,.25);
+  transition:.18s ease;
+}
 
-        .applicants-list {
-            display: grid;
-            gap: 15px;
-        }
+.ressource-action a:hover{
+  box-shadow:0 0 0 6px rgba(24,191,234,.12);
+}
 
-        .applicant-card {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            transition: background 0.2s;
-        }
 
-        .applicant-card:hover {
-            background: #f9f9f9;
-        }
 
-        .applicant-info {
-            flex: 1;
-        }
+/* ==============================
+   APPLICANTS CONTAINER
+============================== */
 
-        .applicant-name {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
+.applicants-container{
+  background: rgba(255,255,255,.9);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:20px;
+  box-shadow: var(--shadow2);
+  margin-top:20px;
+}
 
-        .applicant-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 8px;
-        }
+/* ==============================
+   TABS (same style logic)
+============================== */
 
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
 
-        .applicant-actions {
-            display: flex;
-            gap: 10px;
-        }
+.tab-button{
+  flex:1;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background: rgba(233,253,255,.55);
+  font-weight:900;
+  font-size:13px;
+  cursor:pointer;
+  transition:.18s ease;
+}
 
-        .action-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
+.tab-button:hover{
+  transform:translateY(-2px);
+  box-shadow: var(--shadow2);
+}
 
-        .btn-accept {
-            background: #4caf50;
-            color: white;
-        }
+.tab-button.active{
+  background: linear-gradient(135deg, rgba(24,191,234,.22), rgba(168,120,255,.18));
+  border:1px solid rgba(24,191,234,.25);
+}
 
-        .btn-accept:hover {
-            background: #45a049;
-        }
+/* ==============================
+   TAB CONTENT
+============================== */
 
-        .btn-reject {
-            background: #f44336;
-            color: white;
-        }
+.tab-content{
+  display:none;
+}
 
-        .btn-reject:hover {
-            background: #da190b;
-        }
+.tab-content.active{
+  display:block;
+}
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
+/* ==============================
+   APPLICANT CARDS
+============================== */
 
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
+.applicants-list{
+  display:grid;
+  gap:12px;
+}
 
-        .status-accepted {
-            background: #d4edda;
-            color: #155724;
-        }
+.applicant-card{
+  padding:16px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background: rgba(233,253,255,.55);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  transition:.18s ease;
+}
 
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
+.applicant-card:hover{
+  transform:translateY(-4px);
+  box-shadow: var(--shadow2);
+}
 
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
+.applicant-name{
+  font-weight:950;
+  font-size:14px;
+}
 
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
+.applicant-details{
+  margin-top:6px;
+  display:grid;
+  gap:4px;
+  font-size:13px;
+  color:var(--muted);
+}
 
-        .rejection-form {
-            display: none;
-            margin-top: 10px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-        }
+/* ==============================
+   ACTION BUTTONS
+============================== */
 
-        .rejection-form.show {
-            display: block;
-        }
+.action-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.9);
+  cursor:pointer;
+  transition:.18s ease;
+}
 
-        .rejection-form textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            resize: vertical;
-            min-height: 80px;
-            font-family: Arial, sans-serif;
-            margin-bottom: 8px;
-        }
+.action-btn:hover{
+  box-shadow:0 0 0 6px rgba(24,191,234,.12);
+}
 
-        .rejection-form-actions {
-            display: flex;
-            gap: 10px;
-        }
+.btn-accept{
+  background: linear-gradient(135deg, rgba(24,191,234,.22), rgba(168,120,255,.18));
+  border:1px solid rgba(24,191,234,.25);
+}
 
-        .rejection-form-actions button {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
+.btn-reject{
+  background: rgba(255,120,120,.18);
+  border:1px solid rgba(255,120,120,.35);
+}
 
-        .btn-submit {
-            background: #f44336;
-            color: white;
-        }
+/* ==============================
+   STATUS BADGES
+============================== */
 
-        .btn-cancel {
-            background: #999;
-            color: white;
-        }
-    </style>
+.status-badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+}
+
+.status-accepted{
+  background: rgba(24,191,234,.18);
+  border:1px solid rgba(24,191,234,.25);
+}
+
+.status-rejected{
+  background: rgba(255,120,120,.18);
+  border:1px solid rgba(255,120,120,.35);
+}
+
+/* ==============================
+   EMPTY STATE
+============================== */
+
+.empty-state{
+  padding:30px;
+  text-align:center;
+  color:var(--muted);
+}
+
+.empty-state-icon{
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+/* ==============================
+   REJECTION FORM
+============================== */
+
+.rejection-form{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:18px;
+  background: rgba(255,255,255,.9);
+  border:1px solid var(--border);
+}
+
+.rejection-form.show{
+  display:block;
+}
+
+.rejection-form textarea{
+  width:100%;
+  border-radius:14px;
+  border:1px solid var(--border);
+  padding:10px;
+  font-family:inherit;
+  resize:vertical;
+  min-height:80px;
+  margin-bottom:10px;
+}
+
+/* ==============================
+   FORMATION HEADER (same style system)
+============================== */
+
+.formation-header{
+  background: rgba(255,255,255,.9);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:22px;
+  box-shadow: var(--shadow2);
+  margin-bottom:20px;
+}
+
+.formation-header h2{
+  margin:0 0 16px;
+  font-weight:980;
+  letter-spacing:-.4px;
+}
+
+/* formation info grid */
+.formation-info{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+
+/* info cards */
+.info-item{
+  background: rgba(233,253,255,.55);
+  border:1px solid var(--border);
+  padding:12px;
+  border-radius:18px;
+  font-weight:850;
+  font-size:13px;
+  transition:.18s ease;
+}
+
+.info-item:hover{
+  transform:translateY(-3px);
+  box-shadow: var(--shadow2);
+}
+
+
+
+.btn-submit{
+  background: rgba(255,120,120,.18);
+  border:1px solid rgba(255,120,120,.35);
+}
+
+.btn-cancel{
+  background: rgba(200,200,200,.3);
+  border:1px solid var(--border);
+}
+
+	</style>
 {% endblock %}
 
 {% block body %}
-<div class="portal">
-    {% include 'side_bar.html.twig' %}
 
-    <main class="portal__main">
-        <div class="formation-header">
-            <h2>{{ formation.title }}</h2>
-            <div class="formation-info">
-                <div class="info-item">📅 Start: {{ formation.startDate|date('d/m/Y') }}</div>
-                <div class="info-item">📅 End: {{ formation.endDate|date('d/m/Y') }}</div>
-                <div class="info-item">🏷️ {{ formation.category }}</div>
-                <div class="info-item">👥 Total Applicants: {{ applications.pending|length + applications.accepted|length + applications.rejected|length }}</div>
-            </div>
-        </div>
+{% set navigation = [
+    {'name': 'Dashboard', 'path': path('app_medecin_dashboard'), 'icon': '🏠'},
+    {'name': 'Consultations', 'path': path('medecin_consultations'), 'icon': '🩺'},
+	{'name': 'Ordonnances', 'path': path('Ordonnance_new'), 'icon': '💊'},
+    {'name': 'Formations', 'path': path('medecin_formations'), 'icon': '📚'},
+    {'name': 'Nouvelle Formation', 'path': path('medecin_formation_new'), 'icon': '➕'}
+] %}
+	<div class="portal">
+		{% include 'side_bar.html.twig' %}
 
-        <div class="applicants-container">
-            <div class="tabs">
-                <button class="tab-button active" onclick="showTab(event, 'pending')">
-                    ⏳ Pending ({{ applications.pending|length }})
-                </button>
-                <button class="tab-button" onclick="showTab(event, 'accepted')">
-                    ✅ Accepted ({{ applications.accepted|length }})
-                </button>
-                <button class="tab-button" onclick="showTab(event, 'rejected')">
-                    ❌ Rejected ({{ applications.rejected|length }})
-                </button>
-            </div>
+		<main
+			class="portal__main">
+			<!-- Formation Header -->
+			<div class="formation-header">
+				<h2>{{ formation.title }}</h2>
+				<div class="formation-info">
+					<div class="info-item">📅 Start:
+						{{ formation.startDate|date('d/m/Y') }}</div>
+					<div class="info-item">📅 End:
+						{{ formation.endDate|date('d/m/Y') }}</div>
+					<div class="info-item">🏷️
+						{{ formation.category }}</div>
+					<div class="info-item">👥 Total Applicants:
+						{{ applications.pending|length + applications.accepted|length + applications.rejected|length }}</div>
+				</div>
+			</div>
 
-            <!-- PENDING TAB -->
-            <div id="pending" class="tab-content active">
-                {% if applications.pending is empty %}
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <p>No pending applications</p>
-                    </div>
-                {% else %}
-                    <div class="applicants-list">
-                        {% for application in applications.pending %}
-                            <div class="applicant-card">
-                                <div class="applicant-info">
-                                    <div class="applicant-name">{{ application.aideSoignant.nom }} {{ application.aideSoignant.prenom }}</div>
-                                    <div class="applicant-details">
-                                        <div class="detail-item">📧 {{ application.aideSoignant.email }}</div>
-                                        <div class="detail-item">📱 {{ application.aideSoignant.telephone }}</div>
-                                        <div class="detail-item">🕒 Applied: {{ application.appliedAt|date('d/m/Y H:i') }}</div>
-                                    </div>
-                                </div>
-                                <div class="applicant-actions">
-                                    <form method="POST" action="{{ path('medecin_accept_application', {'id': application.id}) }}" style="margin: 0;">
-                                        <button type="submit" class="action-btn btn-accept">Accept</button>
-                                    </form>
-                                    <button class="action-btn btn-reject" onclick="toggleRejectionForm({{ application.id }})">Reject</button>
-                                </div>
-                            </div>
-                            <div id="rejection-form-{{ application.id }}" class="rejection-form">
-                                <form method="POST" action="{{ path('medecin_reject_application', {'id': application.id}) }}">
-                                    <textarea name="rejectionReason" placeholder="Optional: Provide rejection reason..."></textarea>
-                                    <div class="rejection-form-actions">
-                                        <button type="submit" class="btn-submit">Reject Application</button>
-                                        <button type="button" class="btn-cancel" onclick="toggleRejectionForm({{ application.id }})">Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+			<!-- Ressources Section -->
+			<div class="ressources-section">
+				<h3>📁 Ressources de la formation</h3>
 
-            <!-- ACCEPTED TAB -->
-            <div id="accepted" class="tab-content">
-                {% if applications.accepted is empty %}
-                    <div class="empty-state">
-                        <div class="empty-state-icon">👥</div>
-                        <p>No accepted applicants yet</p>
-                    </div>
-                {% else %}
-                    <div class="applicants-list">
-                        {% for application in applications.accepted %}
-                            <div class="applicant-card">
-                                <div class="applicant-info">
-                                    <div class="applicant-name">{{ application.aideSoignant.nom }} {{ application.aideSoignant.prenom }}</div>
-                                    <div class="applicant-details">
-                                        <div class="detail-item">📧 {{ application.aideSoignant.email }}</div>
-                                        <div class="detail-item">📱 {{ application.aideSoignant.telephone }}</div>
-                                        <div class="detail-item">✅ Accepted: {{ application.reviewedAt|date('d/m/Y H:i') }}</div>
-                                    </div>
-                                </div>
-                                <span class="status-badge status-accepted">Accepted</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+				<div class="ressources-list">
+					{% for ressource in formation.ressources %}
+						<div class="ressource-item">
 
-            <!-- REJECTED TAB -->
-            <div id="rejected" class="tab-content">
-                {% if applications.rejected is empty %}
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <p>No rejected applicants</p>
-                    </div>
-                {% else %}
-                    <div class="applicants-list">
-                        {% for application in applications.rejected %}
-                            <div class="applicant-card">
-                                <div class="applicant-info">
-                                    <div class="applicant-name">{{ application.aideSoignant.nom }} {{ application.aideSoignant.prenom }}</div>
-                                    <div class="applicant-details">
-                                        <div class="detail-item">📧 {{ application.aideSoignant.email }}</div>
-                                        <div class="detail-item">📱 {{ application.aideSoignant.telephone }}</div>
-                                        <div class="detail-item">❌ Rejected: {{ application.reviewedAt|date('d/m/Y H:i') }}</div>
-                                        {% if application.rejectionReason %}
-                                            <div class="detail-item">📝 Reason: {{ application.rejectionReason }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <span class="status-badge status-rejected">Rejected</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </main>
+							<div class="ressource-info">
+								<div class="ressource-title">
+									{{ ressource.title }}
+								</div>
+								<div class="ressource-desc">
+									{{ ressource.description }}
+								</div>
+							</div>
+
+							<div class="ressource-action">
+								{% if ressource.fileName %} 
+								<a href="{{ asset('uploads/pdfs/' ~ ressource.fileName) }}" target="_blank" class="action-btn btn-accept">
+								 📄 Télécharger le PDF </a> 
+								 {% endif %}
+							</div>
+
+						</div>
+					{% else %}
+						<p>Aucune ressource disponible.</p>
+					{% endfor %}
+				</div>
+			</div>
+
+			<br>
+
+
+		<!-- Applicants Tabs -->
+		<div class="applicants-container">
+			<div class="tabs">
+				<button class="tab-button active" onclick="showTab(event, 'pending')">⏳ Pending ({{ applications.pending|length }})</button>
+				<button class="tab-button" onclick="showTab(event, 'accepted')">✅ Accepted ({{ applications.accepted|length }})</button>
+				<button class="tab-button" onclick="showTab(event, 'rejected')">❌ Rejected ({{ applications.rejected|length }})</button>
+			</div>
+
+			<!-- Pending -->
+			<div id="pending" class="tab-content active">
+				{% if applications.pending is empty %}
+					<div class="empty-state">
+						<div class="empty-state-icon">📭</div>
+						<p>No pending applications</p>
+					</div>
+				{% else %}
+					<div class="applicants-list">
+						{% for application in applications.pending %}
+							<div class="applicant-card">
+								<div class="applicant-info">
+									<div class="applicant-name">{{ application.aideSoignant.nom }}
+										{{ application.aideSoignant.prenom }}</div>
+									<div class="applicant-details">
+										<div class="detail-item">📧
+											{{ application.aideSoignant.email }}</div>
+										<div class="detail-item">📱
+											{{ application.aideSoignant.telephone }}</div>
+										<div class="detail-item">🕒 Applied:
+											{{ application.appliedAt|date('d/m/Y H:i') }}</div>
+									</div>
+								</div>
+								<div class="applicant-actions">
+									<form method="POST" action="{{ path('medecin_accept_application', {'id': application.id}) }}">
+										<button type="submit" class="action-btn btn-accept">Accept</button>
+									</form>
+									<button class="action-btn btn-reject" onclick="toggleRejectionForm({{ application.id }})">Reject</button>
+								</div>
+							</div>
+							<div id="rejection-form-{{ application.id }}" class="rejection-form">
+								<form method="POST" action="{{ path('medecin_reject_application', {'id': application.id}) }}">
+									<textarea name="rejectionReason" placeholder="Optional: Provide rejection reason..."></textarea>
+									<div class="rejection-form-actions">
+										<button type="submit" class="btn-submit">Reject Application</button>
+										<button type="button" class="btn-cancel" onclick="toggleRejectionForm({{ application.id }})">Cancel</button>
+									</div>
+								</form>
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</div>
+
+			<!-- Accepted -->
+			<div id="accepted" class="tab-content">
+				{% if applications.accepted is empty %}
+					<div class="empty-state">
+						<div class="empty-state-icon">👥</div>
+						<p>No accepted applicants yet</p>
+					</div>
+				{% else %}
+					<div class="applicants-list">
+						{% for application in applications.accepted %}
+							<div class="applicant-card">
+								<div class="applicant-info">
+									<div class="applicant-name">{{ application.aideSoignant.nom }}
+										{{ application.aideSoignant.prenom }}</div>
+									<div class="applicant-details">
+										<div class="detail-item">📧
+											{{ application.aideSoignant.email }}</div>
+										<div class="detail-item">📱
+											{{ application.aideSoignant.telephone }}</div>
+										<div class="detail-item">✅ Accepted:
+											{{ application.reviewedAt|date('d/m/Y H:i') }}</div>
+									</div>
+								</div>
+								<span class="status-badge status-accepted">Accepted</span>
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</div>
+
+			<!-- Rejected -->
+			<div id="rejected" class="tab-content">
+				{% if applications.rejected is empty %}
+					<div class="empty-state">
+						<div class="empty-state-icon">📋</div>
+						<p>No rejected applicants</p>
+					</div>
+				{% else %}
+					<div class="applicants-list">
+						{% for application in applications.rejected %}
+							<div class="applicant-card">
+								<div class="applicant-info">
+									<div class="applicant-name">{{ application.aideSoignant.nom }}
+										{{ application.aideSoignant.prenom }}</div>
+									<div class="applicant-details">
+										<div class="detail-item">📧
+											{{ application.aideSoignant.email }}</div>
+										<div class="detail-item">📱
+											{{ application.aideSoignant.telephone }}</div>
+										<div class="detail-item">❌ Rejected:
+											{{ application.reviewedAt|date('d/m/Y H:i') }}</div>
+										{% if application.rejectionReason %}
+											<div class="detail-item">📝 Reason:
+												{{ application.rejectionReason }}</div>
+										{% endif %}
+									</div>
+								</div>
+								<span class="status-badge status-rejected">Rejected</span>
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</div>
+		</div>
+	</main>
 </div>
 
 <script>
-    function showTab(event, tabName) {
-        // Hide all tabs
-        const tabContents = document.querySelectorAll('.tab-content');
-        tabContents.forEach(tab => tab.classList.remove('active'));
+	function showTab(event, tabName) {
+const tabContents = document.querySelectorAll('.tab-content');
+tabContents.forEach(tab => tab.classList.remove('active'));
 
-        // Remove active class from all buttons
-        const tabButtons = document.querySelectorAll('.tab-button');
-        tabButtons.forEach(btn => btn.classList.remove('active'));
+const tabButtons = document.querySelectorAll('.tab-button');
+tabButtons.forEach(btn => btn.classList.remove('active'));
 
-        // Show the selected tab
-        document.getElementById(tabName).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
+document.getElementById(tabName).classList.add('active');
+event.currentTarget.classList.add('active');
+}
 
-    function toggleRejectionForm(applicationId) {
-        const form = document.getElementById('rejection-form-' + applicationId);
-        form.classList.toggle('show');
-    }
-</script>
-{% endblock %}
+function toggleRejectionForm(applicationId) {
+const form = document.getElementById('rejection-form-' + applicationId);
+form.classList.toggle('show');
+}
+</script>{% endblock %}

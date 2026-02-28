@@ -50,7 +50,14 @@
                 {% endif %}
                 
                 <div class="detail-row">
-                    <span class="label">Statut :</span> ⏳ En attente
+                    <span class="label">Statut :</span> 
+                    {% if consultation.status == 'pending' %}
+                        ⏳ En attente
+                    {% elseif consultation.status == 'accepted' %}
+                        ✅ Acceptée
+                    {% else %}
+                        ❌ Refusée
+                    {% endif %}
                 </div>
             </div>
             

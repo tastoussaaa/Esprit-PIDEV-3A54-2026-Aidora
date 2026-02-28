@@ -20,6 +20,20 @@ final class PatientController extends BaseController
     #[Route('/patient/dashboard', name: 'app_patient_dashboard')]
     public function dashboard(ConsultationRepository $repository): Response
     {
+        // Ensure user is authenticated
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        // Ensure only patients can access this dashboard
+        if (!$this->isCurrentUserPatient()) {
+            $userType = $this->getCurrentUserType();
+            return match ($userType) {
+                'medecin' => $this->redirectToRoute('app_medecin_dashboard'),
+                'aidesoignant' => $this->redirectToRoute('app_aide_soignant_dashboard'),
+                'admin' => $this->redirectToRoute('app_admin_dashboard'),
+                default => $this->redirectToRoute('app_login'),
+            };
+        }
+        
         $patient = $this->getCurrentPatient();
         $userId = $this->getCurrentUserId();
         
@@ -65,6 +79,8 @@ final class PatientController extends BaseController
     #[Route('/patient/consultations', name: 'patient_consultations')]
     public function consultations(ConsultationRepository $repository): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
         $user = $this->getUser();
         $consultations = [];
 

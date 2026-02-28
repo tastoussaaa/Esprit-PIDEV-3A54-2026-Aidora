@@ -5,6 +5,10 @@
 # See also https://symfony.com/doc/current/service_container/import.html
 
 # Put parameters here that don't need to change on each machine where the app is deployed
+parameters:
+    upload_dir: '%kernel.project_dir%/public/uploads'
+    pdf_directory: '%kernel.project_dir%/public/uploads/pdfs%'
+    api_key: '%env(GSK_API_KEY)%' # <-- your Groq API key
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 # Twilio credentials should be provided via environment variables for local
 # development and production. Do NOT hard-code secrets here.
@@ -22,14 +26,41 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/Service/AppScheduleProvider.php'
 
-    App\Service\TwilioSmsService:
+    # Configure PDFGenerator service with upload directory
+    App\Service\PDFGenerator:
         arguments:
-            $sid: '%env(string:TWILIO_SID)%'
-            $token: '%env(string:TWILIO_TOKEN)%'
-            $from: '%env(string:TWILIO_FROM)%'
-            $messagingServiceSid: '%env(TWILIO_MESSAGING_SERVICE_SID)%'
+            $uploadDir: '%upload_dir%'
 
+    # Register Doctrine event listener for auto-matching (Section 4)
+    App\EventListener\DemandeAutoMatchingListener:
+        tags:
+            - { name: doctrine.event_subscriber }
+
+    # Configure AI Risk Analysis Service with HuggingFace API key
+    # Pour utiliser le mock IA (démo): décommentez MockAiRiskAnalysisService et commentez AiRiskAnalysisService
+    
+    # Service IA réel (HuggingFace)
+    # App\Service\AiRiskAnalysisService:
+    #     arguments:
+    #         $huggingfaceApiKey: '%env(string:HUGGINGFACE_API_KEY)%'
+    #     public: true
+
+    # Service IA simulé (pour démo)
+    App\Service\AiRiskAnalysisService:
+        class: App\Service\MockAiRiskAnalysisService
+        public: true
+
+    # Make RiskSupervisionService public for CLI scripts
+    App\Service\RiskSupervisionService:
+        public: true
+
+    # explicit service definition
+    App\Service\AiDescriptionService:
+        arguments:
+            $apiKey: '%env(GROQ_API_KEY)%'
     App\Service\OpenAIService:
         arguments:
             $apiKey: '%env(string:OPENAI_API_KEY)%'

@@ -1,0 +1,247 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des missions{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <style>
+        .cards__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            padding: 0;
+        }
+        
+        @media (max-width: 1200px) {
+            .cards__grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+        
+        .card {
+            position: relative;
+            padding: 24px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            opacity: 0.85;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+        
+        .card h3 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .card p {
+            margin: 12px 0;
+            color: #666;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+        
+        .card__actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .card__actions button,
+        .card__actions a {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn--info {
+            background: #B3E5FC;
+            color: #01579B;
+            border: none;
+        }
+
+        .btn--info:hover {
+            background: #81D4FA;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(3, 155, 229, 0.2);
+        }
+
+        .btn--danger {
+            background: #FFCCCC;
+            color: #C62828;
+            border: none;
+        }
+
+        .btn--danger:hover {
+            background: #FFADAD;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+        }
+        
+        .card__status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        
+        .status--urgent {
+            background: #FFE0B2;
+            color: #E65100;
+            border: 1px solid rgba(230, 81, 0, 0.15);
+        }
+        
+        .status--normal {
+            background: #C8E6C9;
+            color: #1B5E20;
+            border: 1px solid rgba(27, 94, 32, 0.15);
+        }
+        
+        .status--economie {
+            background: #E1BEE7;
+            color: #6A1B9A;
+            border: 1px solid rgba(106, 27, 154, 0.15);
+        }
+        
+        .status--accepted {
+            background: #C8E6C9;
+            color: #2E7D32;
+            border: 1px solid rgba(46, 125, 50, 0.15);
+        }
+        
+        .status--archived {
+            background: #E8E8E8;
+            color: #424242;
+            border: 1px solid rgba(66, 66, 66, 0.15);
+        }
+        
+        .card__info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .card__info strong {
+            color: #333;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{% set navigation = navigation %}
+
+<div class="portal">
+    {% include 'side_bar.html.twig' %}
+
+    <main class="portal__main">
+        <div class="portal__top">
+            <div>
+                <h1 class="portal__title">Historique des missions</h1>
+                <p class="portal__subtitle">Missions terminées, expirées ou annulées (suppression possible)</p>
+            </div>
+        </div>
+
+        <div class="portal__actions">
+            <form method="GET" action="{{ path('aidesoingnant_missions_historique') }}" style="display: grid; gap: 12px; grid-template-columns: 1fr auto;">
+                <input type="text" name="search" placeholder="🔍 Chercher dans l'historique..." value="{{ search }}" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                <button type="submit" class="btn btn--primary" style="padding: 10px 16px;">Rechercher</button>
+            </form>
+        </div>
+
+        <!-- Missions List -->
+        <div class="portal__content">
+            {% if missions|length > 0 %}
+                <div class="cards__grid">
+                    {% for item in missions %}
+                        {% set mission = item[0] %}
+                        {% set demande = item[1] %}
+                        <div class="card">
+                            <h3>{{ mission.titreM }}</h3>
+                            <p>{{ demande.descriptionBesoin[:100] }}...</p>
+                            
+                            <span class="card__status status--archived">📦 {{ mission.finalStatus }}</span>
+                            
+                            <div class="card__info">
+                                <div>
+                                    <strong>Type:</strong><br>{{ demande.typeDemande }}
+                                </div>
+                                <div>
+                                    <strong>Budget:</strong><br>{{ demande.budgetMax }} DT
+                                </div>
+                                <div>
+                                    <strong>Prix final:</strong><br>{{ mission.prixFinal ? mission.prixFinal ~ ' DT' : 'Non défini' }}
+                                </div>
+                                <div>
+                                    <strong>Archivée:</strong><br>{{ mission.archivedAt ? mission.archivedAt|date('d/m/Y H:i') : 'N/A' }}
+                                </div>
+                            </div>
+
+                            <div class="card__actions">
+                                <a href="{{ path('aidesoingnant_missions_details', {id: mission.demandeAide.id}) }}" class="btn btn--info">👁️ Détails</a>
+                                <form method="POST" action="{{ path('aidesoingnant_missions_delete', {id: mission.id}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement cette mission de l\'historique ?');">
+                                    <button type="submit" class="btn btn--danger" style="width: 100%;">🗑️ Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 48px; color: #999;">
+                    <p style="font-size: 18px;">Aucune mission dans l'historique</p>
+                    <a href="{{ path('aidesoingnant_missions') }}" class="btn btn--primary" style="margin-top: 16px; display: inline-block;">Retour aux missions actives</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+            <div class="pagination" style="margin-top: 32px; display: flex; justify-content: center; gap: 8px;">
+                {% if current_page > 1 %}
+                    <a href="{{ path('aidesoingnant_missions_historique', {'page': current_page - 1, 'search': search}) }}" class="btn btn--secondary" style="padding: 8px 12px;">Précédent</a>
+                {% endif %}
+
+                {% for page_num in 1..total_pages %}
+                    {% if page_num == current_page %}
+                        <span class="btn btn--primary" style="padding: 8px 12px;">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ path('aidesoingnant_missions_historique', {'page': page_num, 'search': search}) }}" class="btn btn--secondary" style="padding: 8px 12px;">{{ page_num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if current_page < total_pages %}
+                    <a href="{{ path('aidesoingnant_missions_historique', {'page': current_page + 1, 'search': search}) }}" class="btn btn--secondary" style="padding: 8px 12px;">Suivant</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </main>
+</div>
+
+{% endblock %}

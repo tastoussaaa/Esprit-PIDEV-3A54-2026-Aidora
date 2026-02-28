@@ -1,0 +1,53 @@
+{% if demandesAide is empty %}
+    <div class="box">
+        <p style="text-align: center; color: var(--muted);">Aucune demande d'aide en attente pour le moment.</p>
+    </div>
+{% else %}
+    <div class="cards">
+        <div class="cards__grid">
+            {% for demande in demandesAide %}
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 12px 0;">{{ demande.demandeAide.titreD }}</h3>
+                            <span class="card__status status--{{ demande.demandeAide.typeDemande|lower }}">{{ demande.demandeAide.typeDemande }}</span>
+                        </div>
+                        {% if demande.demandeAide.statut == 'REFUSÉE' %}
+                            <span class="card__status" style="background: #FFCCCC; color: #C62828; border: 1px solid rgba(198, 40, 40, 0.15);">Refusée</span>
+                        {% else %}
+                            <span class="card__status status--en_attente">En attente</span>
+                        {% endif %}
+                    </div>
+
+                    <p style="margin: 12px 0; color: #666; line-height: 1.5;">{{ demande.demandeAide.descriptionBesoin|length > 120 ? demande.demandeAide.descriptionBesoin|slice(0, 120) ~ '…' : demande.demandeAide.descriptionBesoin }}</p>
+
+                    <div class="card__info">
+                        <div>
+                            <strong>Type de patient:</strong><br>{{ demande.demandeAide.typePatient|replace({'_': ' '}) }}
+                        </div>
+                        <div>
+                            <strong>Budget:</strong><br>{{ demande.demandeAide.budgetMax }} DT
+                        </div>
+                        <div>
+                            <strong>Début souhaitée:</strong><br>{{ demande.demandeAide.dateDebutSouhaitee ? demande.demandeAide.dateDebutSouhaitee|date('d/m/Y H:i') : 'N/A' }}
+                        </div>
+                        <div>
+                            <strong>Créée:</strong><br>{{ demande.demandeAide.dateCreation ? demande.demandeAide.dateCreation|date('d/m/Y H:i') : 'N/A' }}
+                        </div>
+                    </div>
+
+                    <div class="card__actions">
+                        {% if demande.demandeAide.statut == 'REFUSÉE' %}
+                            <a href="{{ path('aidesoingnant_demande_details', {id: demande.demandeAide.id}) }}" class="btn btn--info">👁️ Voir détails</a>
+                        {% else %}
+                            <a href="{{ path('aidesoingnant_demande_details', {id: demande.demandeAide.id}) }}" class="btn btn--info">👁️ Voir détails</a>
+                            <a href="{{ path('aidesoingnant_accept_mission', {id: demande.demandeAide.id}) }}" class="btn btn--success" onclick="return confirm('Acceptez-vous cette demande ?');">✅ Accepter</a>
+                            <button class="btn btn--warning" onclick="proposePrice({{ demande.id }})">💰 Prix</button>
+                            <a href="{{ path('aidesoingnant_missions_refuse', {id: demande.demandeAide.id}) }}" class="btn btn--danger" onclick="return confirm('Êtes-vous sûr de refuser cette demande ?');">❌ Refuser</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

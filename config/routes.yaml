@@ -18,10 +18,3 @@ aidesoingnant_formations:
     path: /aidesoingnant/formations
     controller: App\Controller\AideSoingnantController::formations
 
-aidesoingnant_missions_details:
-    path: /aidesoingnant/missions/details/{id}
-    controller: App\Controller\AideSoingnantController::showMission
-
-aidesoingnant_missions:
-    path: /aidesoingnant/missions
-    controller: App\Controller\AideSoingnantController::missions

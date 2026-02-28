@@ -1,176 +1,421 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Available Formations{% endblock %}
+{% block title %}Formations Disponibles{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <style>
-        .formations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
+        /* Status button styles */
+        .btn--success {
+            background-color: #28a745;
+            color: #fff;
         }
-
-        .formation-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+        .btn--danger {
+            background-color: #dc3545;
+            color: #fff;
         }
-
-        .formation-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .btn--secondary {
+            background-color: #6c757d;
+            color: #fff;
         }
-
-        .formation-card h3 {
-            margin-top: 0;
-            color: #333;
-            font-size: 1.3em;
-        }
-
-        .formation-meta {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .formation-category {
-            display: inline-block;
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            margin: 5px 0;
-        }
-
-        .formation-description {
-            color: #555;
-            margin: 10px 0;
-            line-height: 1.5;
-        }
-
-        .formation-dates {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            font-size: 0.9em;
-        }
-
-        .apply-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            width: 100%;
+        .card button {
             margin-top: 10px;
-            transition: background 0.2s;
-        }
 
-        .apply-btn:hover {
-            background: #45a049;
         }
+        /* ==============================
+   GLOBAL FIX
+============================== */
 
-        .apply-btn.applied {
-            background: #999;
-            cursor: not-allowed;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        .apply-btn.applied:hover {
-            background: #999;
-        }
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden; /* 🔥 prevents right cut */
+}
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
 
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
+/* ==============================
+   PORTAL LAYOUT FIX
+============================== */
 
-        .status-accepted {
-            background: #d4edda;
-            color: #155724;
-        }
+.portal {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+}
 
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
+/* Sidebar (adjust width if needed) */
+.portal aside,
+.portal .sidebar {
+    width: 260px;
+    min-width: 260px;
+    flex-shrink: 0;
+}
+
+/* Main content */
+.portal__main {
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    padding: 30px 35px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+
+/* ==============================
+   TOP HEADER
+============================== */
+
+.portal__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.portal__title {
+    margin: 0;
+}
+
+.portal__subtitle {
+    margin: 5px 0 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+
+/* ==============================
+   FILTER BAR
+============================== */
+
+.filter {
+    background: rgba(255, 255, 255, .95);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: var(--shadow2);
+    margin-bottom: 25px;
+}
+
+.filter form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: flex-end;
+}
+
+.filter .field {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 220px;
+}
+
+.filter label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.filter input,
+.filter select {
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(233, 253, 255, .55);
+    font-size: 13px;
+    font-family: inherit;
+    transition: 0.2s ease;
+}
+
+.filter input:focus,
+.filter select:focus {
+    outline: none;
+    border: 1px solid rgba(24, 191, 234, .4);
+    box-shadow: 0 0 0 4px rgba(24, 191, 234, .12);
+}
+
+
+/* ==============================
+   CARDS GRID FIX
+============================== */
+
+.cards {
+    width: 100%;
+}
+
+.cards__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 22px;
+    width: 100%;
+}
+
+
+/* ==============================
+   CARD DESIGN
+============================== */
+
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 22px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: 0.2s ease;
+    cursor: pointer;
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 18px;
+    flex-grow: 1;
+}
+
+
+/* Footer */
+.card__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    gap: 10px;
+    margin-top: auto;
+}
+
+/* Category pill */
+.pill {
+    background: rgba(24, 191, 234, 0.12);
+    color: #18bfea;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.card__footer span:last-child {
+    color: var(--muted);
+    text-align: right;
+}
+
+
+/* ==============================
+   POPUP FIX
+============================== */
+
+.popup-success {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    width: 420px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ==============================
+   RESPONSIVE FIX
+============================== */
+
+@media (max-width: 1024px) {
+    .portal {
+        flex-direction: column;
+    }
+
+    .portal aside,
+    .portal .sidebar {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .portal__main {
+        padding: 20px;
+    }
+}
     </style>
 {% endblock %}
 
 {% block body %}
 <div class="portal">
+
+    {% set navigation = [
+        {'name': 'Dashboard', 'path': path('aidesoingnant_dashboard'), 'icon': '🏠'},
+        {'name': 'Mes Missions', 'path': path('aidesoingnant_missions'), 'icon': '📋'},
+        {'name': 'Formation', 'path': path('aidesoingnant_formations'), 'icon': '📚'},
+    ] %}
+
     {% include 'side_bar.html.twig' %}
 
     <main class="portal__main">
+
         <div class="portal__top">
             <div>
-                <h1 class="portal__title">Available Formations</h1>
-                <p class="portal__subtitle">Browse and apply to available training programs</p>
+                <h1 class="portal__title">Formations Disponibles</h1>
+                <p class="portal__subtitle">
+                    Consultez et explorez toutes les formations disponibles
+                </p>
             </div>
         </div>
+        {# ================= FILTER SECTION ================= #}
+<div class="filter">
+    <form method="get" action="{{ path('aidesoingnant_formations') }}">
+
+        <div class="field">
+            <label for="search">Rechercher par nom</label>
+            <input type="text"
+                   name="search"
+                   id="search"
+                   placeholder="Nom de la formation"
+                   value="{{ searchTerm|default('') }}">
+        </div>
+
+        <div class="field">
+            <label for="category">Filtrer par catégorie</label>
+            <select name="category" id="category">
+                <option value="">Toutes</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}"
+                        {% if cat == selectedCategory %} selected {% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+    </form>
+</div>
 
         {% if formations is empty %}
-            <div style="padding: 20px; background: #f5f5f5; border-radius: 8px; text-align: center;">
-                <p style="color: #999; font-size: 1.1em;">No formations available at the moment.</p>
+            <div class="box">
+                <p>Aucune formation disponible pour le moment.</p>
             </div>
         {% else %}
-            <div class="formations-grid">
-                {% for formation in formations %}
-                    <div class="formation-card">
-                        <h3>{{ formation.title }}</h3>
-                        <span class="formation-category">{{ formation.category }}</span>
+            <div class="cards">
+                <div class="cards__grid">
 
-                        <p class="formation-description">{{ formation.description[0:150] }}{% if formation.description|length > 150 %}...{% endif %}</p>
+                    {% for formation in formations %}
+                        <div class="card" 
+                             onclick="window.location='{{ path('formation_details', {'id': formation.id}) }}';" 
+                             style="cursor:pointer;">
 
-                        <div class="formation-dates">
-                            📅 Start: {{ formation.startDate|date('d/m/Y') }}<br>
-                            📅 End: {{ formation.endDate|date('d/m/Y') }}
-                        </div>
+                            <h3>{{ formation.title }}</h3>
 
-                        <div class="formation-meta">
-                            <span>👨‍⚕️ {{ formation.medecin.fullName }}</span>
-                        </div>
-
-                        <div style="margin-top: 10px;">
-                            {% if appliedFormations[formation.id]|default(false) %}
-                                <span class="status-badge status-{{ appliedFormations[formation.id]|lower }}">
-                                    {% if appliedFormations[formation.id] == 'PENDING' %}
-                                        ⏳ Pending
-                                    {% elseif appliedFormations[formation.id] == 'ACCEPTED' %}
-                                        ✅ Accepted
-                                    {% else %}
-                                        ❌ Rejected
-                                    {% endif %}
-                                </span>
-                                <button class="apply-btn applied" disabled>Already Applied</button>
-                            {% else %}
-                                <a href="{{ path('aidesoingnant_apply_formation', {'id': formation.id}) }}" class="apply-btn">
-                                    Apply Now
-                                </a>
+                            {% if formation.objective %}
+                                <p class="objective" style="font-style:italic; color:#555;">
+                                    {{ formation.objective|striptags|length > 100
+                                        ? formation.objective|striptags|slice(0, 100) ~ '…'
+                                        : formation.objective|striptags }}
+                                </p>
                             {% endif %}
+
+                            <p>
+                                {% set plainDesc = formation.description|striptags %}
+                                {{ plainDesc|length > 100
+                                    ? plainDesc|slice(0, 100) ~ '…'
+                                    : plainDesc }}
+                            </p>
+
+                            <div class="card__footer">
+                                <span class="pill">{{ formation.category }}</span>
+                                <span>
+                                    {{ formation.startDate ? formation.startDate|date('d/m/Y') : '' }}
+                                    -
+                                    {{ formation.endDate ? formation.endDate|date('d/m/Y') : '' }}
+                                </span>
+                            </div>
+
+                            {# ================= AIDE SOIGNANT ================= #}
+                            {% if current_user_type == 'aidesoignant' %}
+                               {% set status = appliedFormations[formation.id]|default(null) %}
+
+{% if status is not null %}
+    {% if status == 'pending' %}
+        <button class="btn btn--secondary" disabled>⏳ Candidature en attente</button>
+    {% elseif status == 'accepted' %}
+        <button class="btn btn--success" disabled>✅ Candidature acceptée</button>
+    {% elseif status == 'declined' %}
+        <button class="btn btn--danger" disabled>❌ Candidature refusée</button>
+    {% endif %}
+{% else %}
+    <form method="post" action="{{ path('aidesoingnant_formation_apply', {'id': formation.id}) }}" onclick="event.stopPropagation();">
+        <button type="submit" class="btn btn--primary" style="width:100%;">✉️ Postuler</button>
+    </form>
+{% endif %}
+                            {% endif %}
+
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+
+                </div>
             </div>
         {% endif %}
+
     </main>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("search");
+    const categorySelect = document.getElementById("category");
+    const container = document.querySelector(".cards");
+
+    function fetchFormations() {
+        const url = new URL(window.location.href);
+        url.searchParams.set("search", searchInput.value);
+        url.searchParams.set("category", categorySelect.value);
+
+        fetch(url, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const newCards = doc.querySelector(".cards");
+            container.innerHTML = newCards.innerHTML;
+        });
+    }
+
+    searchInput.addEventListener("input", fetchFormations);
+    categorySelect.addEventListener("change", fetchFormations);
+
+});
+</script>
+
 {% endblock %}
