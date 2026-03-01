@@ -97,8 +97,6 @@
         {% block stylesheets %}
         {% endblock %}
 
-        {% block javascripts %}
-        {% endblock %}
     </head>
     <body>
         {# Messages Flash (only standard types) #}
@@ -113,21 +111,11 @@
                 {% endfor %}
             {% endfor %}
         </div>
-  {% block javascripts %}
-        {% endblock %}
         {# Messages Flash #}
-        {% if app.flashes %}
-            <div class="flash-messages">
-                {% for type, messages in app.flashes %}
-                    {% for message in messages %}
-                        <div class="alert alert--{{ type }}">
-                            {{ message }}
-                            <button class="alert__close" onclick="this.parentElement.style.display='none';">×</button>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-        {% endif %}
+           {% block javascripts %}
+        {% endblock %}
+        
+
 
         {% block body %}{% endblock %}
     </body>

@@ -471,20 +471,36 @@ fetchFormations();
 });
 			</script>
 
-			<script>
-				var botmanWidget = {
-frameEndpoint: '/botman',
-title: 'Assistant Formation',
-introMessage: "✋ Bonjour ! Je peux vous aider à trouver une formation.",
-mainColor: '#18bfea',
-bubbleBackground: '#18bfea',
-frameEndpoint: '/botman',
-aboutText: '',
-bubbleAvatarUrl: ''
-};
-			</script>
-			<script src="https://cdn.jsdelivr.net/npm/botman-web-widget@0/build/js/widget.js"></script>
+{% block javascripts %}
 
+    <script>
+        var botmanWidget = {
+             frameEndpoint: '{{ path('chat_frame') }}',  // your Symfony route
+            chatServer: '/botman.php',   
+            title: 'Assistant',
+            introMessage: "Bonjour 👋 Comment puis-je vous aider ?",
+            mainColor: '#0ABAB5',
+            bubbleBackground: '#0ABAB5',
+            desktopHeight: 450,
+            desktopWidth: 350
+        };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/botman-web-widget@0/build/js/widget.js"></script>
+
+    <style>
+        #botmanWidgetRoot {
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 100000 !important;
+        }
+        #botmanWidgetRoot iframe {
+            height: 450px !important;
+            width: 350px !important;
+        }
+    </style>
+{% endblock %}
 
 			<script>
 				function closeCalendarPopup() {
