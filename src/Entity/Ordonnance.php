@@ -42,19 +42,11 @@ class Ordonnance
     #[ORM\JoinColumn(nullable: false)]
     private ?Consultation $consultation = null;
 
-<<<<<<< HEAD
-    #[ORM\OneToMany(mappedBy: 'ordonnance', targetEntity: Medicament::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
-    private Collection $medicaments;
-
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
-        $this->medicaments = new ArrayCollection();
-        $this->medicament = null;
     }
 
-=======
->>>>>>> 59f550461b34612d3973810c3419a14324a0a0eb
     public function getId(): ?int
     {
         return $this->id;
@@ -131,9 +123,4 @@ class Ordonnance
 
         return $this;
     }
-    public function __construct()
-{
-    $this->createdAt = new \DateTimeImmutable();
-}
-
 }
