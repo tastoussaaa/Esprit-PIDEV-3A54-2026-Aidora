@@ -336,13 +336,92 @@ class Patient
 
     public function isActive(): bool
     {
-        return $this->isActive;
+        return $this->autonomie;
     }
 
-    public function setActive(bool $isActive): static
+    public function setAutonomie(?string $autonomie): static
     {
-        $this->isActive = $isActive;
-
+        $this->autonomie = $autonomie;
         return $this;
+    }
+
+    public function getContactUrgence(): ?string
+    {
+        return $this->contactUrgence;
+    }
+
+    public function setContactUrgence(?string $contactUrgence): static
+    {
+        $this->contactUrgence = $contactUrgence;
+        return $this;
+    }
+
+    public function getProfilCompletionScore(): ?int
+    {
+        return $this->profilCompletionScore;
+    }
+
+    public function setProfilCompletionScore(?int $score): static
+    {
+        $this->profilCompletionScore = $score;
+        return $this;
+    }
+
+    /**
+     * Calcule le score de complétude du profil (0-100%)
+     * @return int Score entre 0 et 100
+     */
+    public function calculateCompletionScore(): int
+    {
+        $fields = [
+            'fullName' => !empty($this->fullName),
+            'email' => !empty($this->email),
+            'birthDate' => !empty($this->birthDate),
+            'adresse' => !empty($this->adresse),
+            'autonomie' => !empty($this->autonomie),
+            'pathologie' => !empty($this->pathologie),
+            'contactUrgence' => !empty($this->contactUrgence),
+            'besoinsSpecifiques' => !empty($this->besoinsSpecifiques),
+        ];
+
+        $completed = count(array_filter($fields));
+        $total = count($fields);
+
+        return (int)($completed / $total * 100);
+    }
+
+    /**
+     * Retourne les champs manquants pour compléter le profil
+     * @return array
+     */
+    public function getMissingFields(): array
+    {
+        $required = [
+            'fullName' => 'Nom complet',
+            'email' => 'Email',
+            'birthDate' => 'Date de naissance',
+            'adresse' => 'Adresse',
+            'autonomie' => 'Niveau d\'autonomie',
+            'pathologie' => 'Pathologie',
+            'contactUrgence' => 'Contact d\'urgence',
+        ];
+
+        $missing = [];
+        foreach ($required as $field => $label) {
+            if (empty($this->{$field})) {
+                $missing[$field] = $label;
+            }
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Vérifie si le profil est complet (100%)
+     * @return bool
+     */
+    public function isProfileComplete(): bool
+    {
+        return $this->calculateCompletionScore() === 100;
     }
 }

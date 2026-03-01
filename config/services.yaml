@@ -10,11 +10,8 @@ parameters:
     pdf_directory: '%kernel.project_dir%/public/uploads/pdfs%'
     api_key: '%env(GSK_API_KEY)%' # <-- your Groq API key
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
-# Twilio credentials should be provided via environment variables for local
-# development and production. Do NOT hard-code secrets here.
-# Expected env vars: TWILIO_SID, TWILIO_TOKEN
-# Optional: TWILIO_FROM (specific phone number) or TWILIO_MESSAGING_SERVICE_SID (Messaging Service)
-# Use MessagingServiceSid for better management of phone numbers and scaling
+parameters:
+    upload_dir: '%kernel.project_dir%/public/uploads'
 
 services:
     _defaults:
@@ -45,9 +42,28 @@ services:
         arguments:
             $apiKey: '%env(GROQ_API_KEY)%'
 
-    App\Service\OpenAIService:
-        arguments:
-            $apiKey: '%env(string:OPENAI_API_KEY)%'
+    # Register Doctrine event listener for auto-matching (Section 4)
+    App\EventListener\DemandeAutoMatchingListener:
+        tags:
+            - { name: doctrine.event_subscriber }
+
+    # Configure AI Risk Analysis Service with HuggingFace API key
+    # Pour utiliser le mock IA (démo): décommentez MockAiRiskAnalysisService et commentez AiRiskAnalysisService
+    
+    # Service IA réel (HuggingFace)
+    # App\Service\AiRiskAnalysisService:
+    #     arguments:
+    #         $huggingfaceApiKey: '%env(string:HUGGINGFACE_API_KEY)%'
+    #     public: true
+
+    # Service IA simulé (pour démo)
+    App\Service\AiRiskAnalysisService:
+        class: App\Service\MockAiRiskAnalysisService
+        public: true
+
+    # Make RiskSupervisionService public for CLI scripts
+    App\Service\RiskSupervisionService:
+        public: true
 
     App\Repository\FormationRepository:
         public: true

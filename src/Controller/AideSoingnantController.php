@@ -22,7 +22,7 @@ final class AideSoingnantController extends BaseController
         parent::__construct($userService);
     }
 
-    #[Route('/aide-soignant/dashboard', name: 'app_aide_soignant_dashboard')]
+    #[Route('/aidesoingnant/dashboard', name: 'app_aide_soignant_dashboard')]
     public function dashboard(): Response
     {
         // Ensure user is authenticated
