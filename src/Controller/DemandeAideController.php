@@ -51,56 +51,6 @@ final class DemandeAideController extends BaseController
                     $isNotArchived = !in_array($d->getStatut(), ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE'], true);
                     return $isUserDemande && $isNotArchived;
                 });
-
-                // Apply search filter with validation based on sort_by
-                if (!empty($search)) {
-                    $demandesAide = array_filter($demandesAide, function($d) use ($search, $sortBy) {
-                        $searchLower = strtolower($search);
-
-                        switch ($sortBy) {
-                            case 'dateCreation':
-                                // Validate date format (YYYY-MM-DD or DD/MM/YYYY)
-                                if (!preg_match('/^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/', $search)) {
-                                    return false;
-                                }
-                                // For date search, we search in date fields
-                                $dateStr = $d->getDateCreation() ? $d->getDateCreation()->format('Y-m-d') : '';
-                                return stripos($dateStr, $search) !== false;
-
-                            case 'budgetMax':
-                                // Validate integer
-                                if (!is_numeric($search) || intval($search) != $search) {
-                                    return false;
-                                }
-                                return $d->getBudgetMax() == intval($search);
-
-                            case 'typeDemande':
-                                return stripos($d->getTypeDemande(), $searchLower) !== false;
-
-                            case 'statut':
-                                return stripos($d->getStatut(), $searchLower) !== false;
-
-                            default:
-                                // General search across multiple fields
-                                return stripos($d->getDescriptionBesoin(), $searchLower) !== false ||
-                                       stripos($d->getTypeDemande(), $searchLower) !== false ||
-                                       stripos($d->getTypePatient(), $searchLower) !== false ||
-                                       stripos($d->getStatut(), $searchLower) !== false;
-                        }
-                    });
-                }
-
-                // Apply sorting
-                usort($demandesAide, function($a, $b) use ($sortBy, $sortOrder) {
-                    $valueA = $this->getSortValue($a, $sortBy);
-                    $valueB = $this->getSortValue($b, $sortBy);
-
-                    if ($sortOrder === 'asc') {
-                        return $valueA <=> $valueB;
-                    } else {
-                        return $valueB <=> $valueA;
-                    }
-                });
                 
                 // Sort by dateCreation desc
                 usort($demandesAide, fn($a, $b) => $b->getDateCreation() <=> $a->getDateCreation());
