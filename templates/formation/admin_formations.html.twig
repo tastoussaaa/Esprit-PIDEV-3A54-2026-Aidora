@@ -76,10 +76,6 @@
                                     </a>
                                 </td>
                             </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="5" style="text-align:center;">Aucune formation disponible</td>
-                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -110,6 +106,7 @@
                     lengthMenu: "Afficher _MENU_ formations",
                     info: "Affichage de _START_ à _END_ sur _TOTAL_ formations",
                     infoEmpty: "Aucune formation disponible",
+                    emptyTable: "Aucune formation disponible",
                     paginate: {
                         previous: "Précédent",
                         next: "Suivant"

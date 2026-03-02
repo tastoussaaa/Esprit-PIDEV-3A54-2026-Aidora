@@ -77,8 +77,6 @@ class AideSoignant
 
     #[ORM\Column]
     private ?float $tarifMin = null;
-    #[ORM\Column]
-    private bool $isActive = true;
 
     public function __construct()
     {
@@ -343,18 +341,6 @@ class AideSoignant
     public function setTarifMin(float $tarifMin): static
     {
         $this->tarifMin = $tarifMin;
-
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function setActive(bool $isActive): static
-    {
-        $this->isActive = $isActive;
 
         return $this;
     }

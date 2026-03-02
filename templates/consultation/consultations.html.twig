@@ -292,10 +292,10 @@
                         <canvas id="acceptanceChart"></canvas>
                     </div>
                     <div style="margin-top: 16px;">
-                        {% for item, value in acceptanceData.data|keys %}
+                        {% for item, value in acceptanceData.data %}
                             <div class="mini-stat">
                                 <strong>{{ acceptanceData.labels[item] }}</strong>
-                                <span class="mini-stat-value">{{ value }} ({{ (value / acceptanceData.total * 100)|round(1) }}%)</span>
+                                <span class="mini-stat-value">{{ value }} ({% if acceptanceData.total > 0 %}{{ (value / acceptanceData.total * 100)|round(1) }}{% else %}0{% endif %}%)</span>
                             </div>
                         {% endfor %}
                     </div>

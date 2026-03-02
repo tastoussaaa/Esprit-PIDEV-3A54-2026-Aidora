@@ -48,10 +48,24 @@ final class MissionController extends BaseController
         $qb = $entityManager->getRepository(Mission::class)->createQueryBuilder('m')
             ->leftJoin('m.demandeAide', 'd')
             ->select('m, d')
-            ->andWhere('m.StatutMission IN (:statuses)')
+            ->andWhere('(
+                m.workflowState IN (:workflowStatuses)
+                OR m.StatutMission IN (:legacyStatuses)
+                OR (
+                    d.statut IN (:acceptedDemandes)
+                    AND (
+                        m.workflowState = :pendingWorkflow
+                        OR m.StatutMission = :pendingLegacy
+                    )
+                )
+            )')
             ->andWhere('m.finalStatus IS NULL')
-            ->andWhere('m.aideSoignant = :aideSoignant')
-            ->setParameter('statuses', ['ACCEPTÉE', 'EN_COURS'])
+            ->andWhere('(m.aideSoignant = :aideSoignant OR d.aideChoisie = :aideSoignant)')
+            ->setParameter('workflowStatuses', [Mission::STATE_ACCEPTEE, Mission::STATE_EN_COURS])
+            ->setParameter('legacyStatuses', ['ACCEPTÉE', 'ACCEPTEE', 'EN_COURS'])
+            ->setParameter('acceptedDemandes', ['ACCEPTÉE', 'ACCEPTEE', 'ACCEPTED'])
+            ->setParameter('pendingWorkflow', Mission::STATE_EN_ATTENTE)
+            ->setParameter('pendingLegacy', 'EN_ATTENTE')
             ->setParameter('aideSoignant', $aideSoignant);
 
         if (!empty($search)) {
@@ -96,6 +110,30 @@ final class MissionController extends BaseController
 
         $qb->setFirstResult(($page - 1) * $limit)->setMaxResults($limit);
         $missions = $qb->getQuery()->getResult();
+
+        $needsFlush = false;
+        foreach ($missions as $mission) {
+            $demande = $mission->getDemandeAide();
+            if (!$demande) {
+                continue;
+            }
+
+            $demandeStatut = strtoupper((string) $demande->getStatut());
+            $isAcceptedDemande = in_array($demandeStatut, ['ACCEPTÉE', 'ACCEPTEE', 'ACCEPTED'], true);
+            $isPendingMission = $mission->getWorkflowState() === Mission::STATE_EN_ATTENTE || $mission->getStatutMission() === 'EN_ATTENTE';
+
+            if ($isAcceptedDemande && $isPendingMission) {
+                if ($mission->getAideSoignant() === null) {
+                    $mission->setAideSoignant($aideSoignant);
+                }
+                $mission->setStatutMission('ACCEPTÉE');
+                $needsFlush = true;
+            }
+        }
+
+        if ($needsFlush) {
+            $entityManager->flush();
+        }
 
         $navigation = [
             ['name' => 'Dashboard', 'path' => $this->generateUrl('app_aide_soignant_dashboard'), 'icon' => '🏠'],

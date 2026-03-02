@@ -20,7 +20,7 @@ class Admin
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
-    #[ORM\ManyToOne(inversedBy: 'admins')]
+    #[ORM\ManyToOne]
     private ?Formation $formation = null;
 
     #[ORM\Column(length: 255)]

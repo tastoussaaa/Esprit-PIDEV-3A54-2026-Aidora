@@ -41,21 +41,6 @@ services:
     App\Service\RiskSupervisionService:
         public: true
 
-<<<<<<< HEAD
-    App\Service\OpenAIService:
-        arguments:
-            $apiKey: '%env(string:OPENAI_API_KEY)%'
-
-    App\Service\TwilioSmsService:
-        arguments:
-            $sid: '%env(string:TWILIO_SID)%'
-            $token: '%env(string:TWILIO_TOKEN)%'
-            $from: '%env(string:TWILIO_FROM)%'
-            $messagingServiceSid: '%env(default::TWILIO_MESSAGING_SERVICE_SID)%'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
-=======
     App\Service\AiDescriptionService:
         arguments:
             $apiKey: '%env(GROQ_API_KEY)%'
@@ -76,5 +61,4 @@ services:
 
     App\Repository\FormationRepository:
         public: true
-    
->>>>>>> 5c42e2f9c8f065578ea2c2cf78d2221bad17907a
+

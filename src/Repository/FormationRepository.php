@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Formation;
+use App\Entity\Medecin;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -57,7 +58,7 @@ class FormationRepository extends ServiceEntityRepository
     }
 
 
-    public function findValidatedByCategory(?string $category = null): array
+    public function findValidatedByCategory(?string $category = null, ?string $searchTerm = null): array
     {
         $qb = $this->createQueryBuilder('f')
             ->andWhere('f.statut = :statut')
@@ -69,6 +70,34 @@ class FormationRepository extends ServiceEntityRepository
         if ($category) {
             $qb->andWhere('f.category = :category')
                 ->setParameter('category', $category);
+        }
+
+        if ($searchTerm !== null && $searchTerm !== '') {
+            $qb->andWhere('LOWER(f.title) LIKE :search OR LOWER(f.description) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($searchTerm) . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findVisibleForMedecin(Medecin $medecin, ?string $category = null, ?string $searchTerm = null): array
+    {
+        $qb = $this->createQueryBuilder('f')
+            ->andWhere('(f.statut = :validated OR f.medecin = :medecin)')
+            ->setParameter('validated', Formation::STATUT_VALIDE)
+            ->setParameter('medecin', $medecin)
+            ->andWhere('f.startDate >= :today')
+            ->setParameter('today', new \DateTime())
+            ->orderBy('f.startDate', 'DESC');
+
+        if ($category) {
+            $qb->andWhere('f.category = :category')
+                ->setParameter('category', $category);
+        }
+
+        if ($searchTerm !== null && $searchTerm !== '') {
+            $qb->andWhere('LOWER(f.title) LIKE :search OR LOWER(f.description) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($searchTerm) . '%');
         }
 
         return $qb->getQuery()->getResult();

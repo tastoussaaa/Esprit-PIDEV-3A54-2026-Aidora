@@ -401,7 +401,7 @@ html, body {
 
 									
 									{# ================= MEDECIN ================= #}
-									{% if current_user_type == 'medecin' %}
+                                    {% if current_user_type == 'medecin' and medecin and formation.medecin and formation.medecin.id == medecin.id %}
 										<div style="margin-top:15px;">
 											<a
 												href="{{ path('medecin_formation_applicants', {'id': formation.id}) }}" class="btn btn--secondary" style="width:100%; text-align:center;" onclick="event.stopPropagation();">

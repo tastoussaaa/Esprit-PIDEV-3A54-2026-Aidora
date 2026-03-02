@@ -5,11 +5,11 @@
         <div>
             <div class="portal__name">Aidora</div>
             <div class="portal__tag">
-                {% if is_granted('ROLE_ADMIN') %}
+                {% if is_granted('ROLE_ADMIN') or current_user_type == 'admin' %}
                     Espace Admin
-                {% elseif is_granted('ROLE_MEDECIN') %}
+                {% elseif is_granted('ROLE_MEDECIN') or is_medecin %}
                     Espace Médecin
-                {% elseif is_granted('ROLE_PATIENT') %}
+                {% elseif is_granted('ROLE_PATIENT') or is_patient %}
                     Espace Patient
                 {% endif %}
             </div>
@@ -37,22 +37,51 @@
     </a>
 
     <nav class="portal__menu">
-        {% if is_granted('ROLE_ADMIN') %}
-            <a href="{{ path('app_admin_dashboard') }}"
-               class="portal__item {% if app.request.pathinfo == path('app_admin_dashboard') %}is-active{% endif %}">
-                <span class="portal__icon">🛠️</span>
-                <span>Validation des Comptes</span>
-            </a>
-        {% endif %}
-        {% for item in navigation|default([]) %}
-            {% if not (is_granted('ROLE_ADMIN') and item.path == path('app_admin_dashboard')) %}
+        {% if is_granted('ROLE_ADMIN') or current_user_type == 'admin' %}
+            {% set admin_navigation = [
+                { path: path('app_admin_dashboard'), name: 'Validation des Comptes', icon: '🛠️' },
+                { path: path('admin_demandes'), name: 'Demandes', icon: '📋' },
+                { path: path('admin_missions'), name: 'Missions', icon: '👥' },
+                { path: path('admin_consultations'), name: 'Consultations', icon: '🩺' },
+                { path: path('admin_formations'), name: 'Formations', icon: '📚' },
+                { path: path('admin_produits'), name: 'Produits', icon: '🛍️' }
+            ] %}
+
+            {% for item in admin_navigation %}
+                <a href="{{ item.path }}"
+                   class="portal__item {% if app.request.pathinfo starts with item.path %}is-active{% endif %}">
+                    <span class="portal__icon">{{ item.icon }}</span>
+                    <span>{{ item.name }}</span>
+                </a>
+            {% endfor %}
+        {% elseif is_granted('ROLE_PATIENT') or is_patient %}
+            {% set patient_navigation = [
+                { path: path('app_patient_dashboard'), name: 'Dashboard', icon: '🏠' },
+                { path: path('patient_consultations'), name: 'Consultations', icon: '🩺' },
+                { path: path('consultation_new'), name: 'Nouvelle consultation', icon: '➕' },
+                { path: path('patient_ordonnances'), name: 'Ordonnances', icon: '💊' },
+                { path: path('app_demandes_index'), name: 'Demandes', icon: '📝' },
+                { path: path('app_demande_aide'), name: 'Nouvelle demande', icon: '➕' },
+                { path: path('produit_list'), name: 'Produits', icon: '🛒' },
+                { path: path('commande_index'), name: 'Mes commandes', icon: '📋' }
+            ] %}
+
+            {% for item in patient_navigation %}
+                <a href="{{ item.path }}"
+                   class="portal__item {% if app.request.pathinfo starts with item.path %}is-active{% endif %}">
+                    <span class="portal__icon">{{ item.icon }}</span>
+                    <span>{{ item.name }}</span>
+                </a>
+            {% endfor %}
+        {% else %}
+            {% for item in navigation|default([]) %}
                 <a href="{{ item.path }}"
                    class="portal__item {% if item.path is defined and app.request.pathinfo starts with item.path %}is-active{% endif %}">
                     <span class="portal__icon">{{ item.icon }}</span>
                     <span>{{ item.name }}</span>
                 </a>
-            {% endif %}
-        {% endfor %}
+            {% endfor %}
+        {% endif %}
     </nav>
 
     <div class="portal__bottom">

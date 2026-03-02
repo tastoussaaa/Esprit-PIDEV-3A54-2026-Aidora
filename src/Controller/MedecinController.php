@@ -87,9 +87,12 @@ class MedecinController extends BaseController
 
         // Get selected category from query parameter (e.g., ?category=Urgence)
         $selectedCategory = $request->query->get('category');
+        $searchTerm = $request->query->get('search');
 
-        // Get formations filtered by category (or all if none selected)
-        $formations = $formationRepository->findValidatedByCategory($selectedCategory);
+        // Show validated formations + current medecin own formations (including EN_ATTENTE)
+        $formations = $medecin
+            ? $formationRepository->findVisibleForMedecin($medecin, $selectedCategory, $searchTerm)
+            : $formationRepository->findValidatedByCategory($selectedCategory, $searchTerm);
 
         // Get all categories for dropdown
         $categories = $formationRepository->findAllCategories();
@@ -98,6 +101,7 @@ class MedecinController extends BaseController
             'formations' => $formations,          // filtered list
             'categories' => $categories,          // list of all categories
             'selectedCategory' => $selectedCategory, // currently selected category
+            'searchTerm' => $searchTerm,
             'userId' => $userId,
             'medecin' => $medecin,
         ]);

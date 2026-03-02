@@ -150,6 +150,23 @@ final class DemandeAideController extends BaseController
                         'navigation' => $navigation,
                     ]);
                 }
+
+                $existingRecentDemande = $entityManager->getRepository(DemandeAide::class)->findOneBy([
+                    'email' => $demandeAide->getEmail(),
+                    'TitreD' => $demandeAide->getTitreD(),
+                    'descriptionBesoin' => $demandeAide->getDescriptionBesoin(),
+                    'dateDebutSouhaitee' => $demandeAide->getDateDebutSouhaitee(),
+                    'budgetMax' => $demandeAide->getBudgetMax(),
+                ], ['dateCreation' => 'DESC']);
+
+                if ($existingRecentDemande && $existingRecentDemande->getDateCreation() !== null) {
+                    $secondsSinceCreation = (new \DateTime())->getTimestamp() - $existingRecentDemande->getDateCreation()->getTimestamp();
+
+                    if ($secondsSinceCreation <= 120) {
+                        $this->addFlash('success', 'Votre demande est déjà enregistrée. Redirection vers la sélection d\'aide-soignant.');
+                        return $this->redirectToRoute('app_demande_select_aide', ['id' => $existingRecentDemande->getId()]);
+                    }
+                }
                 
                 // Enregistrer en base de données
                 $entityManager->persist($demandeAide);
@@ -547,6 +564,7 @@ final class DemandeAideController extends BaseController
             return $this->redirectToRoute('aidesoingnant_demandes');
         }
 
+        $mission->setStatutMission('ACCEPTÉE');
         $demande->setStatut('ACCEPTÉE');
 
         $entityManager->flush();
@@ -628,8 +646,9 @@ final class DemandeAideController extends BaseController
             ->distinct()
             ->andWhere('d.aideChoisie = :aideSoignant')
             ->setParameter('aideSoignant', $aideSoignant)
-            ->andWhere('m.StatutMission = :status')
-            ->setParameter('status', 'EN_ATTENTE')
+            ->andWhere('(m.workflowState = :pendingWorkflow OR m.StatutMission = :pendingLegacy)')
+            ->setParameter('pendingWorkflow', Mission::STATE_EN_ATTENTE)
+            ->setParameter('pendingLegacy', 'EN_ATTENTE')
             ->andWhere('d.statut = :demandeStatus')
             ->setParameter('demandeStatus', 'EN_ATTENTE')
             ->andWhere('d.dateDebutSouhaitee > :now')
