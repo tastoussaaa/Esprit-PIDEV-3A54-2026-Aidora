@@ -2,15 +2,19 @@
 
 namespace App\Service;
 
-use OpenAI;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class OpenAIService
 {
-    private OpenAI\Client $client;
+    private const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+    
+    private string $apiKey;
+    private HttpClientInterface $httpClient;
 
-    public function __construct(string $apiKey)
+    public function __construct(HttpClientInterface $httpClient, string $openaiApiKey)
     {
-        $this->client = OpenAI::client($apiKey);
+        $this->httpClient = $httpClient;
+        $this->apiKey = $openaiApiKey;
     }
 
     /**
@@ -23,23 +27,18 @@ class OpenAIService
         }
 
         try {
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Tu es un assistant médical francophone. Améliore la raison de consultation en une déclaration claire et professionnelle. Maximum 1-3 phrases. Réponds UNIQUEMENT avec le texte amélioré.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $motif
-                    ]
+            $response = $this->callOpenAI([
+                [
+                    'role' => 'system',
+                    'content' => 'Tu es un assistant médical francophone. Améliore la raison de consultation en une déclaration claire et professionnelle. Maximum 1-3 phrases. Réponds UNIQUEMENT avec le texte amélioré.'
                 ],
-                'max_tokens' => 200,
-                'temperature' => 0.5,
-            ]);
+                [
+                    'role' => 'user',
+                    'content' => $motif
+                ]
+            ], 200, 0.5);
 
-            return trim($response->choices[0]->message->content) ?: $motif;
+            return $response ?: $motif;
 
         } catch (\Exception $e) {
             return $motif;
@@ -85,21 +84,14 @@ class OpenAIService
             $systemPrompt = "Tu es un médecin expert en triage médical. "
                 . "Réponds UNIQUEMENT en JSON valide.\n"
                 . "Format: {\"enhanced\":\"texte\",\"urgency\":\"elevee|moderee|faible\",\"isValid\":true|false,\"message\":\"texte\"}\n"
-                . "isValid=false si le texte n’est pas une phrase médicale claire.";
+                . "isValid=false si le texte n'est pas une phrase médicale claire.";
 
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $cleanMotif]
-                ],
-                'max_tokens' => 300,
-                'temperature' => 0.2,
-            ]);
+            $response = $this->callOpenAI([
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $cleanMotif]
+            ], 300, 0.2);
 
-            $content = $response->choices[0]->message->content;
-
-            if (!preg_match('/\{.*\}/', $content, $matches)) {
+            if (!preg_match('/\{.*\}/', $response, $matches)) {
                 return $this->fallbackAnalysis($motif);
             }
 
@@ -124,6 +116,33 @@ class OpenAIService
         } catch (\Exception $e) {
             return $this->fallbackAnalysis($motif);
         }
+    }
+
+    /**
+     * Call OpenAI API using HTTP Client
+     */
+    private function callOpenAI(array $messages, int $maxTokens = 200, float $temperature = 0.5): string
+    {
+        if (empty($this->apiKey)) {
+            throw new \Exception('OpenAI API key not configured');
+        }
+
+        $response = $this->httpClient->request('POST', self::OPENAI_API_URL, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'gpt-4o-mini',
+                'messages' => $messages,
+                'max_tokens' => $maxTokens,
+                'temperature' => $temperature,
+            ],
+        ]);
+
+        $content = $response->toArray();
+        
+        return trim($content['choices'][0]['message']['content'] ?? '');
     }
 
     /**
@@ -186,23 +205,17 @@ class OpenAIService
     public function analyzeSeverity(string $motif): string
     {
         try {
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Analyse la gravité et réponds uniquement: leger, modere ou grave.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $motif
-                    ]
+            $response = $this->callOpenAI([
+                [
+                    'role' => 'system',
+                    'content' => 'Analyse la gravité et réponds uniquement: leger, modere ou grave.'
                 ],
-                'max_tokens' => 20,
-                'temperature' => 0.2,
-            ]);
+                [
+                    'role' => 'user',
+                    'content' => $motif]
+            ], 20, 0.2);
 
-            $severity = strtolower(trim($response->choices[0]->message->content));
+            $severity = strtolower(trim($response));
 
             return match ($severity) {
                 'leger','léger' => 'mild',

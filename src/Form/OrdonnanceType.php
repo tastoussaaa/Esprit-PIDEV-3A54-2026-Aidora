@@ -4,37 +4,32 @@ namespace App\Form;
 
 use App\Entity\Consultation;
 use App\Entity\Ordonnance;
+use App\Entity\Medicament;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 
 class OrdonnanceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('medicament', TextType::class, [
-                'label' => 'Medicament',
-                'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'Medicine name']
-            ])
-            ->add('dosage', TextType::class, [
-                'label' => 'Dosage',
-                'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'e.g., 2 tablets']
-            ])
-            ->add('duree', TextType::class, [
-                'label' => 'Duration',
-                'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__input', 'placeholder' => 'e.g., 7 days']
-            ])
-            ->add('instructions', TextareaType::class, [
-                'label' => 'Instructions',
-                'row_attr' => ['class' => 'form__field'],
-                'attr' => ['class' => 'form__textarea', 'rows' => 4, 'placeholder' => 'How to take the medicine']
+            ->add('medicaments', CollectionType::class, [
+                'entry_type' => MedicamentType::class,
+                'entry_options' => [
+                    'label' => false,
+                ],
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+                'label' => 'Médicaments',
+                'attr' => [
+                    'class' => 'medicaments-collection',
+                ],
             ])
             ->add('consultation', EntityType::class, [
                 'class' => Consultation::class,

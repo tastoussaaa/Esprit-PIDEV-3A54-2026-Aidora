@@ -60,37 +60,13 @@
                             {% for o in ordonnances %}
                                 <tr>
                                     <td>
-                                        {% if o.medicaments|length > 0 %}
-                                            <div class="medicament-list">
-                                                {% for med in o.medicaments %}
-                                                    <span class="medicament-pill">{{ med.medicament }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            <span style="color: rgba(7,19,31,.40);">—</span>
-                                        {% endif %}
+                                        {{ o.medicament ?: '—' }}
                                     </td>
                                     <td>
-                                        {% if o.medicaments|length > 0 %}
-                                            <div class="medicament-list">
-                                                {% for med in o.medicaments %}
-                                                    <span class="medicament-pill medicament-pill--dosage">{{ med.dosage ?: '—' }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            {{ o.dosage ?: '—' }}
-                                        {% endif %}
+                                        {{ o.dosage ?: '—' }}
                                     </td>
                                     <td>
-                                        {% if o.medicaments|length > 0 %}
-                                            <div class="medicament-list">
-                                                {% for med in o.medicaments %}
-                                                    <span class="medicament-pill medicament-pill--duree">{{ med.duree ?: '—' }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            {{ o.duree ?: '—' }}
-                                        {% endif %}
+                                        {{ o.duree ?: '—' }}
                                     </td>
                                     <td>
                                         {% if o.consultation %}
@@ -110,11 +86,6 @@
                                     </td>
                                     <td>
                                         <div class="ordo-actions">
-                                            {% if o.consultation %}
-                                                <a href="{{ path('download_consultation_pdf', {'consultationId': o.consultation.id}) }}" class="btn btn--ghost" title="Télécharger PDF" style="padding: 8px 10px; font-size: 14px;">
-                                                    📥
-                                                </a>
-                                            {% endif %}
                                             <a href="{{ path('Ordonnance_show', {'id': o.id}) }}" class="btn btn--ghost" style="padding: 8px 14px; font-size: 13px;">
                                                 Détails
                                             </a>

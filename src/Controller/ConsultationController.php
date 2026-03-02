@@ -5,17 +5,26 @@ namespace App\Controller;
 use App\Entity\Consultation;
 use App\Form\ConsultationType;
 use App\Repository\ConsultationRepository;
+use App\Service\OpenAIService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
-
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mailer\MailerInterface;
 
 #[Route('/consultation')]
 class ConsultationController extends AbstractController
 {
+    private MailerInterface $mailer;
+    private OpenAIService $openAIService;
+
+    public function __construct(MailerInterface $mailer, OpenAIService $openAIService)
+    {
+        $this->mailer = $mailer;
+        $this->openAIService = $openAIService;
+    }
 
     #[Route('/', name: 'consultation_index', methods: ['GET'])]
     public function index(Request $request, ConsultationRepository $repository): Response
@@ -74,6 +83,38 @@ class ConsultationController extends AbstractController
             'sort' => $sort,
             'navigation' => $navigation,
         ]);
+    }
+
+    #[Route('/analyze-motif', name: 'consultation_analyze_motif', methods: ['GET'])]
+    public function analyzeMotif(Request $request): Response
+    {
+        $motif = $request->query->get('motif', '');
+
+        if (empty(trim($motif))) {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Motif vide',
+                'message' => 'Veuillez entrer un motif de consultation'
+            ]);
+        }
+
+        try {
+            $result = $this->openAIService->analyzeMotifComprehensive($motif);
+            
+            return $this->json([
+                'ok' => $result['isValid'] ?? true,
+                'original' => $motif,
+                'enhanced' => $result['enhanced'] ?? $motif,
+                'urgency' => $result['urgency'] ?? 'moderee',
+                'message' => $result['message'] ?? ''
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Erreur lors de l\'analyse',
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     #[Route('/new', name: 'consultation_new', methods: ['GET','POST'])]

@@ -39,7 +39,8 @@ padding: 8px;
 margin-top: 40px;
 text-align: center;
 font-size: 12px;
-} </style>
+}
+</style>
 
 </head>
 
@@ -68,7 +69,6 @@ font-size: 12px;
 <div class="section">
     <strong>Medications:</strong>
 
-```
 <table>
     <tr>
         <th>Medication</th>
@@ -78,17 +78,14 @@ font-size: 12px;
     </tr>
 
     {% for ordonnance in consultation.ordonnances %}
-        {% for med in ordonnance.medicaments %}
-        <tr>
-            <td>{{ med.medicament }}</td>
-            <td>{{ med.dosage }}</td>
-            <td>{{ med.duree }}</td>
-            <td>{{ med.instructions }}</td>
-        </tr>
-        {% endfor %}
+    <tr>
+        <td>{{ ordonnance.medicament }}</td>
+        <td>{{ ordonnance.dosage }}</td>
+        <td>{{ ordonnance.duree }}</td>
+        <td>{{ ordonnance.instructions }}</td>
+    </tr>
     {% endfor %}
 </table>
-```
 
 </div>
 
@@ -98,4 +95,3 @@ font-size: 12px;
 
 </body>
 </html>
-d

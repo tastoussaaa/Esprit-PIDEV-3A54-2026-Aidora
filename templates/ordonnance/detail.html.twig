@@ -28,23 +28,50 @@
         <section class="portal__content portal__card">
             <div class="card" style="display:flex;gap:18px;align-items:flex-start">
                 <div style="flex:1">
-                    <h3 style="margin:0 0 8px">{{ ordonnance.medicament }} <span style="color:var(--muted);font-weight:700">· {{ ordonnance.dosage }}</span></h3>
+                    {# Show all medicaments #}
+                    {% if ordonnance.medicaments is not empty %}
+                        {% for medicament in ordonnance.medicaments %}
+                            <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+                                <h3 style="margin:0 0 8px">
+                                    {{ medicament.medicament ?: 'Non spécifié' }} 
+                                    <span style="color:var(--muted);font-weight:700">· {{ medicament.dosage ?: '—' }}</span>
+                                </h3>
+                                
+                                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px">
+                                    <div>
+                                        <div class="section-title"><h2 style="font-size:14px;margin:0">Durée</h2></div>
+                                        <div style="margin-top:6px">{{ medicament.duree ?: '—' }}</div>
+                                    </div>
+                                </div>
 
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px">
-                        <div>
-                            <div class="section-title"><h2 style="font-size:14px;margin:0">Duration</h2></div>
-                            <div style="margin-top:6px">{{ ordonnance.duree ?: '—' }}</div>
-                        </div>
-                        <div>
-                            <div class="section-title"><h2 style="font-size:14px;margin:0">Created</h2></div>
-                            <div style="margin-top:6px">{{ ordonnance.createdAt ? ordonnance.createdAt|date('Y-m-d') : '—' }}</div>
-                        </div>
-                    </div>
+                                {% if medicament.instructions %}
+                                    <div style="margin-top:14px">
+                                        <div class="section-title"><h2 style="font-size:14px;margin:0">Instructions</h2></div>
+                                        <div style="margin-top:8px;white-space:pre-line">{{ medicament.instructions }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {# Fallback for old data without medicaments collection #}
+                        <h3 style="margin:0 0 8px">{{ ordonnance.medicament ?: 'Non spécifié' }} <span style="color:var(--muted);font-weight:700">· {{ ordonnance.dosage ?: '—' }}</span></h3>
 
-                    <div style="margin-top:14px">
-                        <div class="section-title"><h2 style="font-size:14px;margin:0">Instructions</h2></div>
-                        <div style="margin-top:8px;white-space:pre-line">{{ ordonnance.instructions ?: '—' }}</div>
-                    </div>
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px">
+                            <div>
+                                <div class="section-title"><h2 style="font-size:14px;margin:0">Duration</h2></div>
+                                <div style="margin-top:6px">{{ ordonnance.duree ?: '—' }}</div>
+                            </div>
+                            <div>
+                                <div class="section-title"><h2 style="font-size:14px;margin:0">Created</h2></div>
+                                <div style="margin-top:6px">{{ ordonnance.createdAt ? ordonnance.createdAt|date('Y-m-d') : '—' }}</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:14px">
+                            <div class="section-title"><h2 style="font-size:14px;margin:0">Instructions</h2></div>
+                            <div style="margin-top:8px;white-space:pre-line">{{ ordonnance.instructions ?: '—' }}</div>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <aside style="width:280px">

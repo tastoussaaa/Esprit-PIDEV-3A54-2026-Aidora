@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -98,9 +97,11 @@ class CreateUserAccountsCommand extends Command
                 
                 $admin = new Admin();
                 $admin->setUser($user);
-                $admin->setFullName($fullName);
-                $admin->setEmail($email);
-                $admin->setIsActive(true);
+                // Split full name into nom and prenom
+                $nameParts = explode(' ', $fullName, 2);
+                $admin->setNom($nameParts[0] ?? $fullName);
+                $admin->setPrenom($nameParts[1] ?? '');
+                $admin->setMdp($password); // Required field
                 
                 $this->em->persist($admin);
                 $output->writeln('<info>Admin account created successfully!</info>');
@@ -114,11 +115,12 @@ class CreateUserAccountsCommand extends Command
                 $patient->setUser($user);
                 $patient->setFullName($fullName);
                 $patient->setEmail($email);
-                $patient->setIsActive(true);
+                $patient->setActive(true);
                 // Required fields for complete profile
                 $patient->setAutonomie('AUTONOME');
                 $patient->setAdresse('Not specified');
                 $patient->setContactUrgence('Not specified');
+                $patient->setMdp($password); // Required field
                 
                 $this->em->persist($patient);
                 $output->writeln('<info>Patient account created successfully!</info>');
@@ -148,7 +150,8 @@ class CreateUserAccountsCommand extends Command
                 $medecin->setRpps($rpps);
                 $medecin->setDisponible(true);
                 $medecin->setIsValidated(true);
-                $medecin->setIsActive(true);
+                $medecin->setActive(true);
+                $medecin->setMdp($password); // Required field
                 
                 $this->em->persist($medecin);
                 $output->writeln('<info>Medecin account created successfully!</info>');

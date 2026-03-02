@@ -8,7 +8,7 @@ use App\Repository\OrdonnanceRepository;
 use App\Service\MedicationApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\FormError;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -92,6 +92,10 @@ class OrdonnanceController extends AbstractController
     public function new(Request $request, EntityManagerInterface $em, ?MedicationApiService $medService = null): Response
     {
         $Ordonnance = new Ordonnance();
+        
+        // Add an empty medicament by default so the form displays at least one field
+        $Ordonnance->addMedicament(new \App\Entity\Medicament());
+        
         $form = $this->createForm(OrdonnanceType::class, $Ordonnance);
         $form->handleRequest($request);
 

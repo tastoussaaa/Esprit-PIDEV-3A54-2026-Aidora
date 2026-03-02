@@ -138,32 +138,30 @@
                     <div class="medicaments-title">💊 Prescribed Medications</div>
 
                     {% for ordonnance in consultation.ordonnances %}
-                        {% for medicament in ordonnance.medicaments %}
-                            <div class="medicament-card">
-                                <div class="medicament-name">✓ {{ medicament.medicament ?: 'Medication not specified' }}</div>
-                                <div class="medicament-details">
-                                    <div class="medicament-detail">
-                                        <div class="medicament-detail-label">Dosage</div>
-                                        <div class="medicament-detail-value">{{ medicament.dosage ?: 'Not specified' }}</div>
-                                    </div>
-                                    <div class="medicament-detail">
-                                        <div class="medicament-detail-label">Duration</div>
-                                        <div class="medicament-detail-value">{{ medicament.duree ?: 'Not specified' }}</div>
-                                    </div>
-                                    <div class="medicament-detail">
-                                        <div class="medicament-detail-label">Frequency</div>
-                                        <div class="medicament-detail-value">As prescribed</div>
-                                    </div>
+                        <div class="medicament-card">
+                            <div class="medicament-name">✓ {{ ordonnance.medicament ?: 'Medication not specified' }}</div>
+                            <div class="medicament-details">
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Dosage</div>
+                                    <div class="medicament-detail-value">{{ ordonnance.dosage ?: 'Not specified' }}</div>
                                 </div>
-
-                                {% if medicament.instructions %}
-                                    <div class="instructions">
-                                        <div class="instructions-label">⚠️ Special Instructions</div>
-                                        {{ medicament.instructions|nl2br }}
-                                    </div>
-                                {% endif %}
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Duration</div>
+                                    <div class="medicament-detail-value">{{ ordonnance.duree ?: 'Not specified' }}</div>
+                                </div>
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Frequency</div>
+                                    <div class="medicament-detail-value">As prescribed</div>
+                                </div>
                             </div>
-                        {% endfor %}
+
+                            {% if ordonnance.instructions %}
+                                <div class="instructions">
+                                    <div class="instructions-label">⚠️ Special Instructions</div>
+                                    {{ ordonnance.instructions|nl2br }}
+                                </div>
+                            {% endif %}
+                        </div>
                     {% endfor %}
                 </div>
             {% endif %}
