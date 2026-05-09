@@ -152,6 +152,12 @@
 						{{ form_errors(form.description) }}
 					</div>
 
+					<div class="form-group">
+						{{ form_label(form.url, 'Lien (URL)') }}
+						{{ form_widget(form.url) }}
+						{{ form_errors(form.url) }}
+					</div>
+
 					{# ✅ Fixed: was form.file, must match RessourceType field name #}
 					{% if form.pdfFile is defined %}
 						<div class="form-group">

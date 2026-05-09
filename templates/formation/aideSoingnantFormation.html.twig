@@ -211,7 +211,27 @@
                     {{ formation.description|raw }}
                 </div>
 
-                <div class="formation-footer">
+				{% if formation.ressources|length > 0 %}
+					<div class="formation-ressources">
+						<h3 style="margin-top:30px; margin-bottom:15px; font-size:1.3rem;">Ressources</h3>
+						<ul style="list-style:none; padding:0;">
+							{% for ressource in formation.ressources %}
+								<li style="margin-bottom:10px;">
+									<strong>{{ ressource.title }}</strong>
+									{% if ressource.url %}
+										— <a href="{{ ressource.url }}" target="_blank">Lien</a>
+									{% endif %}
+									{% if ressource.fileName %}
+										{% set pdfPath = 'uploads/pdfs/' ~ ressource.fileName %}
+										<a href="{{ asset(pdfPath) }}" target="_blank">📄 Télécharger le PDF</a>
+									{% endif %}
+								</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% endif %}
+
+			<div class="formation-footer">
                     {% set hasApplied = appliedFormations[formation.id] is defined %}
 
                     {% if hasApplied %}

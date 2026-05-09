@@ -9,6 +9,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Validator\Constraints\File;
 
 class RessourceType extends AbstractType
@@ -42,6 +43,13 @@ class RessourceType extends AbstractType
                 'attr' => [
                     'rows' => 4
                 ]
+            ])
+
+            // 🔗 URL
+            ->add('url', UrlType::class, [
+                'label' => 'Lien (URL)',
+                'required' => true,
+                'default_protocol' => 'https',
             ])
 
             // 📄 Upload PDF

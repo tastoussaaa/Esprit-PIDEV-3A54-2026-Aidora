@@ -65,10 +65,6 @@ class FormationRepository extends ServiceEntityRepository
     public function findValidatedByCategory(?string $category = null, ?string $searchTerm = null): array
     {
         $qb = $this->createQueryBuilder('f')
-            ->andWhere('f.statut = :statut')
-            ->setParameter('statut', Formation::STATUT_VALIDE)
-            ->andWhere('f.startDate >= :today')
-            ->setParameter('today', new \DateTime())
             ->orderBy('f.startDate', 'DESC');
 
         if ($category) {
