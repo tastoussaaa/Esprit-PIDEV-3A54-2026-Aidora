@@ -20,6 +20,9 @@ class Patient
     #[Assert\Length(max: 255)]
     private ?string $pathologie = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $aiHealthSummary = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $besoinsSpecifiques = null;
 
@@ -152,6 +155,17 @@ class Patient
     public function setPathologie(?string $pathologie): static
     {
         $this->pathologie = $pathologie;
+        return $this;
+    }
+
+    public function getAiHealthSummary(): ?string
+    {
+        return $this->aiHealthSummary;
+    }
+
+    public function setAiHealthSummary(?string $aiHealthSummary): static
+    {
+        $this->aiHealthSummary = $aiHealthSummary;
         return $this;
     }
 

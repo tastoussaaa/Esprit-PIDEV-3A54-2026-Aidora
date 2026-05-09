@@ -1,85 +1,455 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Médecin{% endblock %}
+{% block title %}Dashboard Patient{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/patient/dashboard.css') }}">
 {% endblock %}
 
 {% block body %}
-{% set navigation = [
+{% set navigation = navigation|default([
     {'name': 'Dashboard', 'path': path('app_patient_dashboard'), 'icon': '🏠'},
     {'name': 'Consultations', 'path': path('patient_consultations'), 'icon': '🩺'},
     {'name': 'Nouvelle consultation', 'path': path('consultation_new'), 'icon': '➕'},
     {'name': 'Produits', 'path': path('produit_list'), 'icon': '🛒'},
     {'name': 'Mes commandes', 'path': path('commande_index'), 'icon': '📋'}
-] %}
+]) %}
 
-<div class="portal">
+{% set fullName = patient and patient.fullName ? patient.fullName : (app.user and app.user.fullName ? app.user.fullName : 'Tasnim') %}
+{% set firstName = fullName|split(' ')|first %}
+{% set profileScore = patient and patient.profilCompletionScore is not null ? patient.profilCompletionScore : 85 %}
+{% set consultationsCount = consultations|length %}
+{% set doctorsCount = compatibleDoctors|length %}
+{% set totalDoctorScore = 0 %}
+{% for match in compatibleDoctors %}
+    {% set totalDoctorScore = totalDoctorScore + (match.compatibilityScore|default(0)) %}
+{% endfor %}
+{% set trustScore = doctorsCount > 0 ? (totalDoctorScore / doctorsCount)|round : 88 %}
+{% set stress = 32 %}
+{% set sleep = 74 %}
+{% set activity = 66 %}
+{% set mood = 79 %}
 
-    <!-- SIDEBAR -->
+<div class="portal patient-portal">
     {% include 'side_bar.html.twig' %}
 
-
-
-    <!-- MAIN CONTENT -->
-    <main class="portal__main">
-
-        <div class="portal__top">
-            <div>
-                <h1 class="portal__title">Dashboard</h1>
-                <p class="portal__subtitle">Vue d'ensemble de vos consultations</p>
+    <main class="portal__main patient-main">
+        <section class="hero-pro">
+            <div class="hero-pro__left">
+                <div class="hero-pro__kicker">Espace Patient Aidora</div>
+                <h1>Bonjour {{ firstName }} 👋</h1>
+                <p>Voici le suivi de votre espace sante aujourd'hui.</p>
+                <div class="hero-pro__actions">
+                    <a href="{{ path('consultation_new') }}" class="btn btn--primary">Nouvelle consultation</a>
+                    <a href="{{ path('patient_ordonnances') }}" class="btn btn--ghost">Telecharger dossier</a>
+                </div>
             </div>
+            <div class="hero-pro__right">
+                <div class="hero-pro__identity">
+                    <div class="hero-avatar">
+                        {% if app.user and app.user.avatar %}
+                            <img src="{{ app.user.avatar }}" alt="Avatar utilisateur">
+                        {% else %}
+                            {{ firstName|slice(0, 1)|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong>{{ fullName }}</strong>
+                        <span>{{ "now"|date("d/m/Y") }}</span>
+                    </div>
+                </div>
+                <div class="hero-badge">Profil verifie</div>
+            </div>
+        </section>
 
-            <a href="{{ path('consultation_new') }}" class="btn btn--primary">Nouvelle Consultation</a>
-        </div>
+        <section class="stats-grid">
+            <article class="stat-card stat-card--c1">
+                <div class="stat-card__head">
+                    <h3>Consultations</h3><span>🩺</span>
+                </div>
+                <div class="stat-card__value">{{ consultationsCount }}</div>
+                <p>+12% ce mois</p>
+            </article>
+            <article class="stat-card stat-card--c2">
+                <div class="stat-card__head">
+                    <h3>Medecins compatibles</h3><span>👨‍⚕️</span>
+                </div>
+                <div class="stat-card__value">{{ doctorsCount }}</div>
+                <p>+7 nouveaux profils</p>
+            </article>
+            <article class="stat-card stat-card--c3">
+                <div class="stat-card__head">
+                    <h3>Niveau de confiance</h3><span>🛡️</span>
+                </div>
+                <div class="stat-card__value">{{ trustScore }}%</div>
+                <p>Score stable et en progression</p>
+            </article>
+            <article class="stat-card stat-card--c4">
+                <div class="stat-card__head">
+                    <h3>Etat du profil</h3><span>👤</span>
+                </div>
+                <div class="stat-card__value">Complete a {{ profileScore }}%</div>
+                <p>+5% apres mise a jour</p>
+            </article>
+        </section>
 
-        <div class="portal__content">
+        <section class="dashboard-grid">
+            <article class="panel panel--ia">
+                <div class="panel__title">
+                    <h2>Assistant IA Aidora</h2>
+                    <span class="tag">Analyse IA</span>
+                </div>
+                <p class="ia-text">
+                    {{ aiHealthSummary ?: "Votre profil indique une pathologie a suivre avec attention. Nous recommandons un suivi specialise, des consultations regulieres et une coordination active avec les professionnels compatibles." }}
+                </p>
+                <ul class="ia-list">
+                    <li>Score IA de compatibilite: <strong>{{ trustScore }}%</strong></li>
+                    <li>Niveau de priorite patient: <strong>{{ profileScore > 80 ? 'Moyen' : 'Eleve' }}</strong></li>
+                    <li>Analyse automatique du profil: <strong>{{ patient and patient.pathologie ? 'Activee' : 'A completer' }}</strong></li>
+                </ul>
+            </article>
 
-            <div class="box">
-                <h3>Mes Consultations</h3>
-                {% if consultations is empty %}
-                    <p style="color:var(--muted)">Vous n'avez pas encore créé de consultation.</p>
-                    <a href="{{ path('consultation_new') }}" class="btn btn--primary" style="margin-top:12px">Créer une consultation</a>
-                {% else %}
-                    <div class="boxGrid" style="display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
-                        {% for consultation in consultations %}
-                            <div style="border:1px solid rgba(7,19,31,.10);border-radius:12px;padding:16px">
-                                <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
-                                    <div>
-                                        <h4 style="margin:0 0 4px">{{ consultation.motif }}</h4>
-                                        <div style="color:var(--muted);font-size:13px">
-                                            {{ consultation.dateConsultation ? consultation.dateConsultation|date('d M Y H:i') : 'Date non définie' }}
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:4px;justify-content:flex-end">
-                                        {% if consultation.status == 'pending' %}
-                                            <span style="background:rgba(255,193,7,.15);color:#FF9F00;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900">⏳ En attente</span>
-                                        {% elseif consultation.status == 'accepted' %}
-                                            <span style="background:rgba(19,184,194,.15);color:#13B8C2;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900">✅ Acceptée</span>
-                                        {% elseif consultation.status == 'declined' %}
-                                            <span style="background:rgba(255,107,107,.15);color:#FF6B6B;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900">❌ Refusée</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(7,19,31,.05)">
-                                    <a href="{{ path('consultation_show', {'id': consultation.id}) }}" class="btn btn--ghost" style="width:100%;text-align:center">Voir les détails</a>
+            <article class="panel panel--health">
+                <div class="panel__title"><h2>Etat de sante</h2></div>
+                <div class="health-bars">
+                    <div class="health-row"><span>Stress</span><div><i style="width: {{ stress }}%"></i></div><b>{{ stress }}%</b></div>
+                    <div class="health-row"><span>Sommeil</span><div><i style="width: {{ sleep }}%"></i></div><b>{{ sleep }}%</b></div>
+                    <div class="health-row"><span>Activite</span><div><i style="width: {{ activity }}%"></i></div><b>{{ activity }}%</b></div>
+                    <div class="health-row"><span>Humeur</span><div><i style="width: {{ mood }}%"></i></div><b>{{ mood }}%</b></div>
+                </div>
+                <canvas id="healthMiniChart" height="120"></canvas>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel__title">
+                <h2>Matching medecins</h2>
+                <span class="hint">Tri automatique par compatibilite IA</span>
+            </div>
+            {% if compatibleDoctors is not empty %}
+                <div class="doctor-list">
+                    {% for match in compatibleDoctors %}
+                        {% set doctor = match.doctor %}
+                        {% set stats = medecinRatingStats[doctor.id]|default({'avg': 0, 'count': 0}) %}
+                        {% set alreadyRated = doctor.id in alreadyRatedMedecinIds %}
+                        {% set myRating = patientMedecinRatings[doctor.id]|default(0) %}
+                        <article class="doctor-card">
+                            <div class="doctor-card__profile">
+                                <div class="doctor-avatar">{{ doctor.fullName|slice(0, 1)|upper }}</div>
+                                <div>
+                                    <h3>{{ doctor.fullName }}</h3>
+                                    <p>{{ doctor.specialite }}</p>
                                 </div>
                             </div>
+                            <div class="doctor-card__meta">
+                                <div><span>Compatibilite IA</span><strong>{{ match.compatibilityScore }}%</strong></div>
+                                <div><span>Note moyenne</span><strong>{{ stats.avg|number_format(1, '.', '') }}/5</strong></div>
+                                <div><span>Avis</span><strong>{{ stats.count }}</strong></div>
+                            </div>
+                            <div class="doctor-card__reason">{{ match.reason }}</div>
+                            <form method="post" action="{{ path('patient_medecin_rate', {id: doctor.id}) }}" class="doctor-card__rating">
+                                <input type="hidden" name="_token" value="{{ csrf_token('rate-medecin-' ~ doctor.id) }}">
+                                <span>Votre note :</span>
+                                <div class="rating-stars">
+                                    {% for star in 1..5 %}
+                                        <button
+                                            type="submit"
+                                            name="rating"
+                                            value="{{ star }}"
+                                            class="{% if myRating >= star %}is-active{% endif %}"
+                                            {% if alreadyRated %}disabled title="Deja note"{% endif %}
+                                        >★</button>
+                                    {% endfor %}
+                                </div>
+                                {% if alreadyRated %}
+                                    <small>Vous avez deja note ce medecin.</small>
+                                {% endif %}
+                            </form>
+                            <form method="post" action="{{ path('patient_medecin_message', {id: doctor.id}) }}" class="doctor-card__action">
+                                <input type="hidden" name="_token" value="{{ csrf_token('message-medecin-' ~ doctor.id) }}">
+                                <input type="text" name="message" maxlength="1000" placeholder="Message rapide pour ce medecin...">
+                                <button type="submit" class="btn btn--primary">Prendre rendez-vous</button>
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state__icon">🧭</div>
+                    <h3>Aucun medecin compatible trouve pour cette pathologie.</h3>
+                    <p>Completez votre pathologie pour enrichir l'analyse IA et lancer un matching plus precis.</p>
+                    <a href="{{ path('consultation_new') }}" class="btn btn--primary">Commencer une consultation</a>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <div class="panel__title">
+                <h2>Aides-soignants disponibles</h2>
+                <span class="hint">Liste complete avec notes et disponibilite</span>
+            </div>
+            <div class="aide-toolbar">
+                <button type="button" id="toggleAidesBtn" class="btn btn--primary">Afficher les aides-soignants</button>
+                <button type="button" id="sortAidesBtn" class="btn btn--ghost">Trier par note</button>
+            </div>
+
+            <div id="aideDirectory" class="aide-directory is-hidden">
+                <div class="aide-filters">
+                    <input id="aideSearch" type="text" placeholder="Rechercher par nom, email, specialite..." />
+                    <select id="aideSpecialiteFilter">
+                        <option value="">Toutes specialites</option>
+                        {% for aide in aides %}
+                            {% if aide.typePatientsAcceptes %}
+                                <option value="{{ aide.typePatientsAcceptes|lower }}">{{ aide.typePatientsAcceptes }}</option>
+                            {% endif %}
                         {% endfor %}
+                    </select>
+                    <select id="aideAvailabilityFilter">
+                        <option value="">Toutes disponibilites</option>
+                        <option value="1">Disponible</option>
+                        <option value="0">Indisponible</option>
+                    </select>
+                    <input id="aideCityFilter" type="text" placeholder="Filtrer par ville" />
+                </div>
+
+                {% if aides is not empty %}
+                    <div id="aideGrid" class="aide-grid">
+                        {% for aide in aides %}
+                            {% set stats = aideRatingStats[aide.id]|default({'avg': 0, 'count': 0}) %}
+                            {% set avg = stats.avg|default(0) %}
+                            {% set count = stats.count|default(0) %}
+                            {% set alreadyRated = aide.id in alreadyRatedAideIds %}
+                            {% set myRating = patientAideRatings[aide.id]|default(0) %}
+                            {% set fullName = (aide.prenom ~ ' ' ~ aide.nom)|trim %}
+                            {% set city = aide.villeIntervention|default('Ville non renseignee') %}
+                            {% set specialite = aide.typePatientsAcceptes|default('Aide-soignant') %}
+                            {% set isTop = avg >= 4.5 and count >= 2 %}
+                            <article
+                                class="aide-card"
+                                data-rating="{{ avg }}"
+                                data-count="{{ count }}"
+                                data-name="{{ fullName|lower }}"
+                                data-specialite="{{ specialite|lower }}"
+                                data-city="{{ city|lower }}"
+                                data-disponible="{{ aide.disponible ? '1' : '0' }}"
+                            >
+                                <div class="aide-card__head">
+                                    <div class="aide-avatar">
+                                        {% if aide.user and aide.user.avatar %}
+                                            <img src="{{ aide.user.avatar }}" alt="Avatar {{ fullName }}">
+                                        {% else %}
+                                            {{ fullName|slice(0, 1)|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h3>{{ fullName }}</h3>
+                                        <p>{{ specialite }}</p>
+                                        <p class="aide-city">{{ city }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="aide-badges">
+                                    <span class="badge">Verifie</span>
+                                    {% if isTop %}<span class="badge badge--top">Top aidant</span>{% endif %}
+                                    <span class="badge {{ aide.disponible ? 'badge--ok' : 'badge--off' }}">{{ aide.disponible ? 'Disponible' : 'Indisponible' }}</span>
+                                </div>
+
+                                <div class="aide-score">
+                                    <span class="stars">
+                                        {% for i in 1..5 %}
+                                            <i class="{{ avg >= i ? 'is-on' : '' }}">★</i>
+                                        {% endfor %}
+                                    </span>
+                                    <strong>{{ avg|number_format(1, '.', '') }}</strong>
+                                    <small>({{ count }} avis)</small>
+                                </div>
+
+                                <div class="aide-actions">
+                                    <button type="button" class="btn btn--ghost aide-profile-btn" data-target="aide-profile-{{ aide.id }}">Voir profil</button>
+                                    <form method="post" action="{{ path('patient_aide_rate_dashboard', {id: aide.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('rate-aide-dashboard-' ~ aide.id) }}">
+                                        <div class="rating-stars">
+                                            {% for star in 1..5 %}
+                                                <button
+                                                    type="submit"
+                                                    name="rating"
+                                                    value="{{ star }}"
+                                                    class="{% if myRating >= star %}is-active{% endif %}"
+                                                    {% if alreadyRated %}disabled title="Deja note"{% endif %}
+                                                >★</button>
+                                            {% endfor %}
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="aide-profile-panel" id="aide-profile-{{ aide.id }}">
+                                    <p><strong>Email:</strong> {{ aide.email }}</p>
+                                    <p><strong>Telephone:</strong> {{ aide.telephone ?: 'Non renseigne' }}</p>
+                                    <p><strong>Experience:</strong> {{ aide.niveauExperience ?: 0 }} ans</p>
+                                    <p><strong>Rayon:</strong> {{ aide.rayonInterventionKm ?: 0 }} km</p>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state__icon">🩺</div>
+                        <h3>Aucun aide-soignant disponible pour le moment.</h3>
+                        <p>Nous vous informerons des qu'un profil compatible est disponible.</p>
                     </div>
                 {% endif %}
             </div>
+        </section>
 
-        </div>
+        <section class="dashboard-grid">
+            <article class="panel">
+                <div class="panel__title"><h2>Timeline activites</h2></div>
+                <div class="timeline">
+                    <div class="timeline__item"><span>📝</span><div><strong>Consultation creee</strong><small>{{ "now -2 hours"|date("d/m H:i") }}</small></div></div>
+                    <div class="timeline__item"><span>🧬</span><div><strong>Profil mis a jour</strong><small>{{ "now -1 day"|date("d/m H:i") }}</small></div></div>
+                    <div class="timeline__item"><span>🩺</span><div><strong>Medecin trouve</strong><small>{{ "now -2 days"|date("d/m H:i") }}</small></div></div>
+                    <div class="timeline__item"><span>📦</span><div><strong>Commande envoyee</strong><small>{{ "now -4 days"|date("d/m H:i") }}</small></div></div>
+                </div>
+            </article>
 
+            <article class="panel">
+                <div class="panel__title"><h2>Produits recommandes</h2></div>
+                <div class="product-grid">
+                    <div class="product-card">
+                        <img src="{{ asset('assets/images/hero.png') }}" alt="Produit sante">
+                        <h4>Kit suivi quotidien</h4>
+                        <p>39.00 EUR</p>
+                        <a class="btn btn--ghost" href="{{ path('produit_list') }}">Commander</a>
+                    </div>
+                    <div class="product-card">
+                        <img src="{{ asset('assets/images/form.jpg') }}" alt="Produit confort">
+                        <h4>Pack confort patient</h4>
+                        <p>59.00 EUR</p>
+                        <a class="btn btn--ghost" href="{{ path('produit_list') }}">Commander</a>
+                    </div>
+                    <div class="product-card">
+                        <img src="{{ asset('assets/images/avatar.png') }}" alt="Produit pratique">
+                        <h4>Suivi intelligent</h4>
+                        <p>29.00 EUR</p>
+                        <a class="btn btn--ghost" href="{{ path('produit_list') }}">Commander</a>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel__title"><h2>Informations de sante</h2></div>
+            <form method="post" class="health-form">
+                <label for="pathologie">Maladie ou pathologie</label>
+                <textarea id="pathologie" name="pathologie" rows="4" placeholder="Ex: diabete type 2, hypertension, asthme..." {{ isHealthInfoLocked ? 'readonly' : '' }}>{{ patient and patient.pathologie and not (patient.pathologie matches '/(?i)^non\\s*sp/') ? patient.pathologie : '' }}</textarea>
+                {% if isHealthInfoLocked %}
+                    <div class="lock-note">Ces informations sont verrouillees apres le premier enregistrement.</div>
+                {% else %}
+                    <button type="submit" class="btn btn--primary">Enregistrer mes informations</button>
+                {% endif %}
+            </form>
+        </section>
     </main>
-
 </div>
-
 {% endblock %}
 
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var canvas = document.getElementById('healthMiniChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      datasets: [{
+        data: [62, 66, 64, 70, 72, 69, 74],
+        borderColor: '#13B8C2',
+        backgroundColor: 'rgba(183,154,216,.15)',
+        borderWidth: 2,
+        tension: .4,
+        fill: true,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false, min: 40, max: 90 }
+      }
+    }
+  });
 
+  const toggleBtn = document.getElementById('toggleAidesBtn');
+  const sortBtn = document.getElementById('sortAidesBtn');
+  const directory = document.getElementById('aideDirectory');
+  const grid = document.getElementById('aideGrid');
+  const search = document.getElementById('aideSearch');
+  const specialiteFilter = document.getElementById('aideSpecialiteFilter');
+  const availabilityFilter = document.getElementById('aideAvailabilityFilter');
+  const cityFilter = document.getElementById('aideCityFilter');
+  const profileButtons = document.querySelectorAll('.aide-profile-btn');
+  let sortedByRating = true;
 
+  if (toggleBtn && directory) {
+    toggleBtn.addEventListener('click', function () {
+      directory.classList.toggle('is-hidden');
+      const shown = !directory.classList.contains('is-hidden');
+      toggleBtn.textContent = shown ? 'Masquer les aides-soignants' : 'Afficher les aides-soignants';
+    });
+  }
 
+  function applyFilters() {
+    if (!grid) return;
+    const q = (search?.value || '').toLowerCase().trim();
+    const s = (specialiteFilter?.value || '').toLowerCase();
+    const a = (availabilityFilter?.value || '').toLowerCase();
+    const c = (cityFilter?.value || '').toLowerCase().trim();
 
+    grid.querySelectorAll('.aide-card').forEach((card) => {
+      const name = card.dataset.name || '';
+      const specialite = card.dataset.specialite || '';
+      const city = card.dataset.city || '';
+      const dispo = card.dataset.disponible || '';
+
+      const matchQ = q === '' || name.includes(q) || specialite.includes(q) || city.includes(q);
+      const matchS = s === '' || specialite.includes(s);
+      const matchA = a === '' || dispo === a;
+      const matchC = c === '' || city.includes(c);
+
+      card.style.display = (matchQ && matchS && matchA && matchC) ? '' : 'none';
+    });
+  }
+
+  [search, specialiteFilter, availabilityFilter, cityFilter].forEach((el) => {
+    if (el) el.addEventListener('input', applyFilters);
+  });
+
+  if (sortBtn && grid) {
+    sortBtn.addEventListener('click', function () {
+      const cards = Array.from(grid.querySelectorAll('.aide-card'));
+      cards.sort((left, right) => {
+        const leftRating = parseFloat(left.dataset.rating || '-1');
+        const rightRating = parseFloat(right.dataset.rating || '-1');
+        if (rightRating !== leftRating) return rightRating - leftRating;
+        const leftCount = parseInt(left.dataset.count || '0', 10);
+        const rightCount = parseInt(right.dataset.count || '0', 10);
+        return rightCount - leftCount;
+      });
+      cards.forEach((card) => grid.appendChild(card));
+      sortedByRating = true;
+      sortBtn.textContent = sortedByRating ? 'Trie par note active' : 'Trier par note';
+    });
+  }
+
+  profileButtons.forEach((btn) => {
+    btn.addEventListener('click', function () {
+      const panel = document.getElementById(btn.dataset.target);
+      if (!panel) return;
+      panel.classList.toggle('is-open');
+    });
+  });
+});
+</script>
+{% endblock %}

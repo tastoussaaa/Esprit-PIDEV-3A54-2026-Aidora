@@ -8,7 +8,6 @@
 parameters:
     upload_dir: '%kernel.project_dir%/public/uploads'
     pdf_directory: '%kernel.project_dir%/public/uploads/pdfs%'
-    api_key: '%env(GSK_API_KEY)%' # <-- your Groq API key
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 # Twilio credentials should be provided via environment variables for local
 # development and production. Do NOT hard-code secrets here.
@@ -43,11 +42,13 @@ services:
 
     App\Service\AiDescriptionService:
         arguments:
-            $apiKey: '%env(GROQ_API_KEY)%'
+            $baseUrl: '%env(string:OLLAMA_BASE_URL)%'
+            $model: '%env(string:OLLAMA_MODEL)%'
 
-    App\Service\OpenAIService:
+    App\Service\OllamaService:
         arguments:
-            $apiKey: '%env(string:OPENAI_API_KEY)%'
+            $baseUrl: '%env(string:OLLAMA_BASE_URL)%'
+            $model: '%env(string:OLLAMA_MODEL)%'
 
     # BotMan
     App\Service\BotManFactory:

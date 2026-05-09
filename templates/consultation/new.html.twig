@@ -150,7 +150,7 @@
     <script src="{{ asset('assets/js/consultation-slots.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🤖 OpenAI Enhancement script loaded');
+            console.log('🤖 IA locale script loaded');
             
             // Find the motif input - try multiple selectors
             let motifInput = document.querySelector('input[name*="motif"]') || 
@@ -214,8 +214,8 @@
                 return urgencyTexts[urgency] || '⚠️ Urgence modérée';
             }
 
-            // Function to call OpenAI API using new comprehensive endpoint
-            function callOpenAI(motif) {
+            // Fonction pour appeler le endpoint d'analyse IA locale
+            function callLocalAI(motif) {
                 enhancementPanel.style.display = 'block';
                 enhancementDiv.className = 'motif-enhancement loading';
                 enhanceBtn.className = 'enhance-btn loading';
@@ -225,16 +225,16 @@
                 // Hide urgency badge during loading
                 urgencyBadge.innerHTML = '';
                 
-                console.log('Calling OpenAI API with motif:', motif);
+                console.log('Appel IA locale avec motif:', motif);
                 
                 // Use the new comprehensive analysis endpoint
                 fetch('/consultation/analyze-motif?motif=' + encodeURIComponent(motif))
                     .then(response => {
-                        console.log('OpenAI response status:', response.status);
+                        console.log('IA locale response status:', response.status);
                         return response.json();
                     })
                     .then(data => {
-                        console.log('OpenAI data:', data);
+                        console.log('IA locale data:', data);
                         enhanceBtn.className = 'enhance-btn';
                         enhanceBtn.disabled = false;
                         
@@ -295,13 +295,13 @@
                             enhancementDiv.className = 'motif-enhancement error';
                             enhancementContent.innerHTML = `
                                 <span class="enhancement-label">⚠️ Service IA indisponible</span>
-                                <span class="enhancement-content">${data.message || data.error || 'L\'enhancement AI n\'est pas configuré. Veuillez vérifier la clé API OpenAI.'}</span>
+                                <span class="enhancement-content">${data.message || data.error || 'L\'enhancement AI n\'est pas configuré. Le service IA local n'est pas configure.'}</span>
                             `;
                             enhanceBtn.innerHTML = '⚠️ Réessayer';
                         }
                     })
                     .catch(error => {
-                        console.error('OpenAI fetch error:', error);
+                        console.error('IA locale fetch error:', error);
                         enhancementDiv.className = 'motif-enhancement error';
                         enhanceBtn.className = 'enhance-btn';
                         enhanceBtn.disabled = false;
@@ -321,7 +321,7 @@
                     motifInput.focus();
                     return;
                 }
-                callOpenAI(motif);
+                callLocalAI(motif);
             });
 
             // Also trigger on blur for convenience
@@ -435,3 +435,4 @@
 
 </div>
 {% endblock %}
+

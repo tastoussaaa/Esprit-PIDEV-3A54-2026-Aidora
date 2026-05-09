@@ -1,14 +1,14 @@
 <aside class="portal__side">
 
     <a href="#" class="portal__brand">
-        <img src="{{ asset('assets/images/logo_mini.png') }}" class="portal__logo" alt="">
+        <img src="{{ asset('assets/images/logo_mini.png') }}" class="portal__logo" alt="Aidora logo">
         <div>
             <div class="portal__name">Aidora</div>
             <div class="portal__tag">
                 {% if is_granted('ROLE_ADMIN') %}
                     Espace Admin
                 {% elseif is_granted('ROLE_MEDECIN') %}
-                    Espace Médecin
+                    Espace Medecin
                 {% elseif is_granted('ROLE_PATIENT') %}
                     Espace Patient
                 {% endif %}
@@ -40,8 +40,8 @@
         {% if is_granted('ROLE_ADMIN') %}
             <a href="{{ path('app_admin_dashboard') }}"
                class="portal__item {% if app.request.pathinfo == path('app_admin_dashboard') %}is-active{% endif %}">
-                <span class="portal__icon">🛠️</span>
-                <span>Validation des Comptes</span>
+                <span class="portal__icon">ADM</span>
+                <span>Validation des comptes</span>
             </a>
         {% endif %}
         {% for item in navigation|default([]) %}
@@ -55,8 +55,16 @@
         {% endfor %}
     </nav>
 
+    <div class="portal__visual">
+        <img src="{{ asset('assets/images/hero.png') }}" alt="Illustration sante Aidora">
+        <div class="portal__visual-overlay">
+            <strong>Aidora Care</strong>
+            <span>Suivi intelligent et accompagnement personnalise</span>
+        </div>
+    </div>
+
     <div class="portal__bottom">
-        <a href="{{ path('app_logout') }}" class="portal__logout">Déconnexion</a>
+        <a href="{{ path('app_logout') }}" class="portal__logout">Deconnexion</a>
     </div>
 
 </aside>

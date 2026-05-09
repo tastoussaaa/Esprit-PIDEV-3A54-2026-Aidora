@@ -1,75 +1,94 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}Connexion{% endblock %}
-
-
-{% block javascripts %}
-    <script src="{{ asset('public/assets/js/controle.js') }}" defer></script>
-{% endblock %}
 
 {% block body %}
 <div class="bg-orbs"></div>
 
-<div class="container" style="padding:60px 0">
-  <div class="card" style="max-width:520px;margin:0 auto;padding:24px">
-  <div style="text-align:center;margin-bottom:16px">
-  <a href="{{ path('app_home') }}">
-    <img 
-      src="{{ asset('assets/images/logo_mini.png') }}" 
-      alt="Aidora"
-      style="height:56px;margin-bottom:8px"
-    >
-  </a>
-</div>
-
-    <h2 style="margin-bottom:8px">Connexion</h2>
-    <p style="color:#6b7280;margin-bottom:16px">
-      Connectez-vous à votre compte Aidora
-    </p>
-
-    {% if app.request.query.get('registered') == 'medecin' %}
-      <div class="pill" style="margin-bottom:12px;color:#0369a1;background-color:#ecf7fe;border:1px solid #7dd3fc">
-        ✓ Inscription réussie! Votre compte de médecin est en attente de validation par un administrateur.
-      </div>
-    {% elseif app.request.query.get('registered') == 'aidesoignant' %}
-      <div class="pill" style="margin-bottom:12px;color:#0369a1;background-color:#ecf7fe;border:1px solid #7dd3fc">
-        ✓ Inscription réussie! Votre compte d'aide-soignant est en attente de validation par un administrateur.
-      </div>
-    {% endif %}
-
-    {% if app.session.has('validation_error_message') %}
-      {% set message = app.session.get('validation_error_message') %}
-      {% if 'en attente de validation' in message %}
-        <div class="pill" style="margin-bottom:12px;color:#d97706;background-color:#fef3c7;border:1px solid #fcd34d">
-          ⏳ {{ message }}
+<div class="container" style="padding:60px 0;">
+    <div class="card" style="max-width:460px;margin:0 auto;padding:24px;">
+        <div style="text-align:center;margin-bottom:16px;">
+            <a href="{{ path('app_home') }}">
+                <img src="{{ asset('assets/images/logo_mini.png') }}" alt="Aidora" style="height:56px;margin-bottom:8px;">
+            </a>
         </div>
-      {% else %}
-        <div class="pill" style="margin-bottom:12px;color:#dc2626;background-color:#fee2e2;border:1px solid #fca5a5">
-          ❌ {{ message }}
+
+        <h2 style="margin-bottom:8px;">Connexion</h2>
+        <p style="color:#6b7280;margin-bottom:16px;">Accedez a votre espace Aidora</p>
+
+        {% if error %}
+            <div style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-bottom:16px;">
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% endif %}
+        {% if validation_error %}
+            <div style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-bottom:16px;">
+                {{ validation_error }}
+            </div>
+        {% endif %}
+
+        {% if app.request.query.get('registered') %}
+            <div style="background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;border-radius:12px;padding:12px;margin-bottom:16px;">
+                Inscription terminee. Vous pouvez maintenant vous connecter.
+            </div>
+        {% endif %}
+
+        {% for message in app.flashes('error') %}
+            <div style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-bottom:16px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <form method="post">
+            <label for="username">Email</label>
+            <input
+                id="username"
+                type="email"
+                name="_username"
+                value="{{ last_username }}"
+                autocomplete="email"
+                required
+                autofocus
+                style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px;"
+            >
+
+            <label for="password">Mot de passe</label>
+            <input
+                id="password"
+                type="password"
+                name="_password"
+                autocomplete="current-password"
+                required
+                style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px;"
+            >
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn--primary" type="submit">Se connecter</button>
+                <a class="btn btn--ghost" href="{{ path('app_register') }}">Creer un compte</a>
+            </div>
+        </form>
+
+        <div style="display:flex;align-items:center;gap:10px;margin:18px 0;">
+            <span style="height:1px;background:#e5e7eb;flex:1;"></span>
+            <span style="color:#6b7280;font-size:14px;">ou</span>
+            <span style="height:1px;background:#e5e7eb;flex:1;"></span>
         </div>
-      {% endif %}
-      {% set _ = app.session.remove('validation_error_message') %}
-    {% elseif error %}
-      <div class="pill" style="margin-bottom:12px;color:#dc2626;background-color:#fee2e2;border:1px solid #fca5a5">
-        ❌ Ce compte n'existe pas ou les identifiants sont incorrects.
-      </div>
-    {% endif %}
 
-    <form method="post">
-      <label>Email</label>
-      <input type="email" name="_username" value="{{ last_username }}" 
-             style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-
-      <label>Mot de passe</label>
-      <input type="password" name="_password"
-             style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-      <div style="display:flex;gap:10px">
-        <button class="btn btn--primary" type="submit">Connexion</button>
-        <a class="btn btn--ghost" href="{{ path('app_register') }}">Inscription</a>
-      </div>
-    </form>
-  </div>
+        <a
+            href="{{ path('connect_google') }}"
+            class="btn"
+            style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#ffffff;color:#0f172a;border:1px solid #d1d5db;padding:12px;border-radius:12px;font-weight:600;"
+        >
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.73 1.22 9.25 3.61l6.9-6.9C35.95 2.46 30.34 0 24 0 14.64 0 6.56 5.38 2.6 13.22l8.03 6.24C12.5 13.16 17.76 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.5 24.55c0-1.64-.15-3.21-.43-4.73H24v8.95h12.7c-.55 2.96-2.22 5.47-4.74 7.15l7.29 5.66C43.76 37.47 46.5 31.56 46.5 24.55z"/>
+                <path fill="#FBBC05" d="M10.63 28.54A14.45 14.45 0 0 1 9.85 24c0-1.58.28-3.11.78-4.54L2.6 13.22A24 24 0 0 0 0 24c0 3.87.93 7.53 2.6 10.78l8.03-6.24z"/>
+                <path fill="#34A853" d="M24 48c6.34 0 11.66-2.09 15.55-5.69l-7.29-5.66c-2.02 1.36-4.61 2.17-8.26 2.17-6.24 0-11.5-3.66-13.37-8.96L2.6 34.78C6.56 42.62 14.64 48 24 48z"/>
+            </svg>
+            Se connecter avec Google
+        </a>
+    </div>
 </div>
 {% endblock %}

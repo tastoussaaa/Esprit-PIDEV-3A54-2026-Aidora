@@ -7,13 +7,11 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AiDescriptionService
 {
-    private HttpClientInterface $client;
-    private string $apiKey;
-
-    public function __construct(HttpClientInterface $client, string $apiKey)
-    {
-        $this->client = $client;
-        $this->apiKey = $apiKey;
+    public function __construct(
+        private readonly HttpClientInterface $client,
+        private readonly string $baseUrl,
+        private readonly string $model
+    ) {
     }
 
     public function generateDescription(array $data): string
@@ -37,23 +35,21 @@ Please make it clear, concise, and suitable for students and professionals.",
             $data['endDate'] ?? ''
         );
 
-        $response = $this->client->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ],
+        $response = $this->client->request('POST', rtrim($this->baseUrl, '/') . '/api/generate', [
             'json' => [
-                'model' => 'openai/gpt-oss-120b',
-                'messages' => [
-                    ['role' => 'system', 'content' => 'You are a professional educational content writer.'],
-                    ['role' => 'user', 'content' => $prompt]
+                'model' => $this->model,
+                'prompt' => "You are a professional educational content writer.\n\n" . $prompt,
+                'stream' => false,
+                'options' => [
+                    'temperature' => 0.7,
+                    'num_predict' => 600,
                 ],
-                'temperature' => 0.7,
-            ]
+            ],
+            'timeout' => 120,
         ]);
 
-        $responseData = $response->toArray();
+        $responseData = $response->toArray(false);
 
-        return $responseData['choices'][0]['message']['content'] ?? 'Unable to generate description at this time.';
+        return $responseData['response'] ?? 'Unable to generate description at this time.';
     }
 }

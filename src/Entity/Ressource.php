@@ -16,45 +16,36 @@ class Ressource
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
-    // 🔥 Description longue (TEXT au lieu de VARCHAR 255)
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'text')]
     private ?string $description = null;
 
-    // ✅ Nouvelle colonne : Classe
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $classe = null;
 
-    // ✅ Nouvelle colonne : Matériels
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $materiels = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $url = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $fileName = null;
 
     #[ORM\ManyToOne(inversedBy: 'ressources')]
     private ?Formation $formation = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $url = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $fileName = null;
-
-    // ================= GETTERS & SETTERS =================
+    // =========================
+    // GETTERS
+    // =========================
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    // ❌ On supprime setId() car l'id est auto généré
-
     public function getTitle(): ?string
     {
         return $this->title;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-        return $this;
     }
 
     public function getDescription(): ?string
@@ -62,21 +53,9 @@ class Ressource
         return $this->description;
     }
 
-    public function setDescription(?string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
-
     public function getClasse(): ?string
     {
         return $this->classe;
-    }
-
-    public function setClasse(?string $classe): static
-    {
-        $this->classe = $classe;
-        return $this;
     }
 
     public function getMateriels(): ?string
@@ -84,32 +63,9 @@ class Ressource
         return $this->materiels;
     }
 
-    public function setMateriels(?string $materiels): static
-    {
-        $this->materiels = $materiels;
-        return $this;
-    }
-
-    public function getFormation(): ?Formation
-    {
-        return $this->formation;
-    }
-
-    public function setFormation(?Formation $formation): static
-    {
-        $this->formation = $formation;
-        return $this;
-    }
-
     public function getUrl(): ?string
     {
         return $this->url;
-    }
-
-    public function setUrl(?string $url): static
-    {
-        $this->url = $url;
-        return $this;
     }
 
     public function getFileName(): ?string
@@ -117,9 +73,66 @@ class Ressource
         return $this->fileName;
     }
 
-    public function setFileName(?string $fileName): static
+    public function getFormation(): ?Formation
+    {
+        return $this->formation;
+    }
+
+    // =========================
+    // SETTERS AVEC VALIDATION
+    // =========================
+
+    public function setTitle(string $title): self
+    {
+        if (trim($title) === '') {
+            throw new \InvalidArgumentException('Le titre est obligatoire.');
+        }
+
+        $this->title = $title;
+        return $this;
+    }
+
+    public function setDescription(string $description): self
+    {
+        if (trim($description) === '') {
+            throw new \InvalidArgumentException('La description est obligatoire.');
+        }
+
+        $this->description = $description;
+        return $this;
+    }
+
+    public function setClasse(string $classe): self
+    {
+        $this->classe = $classe;
+        return $this;
+    }
+
+    public function setMateriels(string $materiels): self
+    {
+        $this->materiels = $materiels;
+        return $this;
+    }
+
+    public function setUrl(string $url): self
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException('URL invalide.');
+        }
+
+        $this->url = $url;
+        return $this;
+    }
+
+    public function setFileName(string $fileName): self
     {
         $this->fileName = $fileName;
+        return $this;
+    }
+
+    public function setFormation(?Formation $formation): self
+    {
+        $this->formation = $formation;
         return $this;
     }
 }

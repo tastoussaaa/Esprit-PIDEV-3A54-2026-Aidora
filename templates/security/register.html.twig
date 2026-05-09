@@ -13,56 +13,85 @@
   <div class="card" style="max-width:520px;margin:0 auto;padding:24px">
     <div style="text-align:center;margin-bottom:16px">
       <a href="{{ path('app_home') }}">
-        <img 
-          src="{{ asset('assets/images/logo_mini.png') }}" 
+        <img
+          src="{{ asset('assets/images/logo_mini.png') }}"
           alt="Aidora"
           style="height:56px;margin-bottom:8px"
         >
       </a>
     </div>
 
-    <h2 style="margin-bottom:8px">Créer un compte</h2>
+    <h2 style="margin-bottom:8px">Creer un compte</h2>
     <p style="color:#6b7280;margin-bottom:16px">
       Rejoignez la plateforme Aidora
     </p>
 
+    {% if error %}
+      <div style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-bottom:16px;">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    {% if isGoogleSignup %}
+      <div style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:12px;padding:12px;margin-bottom:16px;">
+        Compte prepare avec Google. Votre mot de passe sera genere automatiquement.
+      </div>
+    {% endif %}
+
     <form method="post" id="registrationForm">
+      <input type="hidden" name="authProvider" value="{{ isGoogleSignup ? 'google' : 'local' }}">
+
       <label>Nom complet</label>
-      <input type="text" name="fullName" 
+      <input type="text" name="fullName" value="{{ googleData.name|default('') }}"
+             {{ isGoogleSignup ? 'readonly' : '' }}
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Email</label>
-      <input type="email" name="email" 
+      <input type="email" name="email" value="{{ googleData.email|default('') }}"
+             {{ isGoogleSignup ? 'readonly' : '' }}
              style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
       <label>Mot de passe</label>
-      <input type="password" name="password" minlength="6" 
-             style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
+      {% if isGoogleSignup %}
+        <div style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px;background:#f3f4f6;border:1px solid #d1d5db;color:#374151;">
+          Mot de passe gere par Google pour cette inscription.
+        </div>
+      {% else %}
+        <div style="display:flex;gap:10px;align-items:center;margin:8px 0 12px;">
+          <input type="password" id="generatedPasswordField" name="password" minlength="6"
+                 style="flex:1;padding:12px;border-radius:12px">
+          <button type="button" id="generatePasswordButton" class="btn btn--ghost">Generer</button>
+        </div>
+        <label>Confirmer le mot de passe</label>
+        <input type="password" id="confirmPasswordField" name="confirmPassword" minlength="6"
+               style="width:100%;padding:12px;border-radius:12px;margin:8px 0 12px">
+        <small id="passwordGenerationMessage" style="display:block;color:#6b7280;margin-bottom:16px;">
+          Vous pouvez saisir votre mot de passe ou le generer automatiquement via l'API.
+        </small>
+      {% endif %}
 
       <label>Type de compte</label>
-      <select name="userType" id="userType"style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-        <option value="">Sélectionnez</option>
-        <option value="medecin">Médecin</option>
+      <select name="userType" id="userType" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
+        <option value="">Selectionnez</option>
+        <option value="medecin">Medecin</option>
         <option value="aidesoignant">Aide-Soignant</option>
         <option value="patient">Patient</option>
       </select>
 
-      {# Champs spécifiques aux Médecins #}
       <div id="medecinFields" style="display:none;">
-        <label>Numéro RPPS</label>
+        <label>Numero RPPS</label>
         <input type="text" name="rpps" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-        <label>Spécialité</label>
+        <label>Specialite</label>
         <input type="text" name="specialty" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
       </div>
 
-      {# Champs spécifiques aux Aides-Soignants #}
       <div id="aideFields" style="display:none;">
-        <label>Numéro ADELI</label>
+        <label>Numero ADELI</label>
         <input type="text" name="adeli" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
         <label>Sexe</label>
         <select name="sexe" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-          <option value="">Sélectionnez</option>
+          <option value="">Selectionnez</option>
           <option value="HOMME">Homme</option>
           <option value="FEMME">Femme</option>
         </select>
@@ -73,24 +102,23 @@
         <label>Rayon d'intervention (km)</label>
         <input type="number" name="rayonInterventionKm" min="0" step="1" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
-        <label>Types de patients acceptés</label>
+        <label>Types de patients acceptes</label>
         <input type="text" name="typePatientsAcceptes" placeholder="Ex: PERSONNE_AGEE,ALZHEIMER,HANDICAP" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
 
         <label>Tarif minimum (DT)</label>
         <input type="number" name="tarifMin" min="0" step="0.01" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
       </div>
 
-      {# Champs spécifiques aux Patients #}
       <div id="patientFields" style="display:none;">
         <label>Date de naissance</label>
         <input type="date" name="birthDate" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
-        <label>Numéro de sécurité sociale</label>
+        <label>Numero de securite sociale</label>
         <input type="text" name="ssn" style="width:100%;padding:12px;border-radius:12px;margin:8px 0 16px">
       </div>
 
       <div style="display:flex;gap:10px">
-        <button class="btn btn--primary" type="submit">Créer le compte</button>
-        <a class="btn btn--ghost" href="{{ path('app_login') }}">J’ai déjà un compte</a>
+        <button class="btn btn--primary" type="submit">Creer le compte</button>
+        <a class="btn btn--ghost" href="{{ path('app_login') }}">J'ai deja un compte</a>
       </div>
     </form>
   </div>
@@ -101,6 +129,10 @@
   const medecinFields = document.getElementById('medecinFields');
   const aideFields = document.getElementById('aideFields');
   const patientFields = document.getElementById('patientFields');
+  const generatePasswordButton = document.getElementById('generatePasswordButton');
+  const generatedPasswordField = document.getElementById('generatedPasswordField');
+  const confirmPasswordField = document.getElementById('confirmPasswordField');
+  const passwordGenerationMessage = document.getElementById('passwordGenerationMessage');
 
   userType.addEventListener('change', function() {
     medecinFields.style.display = 'none';
@@ -111,5 +143,43 @@
     if (this.value === 'aidesoignant') aideFields.style.display = 'block';
     if (this.value === 'patient') patientFields.style.display = 'block';
   });
+
+  if (generatePasswordButton && generatedPasswordField) {
+    generatePasswordButton.addEventListener('click', async function() {
+      generatePasswordButton.disabled = true;
+      generatePasswordButton.textContent = 'Generation...';
+
+      try {
+        const response = await fetch('{{ path('app_generate_password') }}', {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur API');
+        }
+
+        const data = await response.json();
+        generatedPasswordField.value = data.password;
+        generatedPasswordField.type = 'text';
+        if (confirmPasswordField) {
+          confirmPasswordField.value = data.password;
+          confirmPasswordField.type = 'text';
+        }
+
+        if (passwordGenerationMessage) {
+          passwordGenerationMessage.textContent = 'Mot de passe genere avec succes. Pensez a le conserver.';
+        }
+      } catch (error) {
+        if (passwordGenerationMessage) {
+          passwordGenerationMessage.textContent = 'Impossible de generer le mot de passe pour le moment.';
+        }
+      } finally {
+        generatePasswordButton.disabled = false;
+        generatePasswordButton.textContent = 'Generer';
+      }
+    });
+  }
 </script>
 {% endblock %}

@@ -41,14 +41,72 @@
                 <h3>Statistiques</h3>
                 <div class="boxGrid">
                     <div class="mini">
-                        <div class="mini__title">Consultations</div>
-                        <div class="mini__value">24</div>
+                        <div class="mini__title">Patients compatibles</div>
+                        <div class="mini__value">{{ patientCardsTotal|default(0) }}</div>
                     </div>
                     <div class="mini">
-                        <div class="mini__title">Formations</div>
-                        <div class="mini__value">5</div>
+                        <div class="mini__title">Reponses en attente</div>
+                        <div class="mini__value">{{ patientCardsPendingReplies|default(0) }}</div>
                     </div>
                 </div>
+            </div>
+
+            <div class="box">
+                <h3>Patients compatibles avec votre specialite</h3>
+                <p class="portal__subtitle" style="margin-top:0;">
+                    Cartes basees sur la compatibilite pathologie/specialite et sur les messages recus.
+                </p>
+
+                {% if patientCards is not empty %}
+                    <div style="display:grid; gap:16px;">
+                        {% for card in patientCards %}
+                            <article style="border:1px solid #dbeafe; border-radius:12px; padding:16px; background:#f8fbff;">
+                                <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+                                    <div>
+                                        <h4 style="margin:0 0 6px 0; border:none; padding:0;">{{ card.patientName }}</h4>
+                                        <div style="font-size:14px; color:#475569;">{{ card.patientEmail ?: 'Email non renseigne' }}</div>
+                                        <div style="margin-top:4px; font-size:14px; color:#0f172a;"><strong>Pathologie:</strong> {{ card.pathologie }}</div>
+                                    </div>
+                                    <div style="padding:6px 12px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-weight:700;">
+                                        {{ card.score }}%
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:10px; font-size:14px; color:#334155;">
+                                    <strong>Compatibilite:</strong> {{ card.reason }}
+                                </div>
+                                <div style="margin-top:8px; font-size:14px; color:#334155;">
+                                    <strong>Message patient:</strong> {{ card.message }}
+                                </div>
+
+                                {% if card.reponse %}
+                                    <div style="margin-top:12px; padding:12px; border-radius:10px; background:#ecfdf5; border:1px solid #a7f3d0;">
+                                        <strong>Votre reponse:</strong> {{ card.reponse }}
+                                    </div>
+                                {% else %}
+                                    <form method="post" action="{{ path('medecin_patient_message_reply', {id: card.messageId}) }}" style="margin-top:12px;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('reply-patient-message-' ~ card.messageId) }}">
+                                        <label for="reply_{{ card.messageId }}" style="display:block; font-weight:600; margin-bottom:6px;">Votre reponse</label>
+                                        <textarea
+                                            id="reply_{{ card.messageId }}"
+                                            name="reponse"
+                                            rows="3"
+                                            maxlength="2000"
+                                            required
+                                            style="width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:10px; resize:vertical;"
+                                            placeholder="Ecrivez une reponse courte et claire pour ce patient..."
+                                        ></textarea>
+                                        <button type="submit" class="btn btn--primary" style="margin-top:10px;">Envoyer la reponse</button>
+                                    </form>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="border:1px dashed #cbd5e1; border-radius:12px; padding:14px; color:#64748b;">
+                        Aucun patient compatible avec message pour le moment.
+                    </div>
+                {% endif %}
             </div>
 
         </div>

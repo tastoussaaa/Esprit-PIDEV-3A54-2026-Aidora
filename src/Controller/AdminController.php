@@ -368,7 +368,9 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
                 'pending' => 0,
                 'rejected' => 0,
                 'acceptanceRate' => 0,
-                'total' => 0
+                'total' => 0,
+                'labels' => ['Acceptees', 'En attente'],
+                'data' => [0, 0]
             ];
         }
         
@@ -410,7 +412,10 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
                 'moderate' => 0,
                 'low' => 0,
                 'urgentPercentage' => 0,
-                'total' => 0
+                'total' => 0,
+                'labels' => ['Urgentes', 'Moderees', 'Routine'],
+                'data' => [0, 0, 0],
+                'colors' => ['#dc2626', '#f59e0b', '#10b981']
             ];
         }
         
