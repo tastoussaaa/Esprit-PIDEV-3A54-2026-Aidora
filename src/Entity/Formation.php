@@ -22,6 +22,9 @@ class Formation
         self::STATUT_REFUSE,
     ];
 
+    // ================================
+    // PROPRIÉTÉS
+    // ================================
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -48,64 +51,56 @@ class Formation
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $objective = null;
 
-    // ✅ Dates corrigées
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotNull(message: 'La date de début est obligatoire.')]
-    #[Assert\GreaterThanOrEqual(
-        'now',
-        message: 'La date de début doit être maintenant ou dans le futur.'
-    )]
+    #[Assert\GreaterThanOrEqual('now', message: 'La date de début doit être maintenant ou dans le futur.')]
     private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotNull(message: 'La date de fin est obligatoire.')]
-    #[Assert\GreaterThan(
-        propertyPath: 'startDate',
-        message: 'La date de fin doit être après la date de début.'
-    )]
+    #[Assert\GreaterThan(propertyPath: 'startDate', message: 'La date de fin doit être après la date de début.')]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
-    #[Assert\Length(
-        max: 100,
-        maxMessage: 'La catégorie ne peut pas dépasser {{ limit }} caractères.'
-    )]
+    #[Assert\Length(max: 100, maxMessage: 'La catégorie ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $category = null;
 
     #[ORM\ManyToOne(inversedBy: 'formations')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Medecin $medecin = null;
 
-    /**
-     * @var Collection<int, AideSoignant>
-     */
     #[ORM\ManyToMany(targetEntity: AideSoignant::class, mappedBy: 'formations')]
     private Collection $aideSoignants;
 
     #[ORM\Column(length: 20)]
     private string $statut = self::STATUT_EN_ATTENTE;
 
-    /**
-     * @var Collection<int, Ressource>
-     */
     #[ORM\OneToMany(targetEntity: Ressource::class, mappedBy: 'formation')]
     private Collection $ressources;
 
+    #[ORM\OneToMany(mappedBy: "formation", targetEntity: Admin::class)]
+    private Collection $admins;
+
+    // ================================
+    // CONSTRUCTEUR
+    // ================================
     public function __construct()
     {
         $this->aideSoignants = new ArrayCollection();
         $this->ressources = new ArrayCollection();
+        $this->admins = new ArrayCollection();
+
         $this->statut = self::STATUT_EN_ATTENTE;
 
-        // ✅ Initialisation par défaut des dates pour éviter null
+        // Valeurs par défaut pour les dates
         $this->startDate = new \DateTime();
         $this->endDate = (new \DateTime())->modify('+1 hour');
     }
 
-    
-    // -------- Getters & Setters --------
-
+    // ================================
+    // GETTERS & SETTERS
+    // ================================
     public function getId(): ?int { return $this->id; }
 
     public function getTitle(): ?string { return $this->title; }
@@ -130,7 +125,6 @@ class Formation
     public function setMedecin(?Medecin $medecin): static { $this->medecin = $medecin; return $this; }
 
     public function getAideSoignants(): Collection { return $this->aideSoignants; }
-
     public function addAideSoignant(AideSoignant $aideSoignant): static
     {
         if (!$this->aideSoignants->contains($aideSoignant)) {
@@ -139,11 +133,48 @@ class Formation
         }
         return $this;
     }
-
     public function removeAideSoignant(AideSoignant $aideSoignant): static
     {
         if ($this->aideSoignants->removeElement($aideSoignant)) {
             $aideSoignant->removeFormation($this);
+        }
+        return $this;
+    }
+
+    public function getRessources(): Collection { return $this->ressources; }
+    public function addRessource(Ressource $ressource): static
+    {
+        if (!$this->ressources->contains($ressource)) {
+            $this->ressources->add($ressource);
+            $ressource->setFormation($this);
+        }
+        return $this;
+    }
+    public function removeRessource(Ressource $ressource): static
+    {
+        if ($this->ressources->removeElement($ressource)) {
+            if ($ressource->getFormation() === $this) {
+                $ressource->setFormation(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getAdmins(): Collection { return $this->admins; }
+    public function addAdmin(Admin $admin): static
+    {
+        if (!$this->admins->contains($admin)) {
+            $this->admins->add($admin);
+            $admin->setFormation($this);
+        }
+        return $this;
+    }
+    public function removeAdmin(Admin $admin): static
+    {
+        if ($this->admins->removeElement($admin)) {
+            if ($admin->getFormation() === $this) {
+                $admin->setFormation(null);
+            }
         }
         return $this;
     }
@@ -155,27 +186,6 @@ class Formation
             throw new \InvalidArgumentException("Statut invalide");
         }
         $this->statut = $statut;
-        return $this;
-    }
-
-    public function getRessources(): Collection { return $this->ressources; }
-
-    public function addRessource(Ressource $ressource): static
-    {
-        if (!$this->ressources->contains($ressource)) {
-            $this->ressources->add($ressource);
-            $ressource->setFormation($this);
-        }
-        return $this;
-    }
-
-    public function removeRessource(Ressource $ressource): static
-    {
-        if ($this->ressources->removeElement($ressource)) {
-            if ($ressource->getFormation() === $this) {
-                $ressource->setFormation(null);
-            }
-        }
         return $this;
     }
 }

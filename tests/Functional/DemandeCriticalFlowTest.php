@@ -8,19 +8,22 @@ use App\Entity\User;
 
 class DemandeCriticalFlowTest extends AbstractFunctionalTest
 {
-    private User $patient;
-    private User $aide;
-    private User $admin;
+   private Patient $patient; // ✅ Patient et non User
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+protected function setUp(): void
+{
+    parent::setUp();
 
-        // Créer les utilisateurs de test
-        $this->patient = $this->createUser('patient@test.com', ['ROLE_PATIENT']);
-        $this->aide = $this->createUser('aide@test.com', ['ROLE_AIDE_SOIGNANT']);
-        $this->admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
-    }
+    // Créer un patient de test
+    $this->patient = new Patient();
+    $this->patient->setNom('Doe');
+    $this->patient->setPrenom('John');
+    $this->patient->setAge(30);
+
+    // Utilisateurs aide et admin restent des User
+    $this->aide = $this->createUser('aide@test.com', ['ROLE_AIDE_SOIGNANT']);
+    $this->admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
+}
 
     /**
      * Test: Creation demande with entity persistence

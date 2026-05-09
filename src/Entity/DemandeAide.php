@@ -10,10 +10,31 @@ use Doctrine\Common\Collections\Collection;
 use App\Entity\Mission;
 use App\Entity\AideSoignant;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Patient; 
 
 #[ORM\Entity(repositoryClass: DemandeAideRepository::class)]
 class DemandeAide
+
+
+
+
 {
+
+
+#[ORM\ManyToOne(targetEntity: Patient::class)]
+#[ORM\JoinColumn(nullable: true)] // allow nulls temporarily
+private ?Patient $patient = null;
+
+public function getPatient(): ?Patient
+{
+    return $this->patient;
+}
+
+public function setPatient(Patient $patient): static
+{
+    $this->patient = $patient;
+    return $this;
+}
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
