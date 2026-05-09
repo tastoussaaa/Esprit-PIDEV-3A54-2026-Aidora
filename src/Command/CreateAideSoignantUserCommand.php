@@ -1,21 +1,20 @@
 <?php
+
 namespace App\Command;
 
 use App\Entity\User;
-use App\Entity\Admin;
+use App\Entity\AideSoignant;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-#[AsCommand(name: 'app:create-admin-user', description: 'Create a User with ROLE_ADMIN and link to an Admin entity')]
-class CreateAdminUserCommand extends Command
+#[AsCommand(name: 'app:create-aide-soignant-user', description: 'Create a User with ROLE_AIDE_SOIGNANT and link to an AideSoignant entity')]
+class CreateAideSoignantUserCommand extends Command
 {
     public function __construct(private EntityManagerInterface $em, private UserPasswordHasherInterface $passwordHasher)
     {
@@ -25,19 +24,20 @@ class CreateAdminUserCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'Admin user email')
-            ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'Admin user password')
+            ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'Aide Soignant user email')
+            ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'Aide Soignant user password')
             ->addOption('full-name', null, InputOption::VALUE_OPTIONAL, 'Full name')
             ->addOption('nom', null, InputOption::VALUE_OPTIONAL, 'Last name')
-            ->addOption('prenom', null, InputOption::VALUE_OPTIONAL, 'First name');
+            ->addOption('prenom', null, InputOption::VALUE_OPTIONAL, 'First name')
+            ->addOption('telephone', null, InputOption::VALUE_OPTIONAL, 'Telephone number')
+            ->addOption('sexe', null, InputOption::VALUE_OPTIONAL, 'Gender (Homme/Femme)')
+            ->addOption('ville-intervention', null, InputOption::VALUE_OPTIONAL, 'Intervention city')
+            ->addOption('rayon-intervention', null, InputOption::VALUE_OPTIONAL, 'Intervention radius in km');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $helper = $this->getHelper('question');
-        if (!$helper instanceof QuestionHelper) {
-            throw new \RuntimeException('Question helper unavailable.');
-        }
 
         $email = $input->getOption('email');
         if (!$email) {
@@ -84,24 +84,51 @@ class CreateAdminUserCommand extends Command
 
         $user = new User();
         $user->setEmail($email);
-        $user->setRoles(['ROLE_ADMIN']);
-        $user->setUserType('admin');
+        $user->setRoles(['ROLE_AIDE_SOIGNANT']);
+        $user->setUserType('aide_soignant');
         $user->setFullName($fullName);
         $hashed = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashed);
 
         $this->em->persist($user);
 
-        $admin = new Admin();
-        $admin->setUser($user);
-        $admin->setNom($nom);
-        $admin->setPrenom($prenom);
-        $admin->setMdp($password);
+        $aideSoignant = new AideSoignant();
+        $aideSoignant->setUser($user);
+        $aideSoignant->setEmail($email);
+        $aideSoignant->setNom($nom);
+        $aideSoignant->setPrenom($prenom);
+        $aideSoignant->setMdp($password);
+        $aideSoignant->setDisponible(true);
+        $aideSoignant->setIsValidated(false);
+        $aideSoignant->setActive(true);
+        $aideSoignant->setRayonInterventionKm(10); // Default 10km
+        $aideSoignant->setTypePatientsAcceptes('Tous'); // Default all types
+        $aideSoignant->setTarifMin(15.0); // Default 15€
 
-        $this->em->persist($admin);
+        $telephone = $input->getOption('telephone');
+        if ($telephone) {
+            $aideSoignant->setTelephone((int)$telephone);
+        }
+
+        $sexe = $input->getOption('sexe');
+        if ($sexe) {
+            $aideSoignant->setSexe($sexe);
+        }
+
+        $villeIntervention = $input->getOption('ville-intervention');
+        if ($villeIntervention) {
+            $aideSoignant->setVilleIntervention($villeIntervention);
+        }
+
+        $rayonIntervention = $input->getOption('rayon-intervention');
+        if ($rayonIntervention) {
+            $aideSoignant->setRayonInterventionKm((int)$rayonIntervention);
+        }
+
+        $this->em->persist($aideSoignant);
         $this->em->flush();
 
-        $output->writeln('<info>Admin user created successfully.</info>');
+        $output->writeln('<info>Aide Soignant user created successfully.</info>');
         $output->writeln('Email: ' . $email);
         $output->writeln('Full Name: ' . $fullName);
         $output->writeln('Last Name: ' . $nom);

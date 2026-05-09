@@ -12,9 +12,9 @@ class DemandeCriticalFlowTest extends AbstractFunctionalTest
     private Patient $patient;
     private AideSoignant $aide;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+protected function setUp(): void
+{
+    parent::setUp();
 
         $this->patient = $this->createPatient('patient@test.com', 'Patient Test');
         $this->aide = $this->createAideSoignant('aide@test.com', 'Aide Test');

@@ -5,28 +5,6 @@ doctrine_doctor:
     # Enable Doctrine Doctor (automatically enabled in dev/test environments)
     enabled: true
 
-    analyzers:
-        hydration:
-            enabled: true
-            row_threshold: 150
-            critical_threshold: 999
-
-        n_plus_one:
-            enabled: true
-            threshold: 20
-
-        get_reference:
-            enabled: false
-
-        missing_embeddable_opportunity:
-            enabled: false
-
-        blameable_trait:
-            enabled: false
-
-        naming_convention:
-            enabled: false
-
 #    # Web Profiler integration
 #    profiler:
 #        show_in_toolbar: true

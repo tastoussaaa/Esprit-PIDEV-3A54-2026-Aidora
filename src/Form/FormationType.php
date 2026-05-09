@@ -10,6 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class FormationType extends AbstractType
@@ -55,31 +56,33 @@ class FormationType extends AbstractType
                     ])
                 ]
             ])
-            ->add('startDate', DateType::class, [
-                'label' => 'Date de début',
-                'widget' => 'single_text',
+            ->add('startDate', DateTimeType::class, [
+                'label' => 'Date et heure de début',
+                'widget' => 'single_text', // input type="datetime-local"
+                'html5' => true,
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La date de début est obligatoire.']),
                     new Assert\GreaterThanOrEqual([
-                        'value' => 'today',
-                        'message' => 'La date de début doit être aujourd’hui ou dans le futur.'
+                        'value' => 'now',
+                        'message' => 'La date de début doit être maintenant ou dans le futur.'
                     ])
                 ]
             ])
-            ->add('endDate', DateType::class, [
-                'label' => 'Date de fin',
+            ->add('endDate', DateTimeType::class, [
+                'label' => 'Date et heure de fin',
                 'widget' => 'single_text',
+                'html5' => true,
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La date de fin est obligatoire.']),
-                    new Assert\Callback(function($endDate, $context) {
+                    new Assert\Callback(function ($endDate, $context) {
                         $startDate = $context->getRoot()->get('startDate')->getData();
                         if ($startDate && $endDate <= $startDate) {
-                            $context->buildViolation('La date de fin doit être après la date de début.')
+                            $context->buildViolation('La date et l’heure de fin doivent être après la date et l’heure de début.')
                                 ->addViolation();
                         }
                     })
                 ]
-            ]);
+            ])
         ;
 
         // Optionally include statut field when controller requests it

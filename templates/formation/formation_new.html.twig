@@ -232,7 +232,62 @@
         </div>
 
     </main>
+    <!-- Popup de contrôle de saisie -->
+<div id="validation-popup" class="popup-success" style="display:none;">
+    <div class="popup-content">
+        <h3>⚠ Vérification du formulaire</h3>
+        <p id="validation-message"></p>
+        <div style="margin-top:15px; display:flex; justify-content:center;">
+            <button onclick="closeValidationPopup()" class="btn btn--primary">OK</button>
+        </div>
+    </div>
 </div>
+</div>
+
+<script>
+function closeValidationPopup() {
+    document.getElementById('validation-popup').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.form-box form');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // bloque la soumission si erreur
+        let errors = [];
+
+        // Récupère les valeurs des champs
+        const title = document.getElementById('{{ form.title.vars.id }}').value.trim();
+        const category = document.getElementById('{{ form.category.vars.id }}').value.trim();
+        const startDate = document.getElementById('{{ form.startDate.vars.id }}').value;
+        const endDate = document.getElementById('{{ form.endDate.vars.id }}').value;
+
+        // Vérification des champs obligatoires
+        if (!title) errors.push('Le titre est obligatoire.');
+        if (!category) errors.push('La catégorie est obligatoire.');
+        if (!startDate) errors.push('La date de début est obligatoire.');
+        if (!endDate) errors.push('La date de fin est obligatoire.');
+
+        // Vérifie que startDate < endDate
+        if (startDate && endDate) {
+            if (new Date(startDate) >= new Date(endDate)) {
+                errors.push('La date de fin doit être après la date de début.');
+            }
+        }
+
+        // Affiche le popup si erreurs
+        if (errors.length > 0) {
+            const popup = document.getElementById('validation-popup');
+            document.getElementById('validation-message').innerHTML = errors.join('<br>');
+            popup.style.display = 'flex';
+            return false; 
+        }
+
+        // Si pas d'erreur, soumettre normalement
+        form.submit();
+    });
+});
+</script>
 
 {# Popup Google Calendar #}
 {% for data in app.flashes('formation_success') %}
