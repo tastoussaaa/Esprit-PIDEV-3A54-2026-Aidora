@@ -7,6 +7,9 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class MissionOutputDtoNormalizer implements NormalizerInterface
 {
+    /**
+     * @return array{id: int|null, title: string|null, status: string|null, statusLabel: string, finalStatus: string|null, startAt: string|null, endAt: string|null, prixFinal: float|int|null, demandeId: int|null, aideSoignantId: int|null, isArchived: bool}
+     */
     public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         \assert($object instanceof MissionOutputDto);

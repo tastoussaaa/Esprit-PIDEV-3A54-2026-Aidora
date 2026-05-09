@@ -108,6 +108,6 @@ class TransitionNotificationService
             }
         }
 
-        return array_values(array_unique(array_filter($emails)));
+        return array_values(array_unique($emails));
     }
 }

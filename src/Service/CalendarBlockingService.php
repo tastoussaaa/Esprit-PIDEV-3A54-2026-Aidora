@@ -19,6 +19,8 @@ class CalendarBlockingService
 
     /**
      * Récupère les créneaux occupés d'une aide-soignante pour une période donnée
+        *
+        * @return list<array{start: string, end: string, title: string, mission_id: int|null}>
      */
     public function getOccupiedSlots(AideSoignant $aide, DateTime $startDate, DateTime $endDate): array
     {
@@ -33,11 +35,17 @@ class CalendarBlockingService
 
         $slots = [];
         foreach ($missions as $mission) {
-            if (!$mission->getDemandeAide()) continue;
+            if (!$mission instanceof Mission || !$mission->getDemandeAide()) {
+                continue;
+            }
 
             $demande = $mission->getDemandeAide();
             $missionStart = $demande->getDateDebutSouhaitee();
             $missionEnd = $demande->getDateFinSouhaitee();
+
+            if (!$missionStart instanceof \DateTimeInterface || !$missionEnd instanceof \DateTimeInterface) {
+                continue;
+            }
 
             // Vérifier chevauchement avec la période demandée
             if ($missionStart < $endDate && $missionEnd > $startDate) {
@@ -64,12 +72,15 @@ class CalendarBlockingService
 
     /**
      * Filtre une liste d'aides pour retourner uniquement celles disponibles
+     *
+     * @param list<AideSoignant> $aides
+     * @return list<AideSoignant>
      */
     public function filterAvailableAides(array $aides, DateTime $startDate, DateTime $endDate): array
     {
-        return array_filter($aides, function(AideSoignant $aide) use ($startDate, $endDate) {
+        return array_values(array_filter($aides, function(AideSoignant $aide) use ($startDate, $endDate): bool {
             return $this->isAvailable($aide, $startDate, $endDate);
-        });
+        }));
     }
 
     /**
@@ -87,8 +98,15 @@ class CalendarBlockingService
 
         $lastMissionEnd = $fromDate;
         foreach ($missions as $mission) {
-            if (!$mission->getDemandeAide()) continue;
+            if (!$mission instanceof Mission || !$mission->getDemandeAide()) {
+                continue;
+            }
+
             $missionEnd = $mission->getDemandeAide()->getDateFinSouhaitee();
+            if (!$missionEnd instanceof \DateTime) {
+                continue;
+            }
+
             if ($missionEnd > $lastMissionEnd) {
                 $lastMissionEnd = $missionEnd;
             }

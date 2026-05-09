@@ -35,7 +35,7 @@ class ProduitController extends AbstractController
 
         // If user typed something in the search box, filter the product list to only show matching products
         // Search in product name OR category
-        if ($recherche !== null && $recherche !== '') {
+        if ($recherche !== '') {
             $recherche = trim($recherche);  // Remove extra spaces
             $produits = array_filter($produits, function ($p) use ($recherche) {
                 return stripos($p->getNom(), $recherche) !== false

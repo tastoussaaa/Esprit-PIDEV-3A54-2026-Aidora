@@ -8,7 +8,7 @@ class ReportAssistant
 {
     /**
      * Analyze completeness of a DemandeAide and generate suggestions
-     * @return array{score: int, level: string, suggestions: array, missingFields: array}
+    * @return array{score: int, level: 'EXCELLENT'|'GOOD'|'FAIR'|'POOR'|'INCOMPLETE', suggestions: list<string>, missingFields: list<string>}
      */
     public function analyzeCompleteness(DemandeAide $demande): array
     {
@@ -95,7 +95,7 @@ class ReportAssistant
         }
 
         // Calculate percentage
-        $percentage = $maxScore > 0 ? round(($score / $maxScore) * 100) : 0;
+        $percentage = (int) round(($score / $maxScore) * 100);
 
         // Determine level
         $level = match (true) {
@@ -116,6 +116,8 @@ class ReportAssistant
 
     /**
      * Generate a structured report with AI-powered recommendations
+        *
+        * @return array<string, mixed>
      */
     public function generateReport(DemandeAide $demande): array
     {

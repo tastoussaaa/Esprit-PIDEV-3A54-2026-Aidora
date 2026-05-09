@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Mission;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 
 final class ExpiredMissionsArchiver
 {
@@ -13,7 +12,6 @@ final class ExpiredMissionsArchiver
     ) {
     }
 
-    #[AsPeriodicTask('*/1 * * * *')]
     public function archiveExpiredMissions(): void
     {
         $now = new \DateTime();

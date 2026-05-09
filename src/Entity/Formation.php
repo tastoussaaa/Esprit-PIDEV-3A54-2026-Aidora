@@ -30,7 +30,7 @@ class Formation
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     #[Assert\Length(
         min: 5,
@@ -40,7 +40,7 @@ class Formation
     )]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: 'La description est obligatoire.')]
     #[Assert\Length(
         min: 20,
@@ -61,7 +61,7 @@ class Formation
     #[Assert\GreaterThan(propertyPath: 'startDate', message: 'La date de fin doit être après la date de début.')]
     private ?\DateTimeInterface $endDate = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
     #[Assert\Length(max: 100, maxMessage: 'La catégorie ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $category = null;
@@ -124,6 +124,9 @@ class Formation
     public function getMedecin(): ?Medecin { return $this->medecin; }
     public function setMedecin(?Medecin $medecin): static { $this->medecin = $medecin; return $this; }
 
+    /**
+     * @return Collection<int, AideSoignant>
+     */
     public function getAideSoignants(): Collection { return $this->aideSoignants; }
     public function addAideSoignant(AideSoignant $aideSoignant): static
     {

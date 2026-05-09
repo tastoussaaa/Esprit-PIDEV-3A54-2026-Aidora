@@ -2,19 +2,23 @@
 
 namespace App\Service;
 
-use OpenAI;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class OpenAIService
 {
-    private OpenAI\Client $client;
+    private const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+    
+    private string $apiKey;
+    private HttpClientInterface $httpClient;
 
-    public function __construct(string $apiKey)
+    public function __construct(HttpClientInterface $httpClient, string $openaiApiKey)
     {
-        $this->client = OpenAI::client($apiKey);
+        $this->httpClient = $httpClient;
+        $this->apiKey = $openaiApiKey;
     }
 
     /**
-     * Enhance and structure consultation motif (reason) using OpenAI
+     * Enhance and structure consultation motif
      */
     public function enhanceConsultationMotif(string $motif): string
     {
@@ -23,217 +27,160 @@ class OpenAIService
         }
 
         try {
-            error_log('OpenAI: Starting enhancement for motif: ' . substr($motif, 0, 100));
-            
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Tu es un assistant médical francophone. Améliore et structure la raison de consultation en une déclaration médicale claire et professionnelle. Améliore la grammaire, la clarté et la pertinence médicale. Maximum 1-3 phrases. Réponds UNIQUEMENT avec le texte amélioré, sans explications.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $motif
-                    ]
+            $response = $this->callOpenAI([
+                [
+                    'role' => 'system',
+                    'content' => 'Tu es un assistant médical francophone. Améliore la raison de consultation en une déclaration claire et professionnelle. Maximum 1-3 phrases. Réponds UNIQUEMENT avec le texte amélioré.'
                 ],
-                'max_tokens' => 200,
-                'temperature' => 0.5,
-            ]);
+                [
+                    'role' => 'user',
+                    'content' => $motif
+                ]
+            ], 200, 0.5);
 
-            if (!isset($response['choices']) || empty($response['choices'])) {
-                error_log('OpenAI: No choices in response');
-                return $motif;
-            }
+            return $response ?: $motif;
 
-            $choice = $response['choices'][0];
-            if (!isset($choice['message']['content'])) {
-                error_log('OpenAI: No content in message');
-                return $motif;
-            }
-
-            $enhanced = trim($choice['message']['content']);
-            error_log('OpenAI: Successfully enhanced. Original: "' . $motif . '" => Enhanced: "' . $enhanced . '"');
-            
-            return !empty($enhanced) ? $enhanced : $motif;
         } catch (\Exception $e) {
-            error_log('OpenAI Enhancement Error: ' . $e->getMessage());
-            error_log('OpenAI Stack: ' . $e->getTraceAsString());
             return $motif;
         }
     }
 
     /**
-     * Comprehensive analysis of consultation motif
+     * Comprehensive motif analysis with HARD validation
+        *
+        * @return array{enhanced: string, urgency: string, isValid: bool, message: string}
      */
     public function analyzeMotifComprehensive(string $motif): array
     {
         $cleanMotif = trim($motif);
-        
-        if (!$cleanMotif || strlen($cleanMotif) === 0) {
-            return [
-                'enhanced' => $motif,
-                'urgency' => 'moderee',
-                'isValid' => false,
-                'message' => 'Veuillez entrer un motif de consultation.'
-            ];
+
+        // =========================
+        // HARD VALIDATION (NO AI)
+        // =========================
+
+        if (strlen($cleanMotif) < 6) {
+            return $this->invalidResponse($motif, 'Veuillez écrire une phrase plus détaillée décrivant vos symptômes.');
         }
 
+        if (preg_match('/^[0-9]+$/', $cleanMotif)) {
+            return $this->invalidResponse($motif, 'Les chiffres seuls ne sont pas un motif valide.');
+        }
+
+        if (preg_match('/(.)\1{2,}/', $cleanMotif)) {
+            return $this->invalidResponse($motif, 'Votre message semble invalide. Veuillez reformuler.');
+        }
+
+        if (str_word_count($cleanMotif) < 2) {
+            return $this->invalidResponse($motif, 'Veuillez entrer une phrase complète décrivant vos symptômes.');
+        }
+
+        if (!preg_match('/[aeiouyàâéèêëîïôûùüÿæœ]/i', $cleanMotif)) {
+            return $this->invalidResponse($motif, 'Le texte semble incompréhensible.');
+        }
+
+        // =========================
+        // AI ANALYSIS
+        // =========================
+
         try {
-            error_log('OpenAI: Starting comprehensive analysis for motif: ' . substr($motif, 0, 100));
-            
-            $systemPrompt = 'Tu es un assistant médical francophone expert. Analyse le motif de consultation et reponds UNIQUEMENT avec un JSON valide sur une seule ligne, sans texte supplémentaire. Format exact: {"enhanced":"texte amélioré","urgency":"elevee|moderee|faible","isValid":true ou false,"message":"message court"}. Règles: urgency=elevee si douleur intense/grave/urgence médicale, moderee si symptômes persistants, faible si routine/check-up. isValid=false seulement si le texte est incompréhensible ou du charabia.';
-            
-            $userMessage = "Analyse ce motif de consultation et retourne le JSON demandé:\n" . $cleanMotif;
+            $systemPrompt = "Tu es un médecin expert en triage médical. "
+                . "Réponds UNIQUEMENT en JSON valide.\n"
+                . "Format: {\"enhanced\":\"texte\",\"urgency\":\"elevee|moderee|faible\",\"isValid\":true|false,\"message\":\"texte\"}\n"
+                . "isValid=false si le texte n'est pas une phrase médicale claire.";
 
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => $systemPrompt
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $userMessage
-                    ]
-                ],
-                'max_tokens' => 300,
-                'temperature' => 0.2,
-            ]);
+            $response = $this->callOpenAI([
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $cleanMotif]
+            ], 300, 0.2);
 
-            $content = $response->choices[0]->message->content;
-            error_log('OpenAI comprehensive response: ' . $content);
-            
-            // Extract JSON from response (in case there's extra text)
-            $jsonMatch = preg_match('/\{.*\}/', $content, $matches);
-            if (!$jsonMatch) {
-                error_log('OpenAI: No JSON found in response: ' . $content);
+            if (!preg_match('/\{.*\}/', $response, $matches)) {
                 return $this->fallbackAnalysis($motif);
             }
-            
+
             $result = json_decode($matches[0], true);
-            
-            if (!$result || !isset($result['enhanced'])) {
-                error_log('OpenAI: Failed to parse JSON response: ' . $matches[0]);
+
+            if (!$result) {
                 return $this->fallbackAnalysis($motif);
             }
 
-            // Sanitize urgency value
-            $urgency = isset($result['urgency']) ? strtolower(trim($result['urgency'])) : 'moderee';
+            $urgency = strtolower($result['urgency'] ?? 'moderee');
             if (!in_array($urgency, ['elevee', 'moderee', 'faible'])) {
-                error_log('OpenAI: Invalid urgency value: ' . $urgency);
                 $urgency = 'moderee';
-            }
-            
-            // Sanitize enhanced text
-            $enhanced = isset($result['enhanced']) ? trim($result['enhanced']) : $motif;
-            
-            // Sanitize isValid
-            $isValid = isset($result['isValid']) ? (bool)$result['isValid'] : true;
-            
-            // Sanitize message
-            $message = isset($result['message']) ? trim($result['message']) : '';
-            if (empty($message)) {
-                $message = $isValid ? 'Motif valide et amélioré.' : 'Veuillez reformuler votre motif.';
             }
 
             return [
-                'enhanced' => $enhanced,
+                'enhanced' => trim($result['enhanced'] ?? $motif),
                 'urgency' => $urgency,
-                'isValid' => $isValid,
-                'message' => $message
+                'isValid' => (bool)($result['isValid'] ?? true),
+                'message' => trim($result['message'] ?? 'Motif enregistré.')
             ];
 
         } catch (\Exception $e) {
-            error_log('OpenAI Comprehensive Analysis Error: ' . $e->getMessage());
-            error_log('OpenAI Stack: ' . $e->getTraceAsString());
             return $this->fallbackAnalysis($motif);
         }
     }
 
     /**
-     * Fallback analysis when OpenAI fails
+     * Call OpenAI API using HTTP Client
+        *
+        * @param list<array{role: string, content: string}> $messages
+     */
+    private function callOpenAI(array $messages, int $maxTokens = 200, float $temperature = 0.5): string
+    {
+        if (empty($this->apiKey)) {
+            throw new \Exception('OpenAI API key not configured');
+        }
+
+        $response = $this->httpClient->request('POST', self::OPENAI_API_URL, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'gpt-4o-mini',
+                'messages' => $messages,
+                'max_tokens' => $maxTokens,
+                'temperature' => $temperature,
+            ],
+        ]);
+
+        $content = $response->toArray();
+        
+        return trim($content['choices'][0]['message']['content'] ?? '');
+    }
+
+    /**
+     * Fallback keyword-based urgency detection
+        *
+        * @return array{enhanced: string, urgency: string, isValid: bool, message: string}
      */
     private function fallbackAnalysis(string $motif): array
     {
-        $cleanMotif = trim($motif);
-        $motifLower = mb_strtolower($cleanMotif);
-        
-        if (strlen($cleanMotif) < 3) {
-            return [
-                'enhanced' => $motif,
-                'urgency' => 'moderee',
-                'isValid' => false,
-                'message' => 'Votre message est trop court. Veuillez décrire vos symptômes plus en détail.'
-            ];
-        }
-        
-        $suspiciousPatterns = [
-            'abc', 'xyz', '123', '!!!', '???', 'xxx', 'aaa', 
-            'bbb', 'ccc', 'ddd', 'eee', 'fff', 'ggg',
-            'qwerty', 'asdf', 'zxcv', '111', '222', '333',
-            'test', 'testing', 'blah', 'foo', 'bar', 'baz',
-            'random', 'nonsense', 'charabia'
-        ];
-        
-        foreach ($suspiciousPatterns as $pattern) {
-            if (stripos($cleanMotif, $pattern) !== false) {
-                return [
-                    'enhanced' => $motif,
-                    'urgency' => 'moderee',
-                    'isValid' => false,
-                    'message' => 'Votre message semble incompréhensible. Veuillez entrer un motif de consultation valide.'
-                ];
-            }
-        }
-        
-        if (preg_match('/(.)\1{2,}/', $cleanMotif)) {
-            return [
-                'enhanced' => $motif,
-                'urgency' => 'moderee',
-                'isValid' => false,
-                'message' => 'Votre message contient des caractères répétés. Veuillez entrer un motif valide.'
-            ];
-        }
-        
-        if (preg_match('/^[0-9]+$/', $cleanMotif)) {
-            return [
-                'enhanced' => $motif,
-                'urgency' => 'moderee',
-                'isValid' => false,
-                'message' => 'Les chiffres seuls ne sont pas un motif valide. Veuillez décrire vos symptômes.'
-            ];
-        }
-
-        $urgencyKeywords = [
-            'elevee' => [
-                'douleur intense', 'forte douleur', 'saignement', 'difficulté respirer', 
-                'urgence', 'grave', 'inconscient', 'douleur thoracique', 'accident',
-                'crise', 'étouffement', 'convulsion', 'infarctus',
-                'brûlure grave', 'fracture', 'hemorragie'
-            ],
-            'faible' => [
-                'check-up', 'bilan', 'routine', 'prévention', 'vaccin', 
-                'renouvellement', 'ordonnance', 'certificat', 'visite de contrôle'
-            ]
-        ];
-
+        $motifLower = mb_strtolower($motif);
         $urgency = 'moderee';
-        
-        foreach ($urgencyKeywords['elevee'] as $keyword) {
-            if (strpos($motifLower, $keyword) !== false) {
+
+        $urgentWords = [
+            'suicide','mourir','infarctus','avc','crise cardiaque',
+            'étouffement','hémorragie','saignement abondant',
+            'perte conscience','convulsion','douleur thoracique'
+        ];
+
+        foreach ($urgentWords as $word) {
+            if (str_contains($motifLower, $word)) {
                 $urgency = 'elevee';
                 break;
             }
         }
-        
-        if ($urgency === 'moderee') {
-            foreach ($urgencyKeywords['faible'] as $keyword) {
-                if (strpos($motifLower, $keyword) !== false) {
-                    $urgency = 'faible';
-                    break;
-                }
+
+        $lowWords = [
+            'check-up','bilan','certificat','ordonnance',
+            'contrôle','prévention'
+        ];
+
+        foreach ($lowWords as $word) {
+            if (str_contains($motifLower, $word)) {
+                $urgency = 'faible';
+                break;
             }
         }
 
@@ -246,82 +193,45 @@ class OpenAIService
     }
 
     /**
-     * Generate suggested medical keywords from consultation motif
+     * Standard invalid response
+        *
+        * @return array{enhanced: string, urgency: string, isValid: bool, message: string}
      */
-    public function generateMedicalKeywords(string $motif): array
+    private function invalidResponse(string $motif, string $message): array
     {
-        try {
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Tu es un assistant médical francophone. Extrais 3-5 mots-clés médicaux pertinents de la raison de consultation. Retourne UNIQUEMENT les mots-clés séparés par des virgules, sans explications ni texte supplémentaire.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => 'Mots-clés de: ' . $motif
-                    ]
-                ],
-                'max_tokens' => 100,
-                'temperature' => 0.3,
-            ]);
-
-            $keywords = trim($response->choices[0]->message->content);
-            $keywordArray = array_map('trim', explode(',', $keywords));
-            // Filter out empty values
-            return array_filter($keywordArray, fn($k) => !empty($k));
-        } catch (\Exception $e) {
-            error_log('OpenAI Keywords Error: ' . $e->getMessage());
-            return [];
-        }
+        return [
+            'enhanced' => $motif,
+            'urgency' => 'moderee',
+            'isValid' => false,
+            'message' => $message
+        ];
     }
 
     /**
-     * Analyze symptom severity from consultation description
+     * Analyze severity only
      */
     public function analyzeSeverity(string $motif): string
     {
         try {
-            $response = $this->client->chat()->create([
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Tu es un assistant médical expert. Analyse la gravité des symptômes décrits. Réponds avec UN SEUL mot: leger, modere, ou grave. Rien d\'autre.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => 'Gravité: ' . $motif
-                    ]
+            $response = $this->callOpenAI([
+                [
+                    'role' => 'system',
+                    'content' => 'Analyse la gravité et réponds uniquement: leger, modere ou grave.'
                 ],
-                'max_tokens' => 20,
-                'temperature' => 0.2,
-            ]);
+                [
+                    'role' => 'user',
+                    'content' => $motif]
+            ], 20, 0.2);
 
-            $severity = strtolower(trim($response->choices[0]->message->content));
-            
-            // Map French responses to standard format
-            $severityMap = [
-                'leger' => 'mild',
-                'léger' => 'mild',
-                'modere' => 'moderate',
-                'modéré' => 'moderate',
+            $severity = strtolower(trim($response));
+
+            return match ($severity) {
+                'leger','léger' => 'mild',
                 'grave' => 'severe',
-                'mild' => 'mild',
-                'moderate' => 'moderate',
-                'severe' => 'severe'
-            ];
-            
-            $mappedSeverity = $severityMap[$severity] ?? 'moderate';
-            
-            if (in_array($mappedSeverity, ['mild', 'moderate', 'severe'])) {
-                return $mappedSeverity;
-            }
-            
-            return 'moderate';
+                default => 'moderate',
+            };
+
         } catch (\Exception $e) {
-            error_log('OpenAI Severity Analysis Error: ' . $e->getMessage());
             return 'moderate';
         }
     }

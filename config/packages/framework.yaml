@@ -4,6 +4,7 @@ framework:
     profiler:
         enabled: true
         collect: true
+        collect_serializer_data: true
     default_locale: fr
     translator:
         default_path: '%kernel.project_dir%/translations'
@@ -25,3 +26,5 @@ when@dev:
     framework:
         profiler:
             only_exceptions: false
+        php_errors:
+            log: false

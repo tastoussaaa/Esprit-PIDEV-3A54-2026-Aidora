@@ -3,7 +3,7 @@
 namespace App\EventListener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Security\Http\Event\AuthenticationFailureEvent;
+use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -18,13 +18,13 @@ class AuthenticationFailureListener implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            AuthenticationFailureEvent::class => 'onAuthenticationFailure',
+            LoginFailureEvent::class => 'onAuthenticationFailure',
         ];
     }
 
-    public function onAuthenticationFailure(AuthenticationFailureEvent $event): void
+    public function onAuthenticationFailure(LoginFailureEvent $event): void
     {
-        $exception = $event->getAuthenticationException();
+        $exception = $event->getException();
         $message = $exception->getMessage();
         $session = $this->requestStack->getSession();
 

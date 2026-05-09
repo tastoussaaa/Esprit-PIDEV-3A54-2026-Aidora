@@ -2,22 +2,22 @@
 
 namespace App\Tests\Functional;
 
+use App\Entity\AideSoignant;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
-use App\Entity\User;
+use App\Entity\Patient;
 
 class MissionTracingFlowTest extends AbstractFunctionalTest
 {
-    private User $patient;
-    private User $aide;
+    private Patient $patient;
+    private AideSoignant $aide;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create test users
-        $this->patient = $this->createUser('patient123@test.com', ['ROLE_PATIENT']);
-        $this->aide = $this->createUser('aide123@test.com', ['ROLE_AIDE_SOIGNANT']);
+        $this->patient = $this->createPatient('patient123@test.com', 'Patient Flow');
+        $this->aide = $this->createAideSoignant('aide123@test.com', 'Aide Flow');
     }
 
     /**
@@ -26,37 +26,20 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
      */
     public function testCheckInValidTime(): void
     {
-        // Setup: Create an accepted mission starting in the past
         $startTime = (new \DateTime())->modify('-1 hour');
         $endTime = (new \DateTime())->modify('+6 hours');
 
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut($startTime);
-        $demande->setDateFin($endTime);
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($startTime);
-        $mission->setDateFin($endTime);
+        $demande = $this->createDemande($startTime, $endTime);
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Record check-in
         $mission->setCheckInAt(new \DateTime());
         $mission->setStatusVerification('PENDING');
         $this->em->flush();
 
-        // Verify check-in recorded
         $this->em->refresh($mission);
         $this->assertNotNull($mission->getCheckInAt());
         $this->assertSame('PENDING', $mission->getStatusVerification());
@@ -68,27 +51,12 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
      */
     public function testCheckOutWithProofAndGeolocation(): void
     {
-        // Setup: Create mission with check-in
         $startTime = (new \DateTime())->modify('-2 hours');
         $endTime = (new \DateTime())->modify('+5 hours');
         $checkInTime = (new \DateTime())->modify('-1 hour');
 
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut($startTime);
-        $demande->setDateFin($endTime);
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($startTime);
-        $mission->setDateFin($endTime);
+        $demande = $this->createDemande($startTime, $endTime);
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
         $mission->setCheckInAt($checkInTime);
         $mission->setStatusVerification('PENDING');
 
@@ -96,21 +64,20 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Record check-out with proof
         $proofPhotoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         $mission->setCheckOutAt(new \DateTime());
         $mission->setProofPhotoData($proofPhotoDataUri);
-        $mission->setStatut('TERMINÉE');
+        $mission->setStatutMission('TERMINÉE');
         $mission->setStatusVerification('VALIDÉE');
-        $mission->setArchivee(true);
+        $mission->setFinalStatus('TERMINÉE');
+        $mission->setArchivedAt(new \DateTime());
         $this->em->flush();
 
-        // Verify checkout recorded
         $this->em->refresh($mission);
         $this->assertNotNull($mission->getCheckOutAt());
-        $this->assertSame('TERMINÉE', $mission->getStatut());
-        $this->assertTrue($mission->isArchivee());
+        $this->assertSame('TERMINÉE', $mission->getStatutMission());
+        $this->assertSame('TERMINÉE', $mission->getFinalStatus());
         $this->assertSame('VALIDÉE', $mission->getStatusVerification());
         $this->assertNotNull($mission->getProofPhotoData());
     }
@@ -125,22 +92,8 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
         $endTime = (new \DateTime())->modify('+5 hours');
         $checkInTime = (new \DateTime())->modify('-1 hour');
 
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut($startTime);
-        $demande->setDateFin($endTime);
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($startTime);
-        $mission->setDateFin($endTime);
+        $demande = $this->createDemande($startTime, $endTime);
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
         $mission->setCheckInAt($checkInTime);
         $mission->setStatusVerification('PENDING');
 
@@ -148,17 +101,15 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Check-out WITHOUT proof
         $mission->setCheckOutAt(new \DateTime());
-        $mission->setStatut('TERMINÉE');
-        $mission->setArchivee(true);
-        // proof fields remain null
+        $mission->setStatutMission('TERMINÉE');
+        $mission->setFinalStatus('TERMINÉE');
+        $mission->setArchivedAt(new \DateTime());
         $this->em->flush();
 
-        // Verify checkout without proof OK
         $this->em->refresh($mission);
         $this->assertNotNull($mission->getCheckOutAt());
-        $this->assertSame('TERMINÉE', $mission->getStatut());
+        $this->assertSame('TERMINÉE', $mission->getStatutMission());
         $this->assertNull($mission->getProofPhotoData());
         $this->assertNull($mission->getSignatureData());
     }
@@ -173,39 +124,62 @@ class MissionTracingFlowTest extends AbstractFunctionalTest
         $startTime = (new \DateTime())->modify('-2 hours');
         $endTime = (new \DateTime())->modify('+5 hours');
 
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut($startTime);
-        $demande->setDateFin($endTime);
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
+        $demande = $this->createDemande($startTime, $endTime);
 
         $proofPhotoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         $proofSignatureDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('TERMINÉE');
-        $mission->setDateDebut($startTime);
-        $mission->setDateFin($endTime);
+        $mission = $this->createMission($demande, 'TERMINÉE');
         $mission->setCheckInAt((new \DateTime())->modify('-1 hour'));
         $mission->setCheckOutAt(new \DateTime());
         $mission->setProofPhotoData($proofPhotoDataUri);
         $mission->setSignatureData($proofSignatureDataUri);
-        $mission->setArchivee(true);
+        $mission->setFinalStatus('TERMINÉE');
+        $mission->setArchivedAt(new \DateTime());
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Retrieve and verify proof data persisted
         $this->em->refresh($mission);
         $this->assertSame($proofPhotoDataUri, $mission->getProofPhotoData());
         $this->assertSame($proofSignatureDataUri, $mission->getSignatureData());
-        $this->assertTrue($mission->isArchivee());
+        $this->assertSame('TERMINÉE', $mission->getFinalStatus());
+    }
+
+    private function createDemande(\DateTimeInterface $start, \DateTimeInterface $end): DemandeAide
+    {
+        $demande = new DemandeAide();
+        $demande->setTitreD('Titre mission tracing');
+        $demande->setTypeDemande('NORMAL');
+        $demande->setDescriptionBesoin('Aide requise');
+        $demande->setTypePatient('AUTRE');
+        $demande->setDateCreation(new \DateTime());
+        $demande->setDateDebutSouhaitee($start);
+        $demande->setDateFinSouhaitee($end);
+        $demande->setBudgetMax(500);
+        $demande->setLieu('Tunis');
+        $demande->setLatitude(36.8065);
+        $demande->setLongitude(10.1815);
+        $demande->setSexe('N');
+        $demande->setEmail((string) $this->patient->getEmail());
+        $demande->setStatut('EN_ATTENTE');
+        $demande->setAideChoisie($this->aide);
+
+        return $demande;
+    }
+
+    private function createMission(DemandeAide $demande, string $statut): Mission
+    {
+        $mission = new Mission();
+        $mission->setDemandeAide($demande);
+        $mission->setAideSoignant($this->aide);
+        $mission->setStatutMission($statut);
+        $mission->setDateDebut(\DateTime::createFromInterface($demande->getDateDebutSouhaitee() ?? new \DateTime()));
+        $mission->setDateFin(\DateTime::createFromInterface($demande->getDateFinSouhaitee() ?? new \DateTime('+1 day')));
+        $mission->setTitreM('Mission tracing');
+        $mission->setPrixFinal(500);
+
+        return $mission;
     }
 }

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    margin: 40px;
+}
+
+.header {
+text-align: center;
+margin-bottom: 30px;
+}
+
+.title {
+font-size: 22px;
+font-weight: bold;
+margin-bottom: 10px;
+}
+
+.section {
+margin-bottom: 20px;
+}
+
+table {
+width: 100%;
+border-collapse: collapse;
+}
+
+td, th {
+border: 1px solid #333;
+padding: 8px;
+}
+
+.footer {
+margin-top: 40px;
+text-align: center;
+font-size: 12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <div class="title">Medical Prescription</div>
+    Date: {{ "now"|date("d/m/Y") }}
+</div>
+
+<div class="section">
+    <strong>Patient:</strong>
+    {{ consultation.patient.name }} {{ consultation.patient.familyName }}
+</div>
+
+<div class="section">
+    <strong>Doctor:</strong>
+    Dr. {{ consultation.medecin.name }}
+</div>
+
+<div class="section">
+    <strong>Motif:</strong>
+    {{ consultation.motif }}
+</div>
+
+<div class="section">
+    <strong>Medications:</strong>
+
+<table>
+    <tr>
+        <th>Medication</th>
+        <th>Dosage</th>
+        <th>Duration</th>
+        <th>Instructions</th>
+    </tr>
+
+    {% for ordonnance in consultation.ordonnances %}
+    <tr>
+        <td>{{ ordonnance.medicament }}</td>
+        <td>{{ ordonnance.dosage }}</td>
+        <td>{{ ordonnance.duree }}</td>
+        <td>{{ ordonnance.instructions }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</div>
+
+<div class="footer">
+    Official medical document
+</div>
+
+</body>
+</html>

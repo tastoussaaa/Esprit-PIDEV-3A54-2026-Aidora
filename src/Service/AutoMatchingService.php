@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\AideSoignant;
 use App\Entity\DemandeAide;
 use App\Repository\AideSoignantRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +22,13 @@ class AutoMatchingService
     /**
      * Relance le matching lorsqu'une demande passe à A_REASSIGNER
      * Recalcule le top 3 des aides disponibles et notifie
+        *
+        * @return array{
+        *     demande_id: int|null,
+        *     top_three_aides: list<array{aide: AideSoignant, score: float, distance: float, experience: int, available_until: \DateTime|null}>,
+        *     count_available: int,
+        *     action: string
+        * }
      */
     public function relanceMatchingOnReassignment(DemandeAide $demande): array
     {
@@ -29,8 +37,19 @@ class AutoMatchingService
 
         // Appliquer filtre calendrier: exclure aides avec missions chevauchantes
         $startDate = $demande->getDateDebutSouhaitee();
-        $endDate = $demande->getDateFinSouhaitee();
-        $availableAides = $this->calendarBlocker->filterAvailableAides($allAides, $startDate, $endDate);
+        $endDate = $demande->getDateFinSouhaitee() ?? $startDate;
+
+        if (!$startDate instanceof \DateTimeInterface || !$endDate instanceof \DateTimeInterface) {
+            throw new \InvalidArgumentException('Les dates de la demande sont obligatoires pour le matching automatique.');
+        }
+
+        $startDateTime = \DateTime::createFromInterface($startDate);
+        $endDateTime = \DateTime::createFromInterface($endDate);
+
+        if ($endDateTime < $startDateTime) {
+            throw new \InvalidArgumentException('La date de fin de la demande doit être après la date de début.');
+        }
+        $availableAides = $this->calendarBlocker->filterAvailableAides($allAides, $startDateTime, $endDateTime);
 
         // Scorer les aides (distance, expérience, disponibilité)
         $scoredAides = [];
@@ -41,7 +60,7 @@ class AutoMatchingService
                 'score' => $score,
                 'distance' => $this->calculateDistance($aide->getVilleIntervention() ?? 'Tunis', $demande->getAdresse() ?? 'Tunis'),
                 'experience' => $aide->getNiveauExperience() ?? 0,
-                'available_until' => $this->calendarBlocker->getNextAvailableSlot($aide, $startDate)
+                'available_until' => $this->calendarBlocker->getNextAvailableSlot($aide, $startDateTime)
             ];
         }
 
@@ -69,7 +88,7 @@ class AutoMatchingService
     /**
      * Calcule le score d'une aide par rapport à une demande (formule de matching)
      */
-    private function calculateAideScore($aide, DemandeAide $demande): float
+    private function calculateAideScore(AideSoignant $aide, DemandeAide $demande): float
     {
         $score = 0;
 
@@ -78,7 +97,7 @@ class AutoMatchingService
         $score += $experience;
 
         // 2. Score disponibilité (0-25 points)
-        if ($aide->getDisponible()) {
+        if ($aide->isDisponible()) {
             $score += 25;
         }
 

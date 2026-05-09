@@ -13,8 +13,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use App\Service\AiDescriptionService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 class MedecinController extends BaseController
@@ -22,7 +20,7 @@ class MedecinController extends BaseController
     private RiskScoringService $riskService;
     private AiDescriptionService $aiService;
 
-    public function __construct(UserService $userService, private MailerInterface $mailer, RiskScoringService $riskService, AiDescriptionService $aiService)
+    public function __construct(UserService $userService, RiskScoringService $riskService, AiDescriptionService $aiService)
     {
         parent::__construct($userService);
         $this->riskService = $riskService;
@@ -87,9 +85,12 @@ class MedecinController extends BaseController
 
         // Get selected category from query parameter (e.g., ?category=Urgence)
         $selectedCategory = $request->query->get('category');
+        $searchTerm = $request->query->get('search');
 
-        // Get formations filtered by category (or all if none selected)
-        $formations = $formationRepository->findValidatedByCategory($selectedCategory);
+        // Show validated formations + current medecin own formations (including EN_ATTENTE)
+        $formations = $medecin
+            ? $formationRepository->findVisibleForMedecin($medecin, $selectedCategory, $searchTerm)
+            : $formationRepository->findValidatedByCategory($selectedCategory, $searchTerm);
 
         // Get all categories for dropdown
         $categories = $formationRepository->findAllCategories();
@@ -98,6 +99,7 @@ class MedecinController extends BaseController
             'formations' => $formations,          // filtered list
             'categories' => $categories,          // list of all categories
             'selectedCategory' => $selectedCategory, // currently selected category
+            'searchTerm' => $searchTerm,
             'userId' => $userId,
             'medecin' => $medecin,
         ]);
@@ -273,30 +275,6 @@ class MedecinController extends BaseController
 
         return $this->redirectToRoute('medecin_consultations');
     }
-
-    /**
-     * Send consultation status email to patient
-     */
-    private function sendConsultationStatusEmail(Consultation $consultation, string $status): void
-    {
-        $patientName = $consultation->getName() . ' ' . $consultation->getFamilyName();
-        $date = $consultation->getDateConsultation() ? $consultation->getDateConsultation()->format('d/m/Y') : 'TBD';
-        $time = $consultation->getTimeSlot() ?: 'TBD';
-        $consultationDate = $date . ' at ' . $time;
-
-        $email = (new Email())
-            ->from('noreply@aidora.com')
-            ->to($consultation->getEmail() ?? 'contact@aidora.com')
-            ->subject('Mise à jour de votre consultation')
-            ->html($this->renderView('email/consultation_status.html.twig', [
-                'patientName' => $patientName,
-                'consultationDate' => $consultationDate,
-                'status' => $status,
-            ]));
-
-        $this->mailer->send($email);
-    }
-
 
     #[Route('/medecin/generate-description', name: 'medecin_formation_generate_description', methods: ['POST'])]   
      public function generateDescription(Request $request): JsonResponse

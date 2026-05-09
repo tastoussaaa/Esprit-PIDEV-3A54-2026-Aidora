@@ -1,148 +1,222 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Médecin{% endblock %}
+{% block title %}Nouvelle Consultation{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
     <style>
-        .motif-enhancement {
-            margin-top: 12px;
-            padding: 16px;
-            background: #f0f7ff;
-            border-left: 4px solid #007bff;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: all 0.3s ease;
+        body { 
+            background: linear-gradient(135deg, #ecf7fa 0%, #f5f9fc 100%); 
+            min-height: 100vh; 
         }
-        .motif-enhancement.loading {
-            color: #0066cc;
-            background: #e6f0ff;
-            border-left-color: #0066cc;
+        .portal__card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(10, 123, 167, 0.08);
+            border: 1px solid #e0f2f7;
         }
-        .motif-enhancement.success {
-            color: #155e3d;
-            background: #d1f2eb;
-            border-left-color: #2dbe60;
+        .portal__title { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: #0a7ba7;
+            letter-spacing: -0.5px; 
+            margin: 0; 
         }
-        .motif-enhancement.error {
-            color: #8e2424;
-            background: #f5d5d5;
-            border-left-color: #dc3545;
+        .portal__subtitle { 
+            font-size: 14px; 
+            color: #4a6fa5; 
+            line-height: 1.6; 
+            margin-top: 8px; 
         }
-        .motif-enhancement.warning {
-            color: #856404;
-            background: #fff3cd;
-            border-left-color: #ffc107;
+        .form__field { 
+            margin-bottom: 20px; 
+            display: flex; 
+            flex-direction: column;
+            width: 100%;
         }
-        .enhancement-label {
-            font-weight: 600;
-            display: block;
+        .form__field:last-child {
+            margin-bottom: 0;
+        }
+        .form__field label { 
+            font-weight: 600; 
+            font-size: 13px;
             margin-bottom: 8px;
+            color: #0a7ba7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .enhancement-content {
-            font-style: italic;
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            padding: 11px 13px;
+            border: 1px solid #c7e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: #fafcfd;
+            color: #2c3e50;
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #a0b8c5;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0a7ba7;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(10, 123, 167, 0.08);
+        }
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-three { display: grid; grid-template-columns: 1fr 120px 80px; gap: 16px; }
+        .full-width { grid-column: 1 / -1; }
+        textarea { 
+            min-height: 140px; 
+            resize: vertical;
+            font-family: inherit;
             line-height: 1.5;
         }
-        .enhance-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
+        .motif-enhancement {
+            margin-top: 12px; 
+            padding: 14px; 
+            background: #f0fafb;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            border: 1px solid #b3dce8;
+            font-size: 13px; 
+            transition: all 0.3s ease;
+        }
+        .motif-enhancement.success { 
+            background: #f0faf7;
+            border-color: #70c9a8;
+            color: #00897b;
+        }
+        .motif-enhancement.error { 
+            background: #faf5f5;
+            border-color: #f0a8a2;
+            color: #c62828;
+        }
+        .enhance-btn {
+            background: #00897b;
+            color: white; 
+            border: none; 
+            padding: 10px 18px; 
+            border-radius: 6px;
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 600;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
             transition: all 0.2s ease;
         }
-        .enhance-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        .enhance-btn:hover { 
+            background: #00695c;
         }
-        .enhance-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .enhance-btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
         }
-        .enhance-btn.loading {
-            background: linear-gradient(135deg, #6b7c93 0%, #8899a6 100%);
+        .form__actions {
+            display: flex; 
+            gap: 12px; 
+            margin-top: 28px; 
+            padding-top: 20px;
+            border-top: 1px solid #e0f2f7;
         }
-        .ai-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn { 
+            border-radius: 6px; 
+            font-weight: 600; 
+            padding: 11px 24px; 
+            font-size: 14px; 
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn--primary { 
+            background: #0a7ba7;
             color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
         }
-        .urgency-badge {
-            display: inline-flex;
+        .btn--primary:hover { 
+            background: #055a7e;
+        }
+        .btn--ghost { 
+            background: transparent; 
+            color: #0a7ba7; 
+            border: 1px solid #c7e8f0;
+        }
+        .btn--ghost:hover { 
+            background: #f0fafb; 
+        }
+        .form__section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e0f2f7;
+        }
+        .form__section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .form__section-header {
+            display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        .urgency-elevee {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .form__section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0a7ba7;
+            margin: 0;
         }
-        .urgency-moderee {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
+        .form__section-emoji {
+            font-size: 20px;
         }
-        .urgency-faible {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .form__advice {
+            background: linear-gradient(135deg, #f0fafb 0%, #e8f4f8 100%);
+            border: 2px solid #0a7ba7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
         }
-        .original-motif {
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed #ccc;
-        }
-        .severity-indicator {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        .severity-mild { background: #d4edda; color: #155724; }
-        .severity-moderate { background: #fff3cd; color: #856404; }
-        .severity-severe { background: #f8d7da; color: #721c24; }
-        .validation-error {
-            color: #dc3545;
+        .form__advice-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #0a7ba7;
             font-size: 13px;
-            margin-top: 8px;
-            padding: 8px 12px;
-            background: #f8d7da;
-            border-radius: 4px;
-            border-left: 3px solid #dc3545;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
         }
-        /* Compact form layout */
-        .form__fields { display: block; gap: 12px; }
-        .form__fields .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .form__fields .grid-three { display: grid; grid-template-columns: 1fr 120px 80px; gap: 12px; align-items: end; }
-        .form__fields .full-width { grid-column: 1 / -1; }
-        .motif-guidance { font-size: 13px; background: #fbfdff; border-radius: 8px; padding:10px; }
-        /* Tidy buttons */
-        .form__actions { display:flex; gap:12px; align-items:center; margin-top:18px }
+        .form__advice-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .form__advice-list li {
+            padding: 8px 0;
+            padding-left: 24px;
+            color: #4a6fa5;
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+        }
+        .form__advice-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #00897b;
+            font-weight: bold;
+        }
+        .form__fields {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0 !important;
+        }
     </style>
 {% endblock %}
 
@@ -150,285 +224,151 @@
     <script src="{{ asset('assets/js/consultation-slots.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🤖 OpenAI Enhancement script loaded');
+            const motifInput = document.querySelector('textarea[name*="motif"]') || document.querySelector('input[name*="motif"]');
+            const enhanceBtn = document.getElementById('enhance-motif-btn');
+            const enhancementPanel = document.getElementById('motif-enhancement');
             
-            // Find the motif input - try multiple selectors
-            let motifInput = document.querySelector('input[name*="motif"]') || 
-                            document.querySelector('#consultation_type_motif') ||
-                            document.querySelector('[id*="motif"]');
-            
-            console.log('Motif input found:', motifInput);
-            
-            if (!motifInput) {
-                console.error('Could not find motif input field');
-                return;
-            }
-
-            // Create enhancement container
-            const motifField = motifInput.closest('.form__field') || motifInput.parentElement;
-            
-            // Create the enhancement panel
-            const enhancementPanel = document.createElement('div');
-            enhancementPanel.id = 'motif-enhancement-panel';
-            enhancementPanel.style.display = 'none';
-            enhancementPanel.innerHTML = `
-                <div class="motif-enhancement" id="motif-enhancement">
-                    <span class="enhancement-label" id="enhancement-label">
-                        <span class="ai-badge">🤖 AI Assistant</span>
-                        <span id="urgency-badge"></span>
-                    </span>
-                    <div class="enhancement-content" id="enhancement-content"></div>
-                </div>
-            `;
-            
-            // Insert after motif field
-            if (motifField && motifField.parentElement) {
-                motifField.parentElement.insertBefore(enhancementPanel, motifField.nextSibling);
-            } else {
-                motifInput.parentElement.appendChild(enhancementPanel);
-            }
-
-            // Create enhance button
-            const enhanceBtn = document.createElement('button');
-            enhanceBtn.type = 'button';
-            enhanceBtn.className = 'enhance-btn';
-            enhanceBtn.id = 'enhance-btn';
-            enhanceBtn.innerHTML = '✨ Analyser avec IA';
-            enhanceBtn.title = 'Cliquez pour analyser votre motif avec l\'IA';
-            
-            // Insert button after motif input
-            motifInput.parentElement.insertBefore(enhanceBtn, motifInput.nextSibling);
-
-            const enhancementDiv = document.getElementById('motif-enhancement');
-            const enhancementContent = document.getElementById('enhancement-content');
-            const urgencyBadge = document.getElementById('urgency-badge');
-            const enhancementLabel = document.getElementById('enhancement-label');
-
-            // Function to get urgency display text
-            function getUrgencyText(urgency) {
-                const urgencyTexts = {
-                    'elevee': '🚨 Urgence élevée',
-                    'moderee': '⚠️ Urgence modérée',
-                    'faible': '✅ Routine / Faible'
-                };
-                return urgencyTexts[urgency] || '⚠️ Urgence modérée';
-            }
-
-            // Function to call OpenAI API using new comprehensive endpoint
-            function callOpenAI(motif) {
-                enhancementPanel.style.display = 'block';
-                enhancementDiv.className = 'motif-enhancement loading';
-                enhanceBtn.className = 'enhance-btn loading';
-                enhanceBtn.disabled = true;
-                enhanceBtn.innerHTML = '⏳ Analyse en cours...';
-                
-                // Hide urgency badge during loading
-                urgencyBadge.innerHTML = '';
-                
-                console.log('Calling OpenAI API with motif:', motif);
-                
-                // Use the new comprehensive analysis endpoint
-                fetch('/consultation/analyze-motif?motif=' + encodeURIComponent(motif))
-                    .then(response => {
-                        console.log('OpenAI response status:', response.status);
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('OpenAI data:', data);
-                        enhanceBtn.className = 'enhance-btn';
-                        enhanceBtn.disabled = false;
+            if (enhanceBtn && motifInput) {
+                enhanceBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const motif = motifInput.value.trim();
+                    
+                    if (!motif) {
+                        showEnhancementMessage(enhancementPanel, 'error', '❌ Veuillez remplir le motif');
+                        return;
+                    }
+                    
+                    enhanceBtn.disabled = true;
+                    enhanceBtn.innerHTML = '⏳ Analyse en cours...';
+                    
+                    try {
+                        const response = await fetch('/consultation/analyze-motif?motif=' + encodeURIComponent(motif));
+                        const data = await response.json();
                         
                         if (data.ok) {
-                            // Show urgency level
-                            const urgencyClass = 'urgency-' + (data.urgency || 'moderee');
-                            urgencyBadge.className = 'urgency-badge ' + urgencyClass;
-                            urgencyBadge.innerHTML = getUrgencyText(data.urgency);
+                            const urgencyMap = { 'faible': 'low', 'moderee': 'medium', 'elevee': 'high' };
+                            const urgencyLevel = urgencyMap[data.urgency] || 'medium';
                             
-                            if (!data.isValid) {
-                                // Motif is not valid/understandable - show error/warning
-                                enhancementDiv.className = 'motif-enhancement warning';
-                                enhancementContent.innerHTML = `
-                                    <div class="validation-error">
-                                        <strong>⚠️ Motif incompréhensible</strong><br>
-                                        ${data.message || 'Veuillez entrer un motif de consultation clair et comprehensible.'}
-                                    </div>
-                                    <div class="original-motif">
-                                        <strong>Votre message:</strong> "${motif}"
-                                    </div>
-                                    <p style="margin-top: 10px; color: #666; font-size: 13px;">
-                                        💡 <strong>Conseils:</strong> Décrivez vos symptômes clairement (ex: "J'ai mal à la tête depuis 2 jours", "Fièvre et toux depuis une semaine")
-                                    </p>
-                                `;
-                                enhanceBtn.innerHTML = '🔄 Réessayer';
-                            } else if (data.enhanced && data.enhanced !== motif) {
-                                // Valid and enhanced
-                                enhancementDiv.className = 'motif-enhancement success';
-                                enhancementContent.innerHTML = `
-                                    <div class="enhancement-content">
-                                        <strong>Version améliorée:</strong><br>
-                                        <span style="color: #155e3d; font-size: 15px;">"${data.enhanced}"</span>
-                                    </div>
-                                    <div class="original-motif">
-                                        <strong>Original:</strong> "${motif}"
-                                    </div>
-                                    <button type="button" class="enhance-btn" onclick="applyEnhancement('${data.enhanced.replace(/'/g, "\\'")}')" style="margin-top: 10px;">
-                                        ✅ Utiliser cette version
-                                    </button>
-                                `;
-                                enhanceBtn.innerHTML = '🔄 Re-analyser';
-                            } else {
-                                // Valid but no enhancement needed
-                                enhancementDiv.className = 'motif-enhancement';
-                                enhancementContent.innerHTML = `
-                                    <span class="enhancement-label">✅ Parfait!</span>
-                                    <span class="enhancement-content">Votre description est claire et bien structurée.</span>
-                                `;
-                                enhanceBtn.innerHTML = '✨ Re-analyser';
-                            }
+                            const urgencyConfig = {
+                                'low': { emoji: '🟢', label: 'Faible', color: '#00897b' },
+                                'medium': { emoji: '🟡', label: 'Modérée', color: '#ffa726' },
+                                'high': { emoji: '🔴', label: 'ÉLEVÉE', color: '#ef5350' }
+                            };
                             
-                            // Update message if provided
-                            if (data.message && data.isValid) {
-                                enhancementContent.innerHTML += `<p style="margin-top: 8px; font-size: 13px; color: #666;">${data.message}</p>`;
-                            }
+                            const config = urgencyConfig[urgencyLevel];
+                            motifInput.value = data.enhanced || data.original;
+                            
+                            const messageHTML = '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;"><span style="font-size: 20px;">' + config.emoji + '</span><div><strong style="font-size: 14px; color: ' + config.color + ';">Urgence: ' + config.label + '</strong></div></div>';
+                            
+                            showEnhancementMessage(enhancementPanel, 'success', messageHTML);
                         } else {
-                            // API error
-                            enhancementDiv.className = 'motif-enhancement error';
-                            enhancementContent.innerHTML = `
-                                <span class="enhancement-label">⚠️ Service IA indisponible</span>
-                                <span class="enhancement-content">${data.message || data.error || 'L\'enhancement AI n\'est pas configuré. Veuillez vérifier la clé API OpenAI.'}</span>
-                            `;
-                            enhanceBtn.innerHTML = '⚠️ Réessayer';
+                            showEnhancementMessage(enhancementPanel, 'error', '❌ ' + (data.message || data.error || 'Erreur lors de l\'analyse'));
                         }
-                    })
-                    .catch(error => {
-                        console.error('OpenAI fetch error:', error);
-                        enhancementDiv.className = 'motif-enhancement error';
-                        enhanceBtn.className = 'enhance-btn';
+                    } catch (error) {
+                        console.error('AI Analysis error:', error);
+                        showEnhancementMessage(enhancementPanel, 'error', '❌ Erreur de connexion');
+                    } finally {
                         enhanceBtn.disabled = false;
-                        enhancementContent.innerHTML = `
-                            <span class="enhancement-label">⚠️ Erreur de connexion</span>
-                            <span class="enhancement-content">${error.message}</span>
-                        `;
-                        enhanceBtn.innerHTML = '⚠️ Réessayer';
-                    });
+                        enhanceBtn.innerHTML = '✨ Analyser avec IA';
+                    }
+                });
             }
-
-            // Button click handler
-            enhanceBtn.addEventListener('click', function() {
-                const motif = motifInput.value.trim();
-                if (!motif || motif.length < 3) {
-                    alert('Veuillez d\'abord entrer un motif de consultation (au moins 3 caractères).');
-                    motifInput.focus();
-                    return;
-                }
-                callOpenAI(motif);
-            });
-
-            // Also trigger on blur for convenience
-            motifInput.addEventListener('blur', function() {
-                const motif = this.value.trim();
-                if (motif && motif.length >= 3 && enhancementPanel.style.display === 'none') {
-                    // Auto-show hint that enhancement is available
-                    enhanceBtn.style.animation = 'pulse 2s infinite';
-                }
-            });
-
-            // Remove pulse animation when user clicks the button
-            enhanceBtn.addEventListener('click', function() {
-                this.style.animation = 'none';
-            });
+            
+            function showEnhancementMessage(panel, type, message) {
+                if (!panel) return;
+                panel.className = 'motif-enhancement ' + type;
+                panel.innerHTML = message;
+                panel.style.display = 'block';
+            }
         });
-
-        function applyEnhancement(enhancedText) {
-            console.log('Applying enhancement:', enhancedText);
-            const motifInput = document.querySelector('input[name*="motif"]') || 
-                              document.querySelector('#consultation_type_motif') ||
-                              document.querySelector('[id*="motif"]');
-            if (motifInput) {
-                motifInput.value = enhancedText;
-                motifInput.dispatchEvent(new Event('change', { bubbles: true }));
-                
-                // Show success feedback
-                const panel = document.getElementById('motif-enhancement-panel');
-                if (panel) {
-                    panel.style.display = 'none';
-                }
-                
-                // Show confirmation
-                alert('✅ Version améliorée appliquée!');
-            }
-        }
     </script>
 {% endblock %}
 
 {% block body %}
 <div class="portal">
-
-    <!-- SIDEBAR -->
     {% include 'side_bar.html.twig' %}
 
-    <!-- MAIN CONTENT -->
     <main class="portal__main">
-
         <header class="portal__header">
-            <h1 class="portal__title">New Consultation</h1>
-            <p class="portal__subtitle">
-                Fill in the consultation details carefully.
-            </p>
+            <h1 class="portal__title">Nouvelle consultation</h1>
+            <p class="portal__subtitle">Remplissez le formulaire ci-dessous pour prendre rendez-vous</p>
         </header>
 
         <section class="portal__content portal__card">
+            {{ form_start(form, {'attr': {'class': 'form', 'novalidate': 'novalidate'}}) }}
 
-            {{ form_start(form, {'attr': {'class': 'form'}}) }}
-
-                <div class="form__fields" id="consultation-form-fields">
-                    <div class="grid-two">
-                        <div>{{ form_row(form.dateConsultation) }}</div>
-                        <div>{{ form_row(form.timeSlot) }}</div>
+                <div class="form__fields">
+                    <div class="form__section">
+                        <div class="form__section-header">
+                            <span class="form__section-emoji">📅</span>
+                            <h2 class="form__section-title">Choisissez votre rendez-vous</h2>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px;">
+                            <div style="width: 100%;">{{ form_row(form.dateConsultation) }}</div>
+                            <div style="width: 100%;">{{ form_row(form.timeSlot) }}</div>
+                        </div>
+                        
+                        {% include 'consultation/slots-helper.html.twig' %}
                     </div>
 
-                    {% include 'consultation/slots-helper.html.twig' %}
-
-                    <div class="full-width">{{ form_row(form.motif) }}</div>
-
-                    <div class="motif-guidance" style="margin-top:10px;padding:12px;border:1px dashed rgba(7,19,31,0.06);border-radius:8px;background:#fafafa;font-size:14px;color:#333">
-                        <strong>Besoin d'aide pour décrire votre problème ?</strong>
-                        <p style="margin:6px 0 8px 0">Écrivez une phrase claire en précisant : <em>quoi</em>, <em>depuis quand</em>, <em>intensité</em>, <em>symptômes associés</em>, <em>maladies chroniques</em> et <em>médicaments</em> si applicable.</p>
-                        <div style="font-size:13px;color:#555">
-                            <div><strong>Modèle à copier :</strong></div>
-                            <div style="margin:6px 0">« J’ai [symptôme principal] depuis [durée], intensité [faible/modérée/forte], accompagné de [autres symptômes], j’ai [maladies chroniques si oui] et je prends [médicaments si oui]. »</div>
-                            <div style="margin-top:6px"><strong>Exemples :</strong></div>
-                            <ul style="margin:6px 0 0 18px;color:#555">
-                                <li>« Mal de gorge depuis 2 jours, toux sèche légère, pas de maladies chroniques. »</li>
-                                <li>« Fièvre 38.5°C depuis 3 jours, céphalées modérées, je suis diabétique. »</li>
-                                <li>« Douleur thoracique forte et essoufflement depuis 1 heure, antécédents d’hypertension — urgence. »</li>
-                            </ul>
+                    <div class="form__section">
+                        <div class="form__section-header">
+                            <span class="form__section-emoji">🩺</span>
+                            <h2 class="form__section-title">Décrivez vos symptômes</h2>
+                        </div>
+                        
+                        <div style="padding: 16px;">
+                            <div class="form__advice">
+                                <div class="form__advice-title">💡 Comment bien描述 ?</div>
+                                <ul class="form__advice-list">
+                                    <li><strong>Principal symptôme:</strong> Mal de gorge, douleur thoracique, fièvre...</li>
+                                    <li><strong>Depuis combien de temps ?</strong> 2 jours, 1 semaine...</li>
+                                    <li><strong>Intensité:</strong> Léger, modéré, intense ?</li>
+                                    <li><strong>Contexte:</strong> Maladies chroniques ou antécédents ?</li>
+                                </ul>
+                            </div>
+                            
+                            {{ form_row(form.motif) }}
+                            <div style="display: flex; gap: 8px; margin-top: 12px; margin-bottom: 20px;">
+                                <button type="button" id="enhance-motif-btn" class="enhance-btn" title="Analyser et améliorer votre description avec l'IA">
+                                    ✨ Analyser avec IA
+                                </button>
+                            </div>
+                            <div id="motif-enhancement" class="motif-enhancement" style="display: none;"></div>
                         </div>
                     </div>
 
-                    <div class="grid-two">
-                        <div>{{ form_row(form.name) }}</div>
-                        <div>{{ form_row(form.familyName) }}</div>
-                    </div>
-
-                    <div class="grid-three">
-                        <div>{{ form_row(form.email) }}</div>
-                        <div>{{ form_row(form.sex) }}</div>
-                        <div>{{ form_row(form.age) }}</div>
+                    <div class="form__section">
+                        <div class="form__section-header">
+                            <span class="form__section-emoji">👤</span>
+                            <h2 class="form__section-title">Vos informations</h2>
+                        </div>
+                        
+                        <div style="padding: 16px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div style="width: 100%;">{{ form_row(form.name) }}</div>
+                                <div style="width: 100%;">{{ form_row(form.familyName) }}</div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div style="width: 100%;">{{ form_row(form.email) }}</div>
+                                <div style="width: 100%;">{{ form_row(form.sex) }}</div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                                <div style="width: 100%;">{{ form_row(form.age) }}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form__actions">
-                    <a href="{{ path('patient_consultations') }}" class="btn btn--ghost" role="button" aria-label="Cancel and go back">
-                        Annuler
-                    </a>
-                    <button type="submit" class="btn btn--primary" title="Save consultation">
-                        Créer
-                    </button>
+                    <a href="{{ path('patient_consultations') }}" class="btn btn--ghost">Annuler</a>
+                    <button type="submit" class="btn btn--primary">Créer consultation</button>
                 </div>
 
             {{ form_end(form) }}
-
         </section>
 
     </main>

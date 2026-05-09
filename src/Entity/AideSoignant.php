@@ -15,13 +15,13 @@ class AideSoignant
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $prenom = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $email = null;
 
     #[ORM\Column(nullable: true)]
@@ -30,7 +30,7 @@ class AideSoignant
     #[ORM\Column(nullable: true)]
     private ?int $niveauExperience = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?bool $disponible = null;
 
     #[ORM\ManyToOne(inversedBy: 'aideSoignants')]
@@ -47,35 +47,36 @@ class AideSoignant
      */
     #[ORM\OneToMany(mappedBy: 'aideSoignant', targetEntity: Mission::class)]
     private Collection $missions;
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $mdp = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $adeli = null;
 
-    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?bool $isValidated = false;
 
-    #[ORM\Column(length: 255)]
-    private ?string $Sexe = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $villeIntervention = null;
-
-    #[ORM\Column]
-    private ?int $rayonInterventionKm = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $typePatientsAcceptes = null;
-
-    #[ORM\Column]
-    private ?float $tarifMin = null;
     #[ORM\Column]
     private bool $isActive = true;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $Sexe = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $villeIntervention = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $rayonInterventionKm = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $typePatientsAcceptes = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $tarifMin = null;
 
     public function __construct()
     {
@@ -272,6 +273,18 @@ class AideSoignant
         return $this;
     }
 
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
     public function getSexe(): ?string
     {
         return $this->Sexe;
@@ -328,18 +341,6 @@ class AideSoignant
     public function setTarifMin(float $tarifMin): static
     {
         $this->tarifMin = $tarifMin;
-
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function setActive(bool $isActive): static
-    {
-        $this->isActive = $isActive;
 
         return $this;
     }

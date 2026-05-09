@@ -24,13 +24,13 @@ class Commande
     #[Assert\NotBlank(message: 'La quantité est obligatoire')]
     #[Assert\Positive(message: 'La quantité doit être positive')]
     #[Assert\Range(min: 1, max: 10000, notInRangeMessage: 'La quantité doit être entre 1 et 10000')]
-    private ?int $quantite = null;
+    private int $quantite = 1;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\Positive(message: 'Le montant total doit être positif')]
-    private ?float $montantTotal = null;
+    private ?string $montantTotal = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 50, nullable: true)]
     #[Assert\NotBlank(message: 'Le statut est obligatoire')]
     #[Assert\Choice(
         choices: ['en_attente', 'confirmée', 'livrée', 'annulée'],
@@ -38,7 +38,7 @@ class Commande
     )]
     private ?string $statut = 'en_attente';
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Assert\NotNull(message: 'La date est obligatoire')]
     #[Assert\LessThanOrEqual('now', message: 'La date ne peut pas être dans le futur')]
     private ?\DateTimeInterface $dateCommande = null;
@@ -68,7 +68,7 @@ class Commande
         return $this;
     }
 
-    public function getQuantite(): ?int
+    public function getQuantite(): int
     {
         return $this->quantite;
     }
@@ -81,12 +81,12 @@ class Commande
 
     public function getMontantTotal(): ?float
     {
-        return $this->montantTotal;
+        return $this->montantTotal !== null ? (float) $this->montantTotal : null;
     }
 
     public function setMontantTotal(?float $montantTotal): static
     {
-        $this->montantTotal = $montantTotal;
+        $this->montantTotal = $montantTotal !== null ? number_format($montantTotal, 2, '.', '') : null;
         return $this;
     }
 

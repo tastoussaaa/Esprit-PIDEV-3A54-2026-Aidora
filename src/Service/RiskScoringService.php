@@ -11,7 +11,7 @@ class RiskScoringService
      * @param int $chronicCount number of chronic conditions
      * @param float $aiProbability 0.0-1.0 (AI evaluation probability of high risk)
      *
-     * @return array{score:int,level:string,breakdown:array}
+    * @return array{score:int,level:string,breakdown:array{ageWeight:int,symptomWeight:int,aiWeight:int,rawTotal:int}}
      */
     public function calculate(int $age, int $symptomSeverity, int $chronicCount, float $aiProbability): array
     {

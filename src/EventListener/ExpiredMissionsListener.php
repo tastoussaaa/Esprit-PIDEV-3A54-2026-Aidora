@@ -28,51 +28,48 @@ final class ExpiredMissionsListener
         self::$lastCheck = $now;
 
         $nowDateTime = new \DateTime();
+        $expiredThreshold = (clone $nowDateTime)->modify('-30 minutes');
 
-        // Get all missions that haven't been archived yet
-        $missions = $this->entityManager->getRepository(Mission::class)->findAll();
+        $repository = $this->entityManager->getRepository(Mission::class);
 
-        foreach ($missions as $mission) {
-            // Skip if already archived
-            if ($mission->getFinalStatus()) {
-                continue;
-            }
+        $missionsWithCheckout = $repository->createQueryBuilder('m')
+            ->andWhere('m.finalStatus IS NULL')
+            ->andWhere('m.checkOutAt IS NOT NULL')
+            ->getQuery()
+            ->getResult();
 
-            // ✅ FIX 1: If check-out is done, mark as TERMINÉE (not EXPIRÉE)
+        $expiredStartedMissions = $repository->createQueryBuilder('m')
+            ->andWhere('m.finalStatus IS NULL')
+            ->andWhere('m.checkOutAt IS NULL')
+            ->andWhere('m.checkInAt IS NOT NULL')
+            ->andWhere('m.dateDebut IS NOT NULL')
+            ->andWhere('m.dateDebut <= :expiredThreshold')
+            ->setParameter('expiredThreshold', $expiredThreshold)
+            ->getQuery()
+            ->getResult();
+
+        $hasChanges = false;
+
+        foreach ($missionsWithCheckout as $mission) {
             if ($mission->getCheckOutAt()) {
                 $mission->setFinalStatus('TERMINÉE');
                 $mission->setArchivedAt(new \DateTime());
                 $mission->setArchiveReason('Mission terminée (check-out effectué)');
                 $this->entityManager->persist($mission);
-                continue;
-            }
-
-            // ✅ FIX 2: Only mark as EXPIRÉE if mission has actually started (checkInAt exists)
-            // Don't auto-expire missions that have never been started
-            if (!$mission->getCheckInAt()) {
-                continue;
-            }
-
-            // Get mission start date
-            $dateDebut = $mission->getDateDebut();
-            if (!$dateDebut) {
-                continue;
-            }
-
-            // Calculate expiry time: 30 minutes after start date
-            $expiryTime = (clone $dateDebut)->modify('+30 minutes');
-
-            // If current time is past expiry time, archive mission as EXPIRÉE
-            if ($nowDateTime > $expiryTime) {
-                $mission->setFinalStatus('EXPIRÉE');
-                $mission->setArchivedAt(new \DateTime());
-                $mission->setArchiveReason('Mission expirée (30 minutes après l\'heure de début)');
-
-                $this->entityManager->persist($mission);
+                $hasChanges = true;
             }
         }
 
-        // Flush all changes at once
-        $this->entityManager->flush();
+        foreach ($expiredStartedMissions as $mission) {
+            $mission->setFinalStatus('EXPIRÉE');
+            $mission->setArchivedAt(new \DateTime());
+            $mission->setArchiveReason('Mission expirée (30 minutes après l\'heure de début)');
+            $this->entityManager->persist($mission);
+            $hasChanges = true;
+        }
+
+        if ($hasChanges) {
+            $this->entityManager->flush();
+        }
     }
 }

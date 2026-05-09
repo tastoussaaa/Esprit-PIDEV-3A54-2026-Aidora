@@ -2,7 +2,6 @@
 
 namespace App\Command;
 
-use App\Repository\MissionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -16,15 +15,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class CheckExpiredMissionsCommand extends Command
 {
-    private MissionRepository $missionRepository;
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        MissionRepository $missionRepository,
         EntityManagerInterface $entityManager
     ) {
         parent::__construct();
-        $this->missionRepository = $missionRepository;
         $this->entityManager = $entityManager;
     }
 

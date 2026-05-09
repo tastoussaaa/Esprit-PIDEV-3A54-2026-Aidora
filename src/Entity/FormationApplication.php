@@ -35,7 +35,7 @@ class FormationApplication
     #[ORM\Column(length: 20)]
     private string $status = self::STATUS_PENDING;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $appliedAt = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

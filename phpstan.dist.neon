@@ -6,3 +6,7 @@ parameters:
         - public/
         - src/
         - tests/
+    ignoreErrors:
+        -
+            identifier: property.unusedType
+            path: src/Entity/*

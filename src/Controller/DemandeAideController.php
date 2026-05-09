@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
 use App\Entity\AideSoignant;
+use App\Entity\User;
 use App\Form\DemandeAideType;
 use App\Repository\DemandeAideRepository;
 use App\Service\TransitionNotificationService;
@@ -21,6 +22,8 @@ use Symfony\Component\Workflow\WorkflowInterface;
 
 final class DemandeAideController extends BaseController
 {
+    private const MAX_AIDE_CANDIDATES = 99;
+
     public function __construct(
         UserService $userService,
         private TransitionNotificationService $transitionNotificationService,
@@ -40,20 +43,12 @@ final class DemandeAideController extends BaseController
         $demandesAide = [];
         
         // Get only this patient's demandes
-        if ($user) {
+        if ($user instanceof User) {
             try {
                 $email = $user->getEmail();
-                $allDemandes = $demandeAideRepository->findAll();
-                $demandesAide = array_filter($allDemandes, function($d) use ($email) {
-                    $de = strtolower((string) $d->getEmail());
-                    $isUserDemande = $de !== '' && strcasecmp($de, $email) === 0;
-                    // Exclude archived demandes from active flow
-                    $isNotArchived = !in_array($d->getStatut(), ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE'], true);
-                    return $isUserDemande && $isNotArchived;
-                });
-                
-                // Sort by dateCreation desc
-                usort($demandesAide, fn($a, $b) => $b->getDateCreation() <=> $a->getDateCreation());
+                if ($email !== null && $email !== '') {
+                    $demandesAide = $demandeAideRepository->findActiveByEmail($email);
+                }
             } catch (\Exception $e) {
                 // User filtering error, skip
             }
@@ -131,7 +126,7 @@ final class DemandeAideController extends BaseController
                 $demandeAide->setLongitude((float)$demandeAideData['longitude']);
                 $demandeAide->setDateCreation(new \DateTime());
                 $demandeAide->setStatut('EN_ATTENTE');
-                $demandeAide->setEmail($this->getUser()->getEmail());
+                $demandeAide->setEmail($this->getCurrentUserEmail() ?? '');
 
                 // Calculate urgency score using AI-powered service
                 $urgencyScore = $urgencyCalculator->calculateUrgencyScore($demandeAide);
@@ -150,6 +145,23 @@ final class DemandeAideController extends BaseController
                         'navigation' => $navigation,
                     ]);
                 }
+
+                $existingRecentDemande = $entityManager->getRepository(DemandeAide::class)->findOneBy([
+                    'email' => $demandeAide->getEmail(),
+                    'TitreD' => $demandeAide->getTitreD(),
+                    'descriptionBesoin' => $demandeAide->getDescriptionBesoin(),
+                    'dateDebutSouhaitee' => $demandeAide->getDateDebutSouhaitee(),
+                    'budgetMax' => $demandeAide->getBudgetMax(),
+                ], ['dateCreation' => 'DESC']);
+
+                if ($existingRecentDemande && $existingRecentDemande->getDateCreation() !== null) {
+                    $secondsSinceCreation = (new \DateTime())->getTimestamp() - $existingRecentDemande->getDateCreation()->getTimestamp();
+
+                    if ($secondsSinceCreation <= 120) {
+                        $this->addFlash('success', 'Votre demande est déjà enregistrée. Redirection vers la sélection d\'aide-soignant.');
+                        return $this->redirectToRoute('app_demande_select_aide', ['id' => $existingRecentDemande->getId()]);
+                    }
+                }
                 
                 // Enregistrer en base de données
                 $entityManager->persist($demandeAide);
@@ -163,8 +175,16 @@ final class DemandeAideController extends BaseController
                 $mission->setPrixFinal(0);
                 $mission->setNote(null);
                 $mission->setCommentaire(null);
-                $mission->setDateDebut($demandeAide->getDateDebutSouhaitee());
-                $mission->setDateFin($demandeAide->getDateFinSouhaitee());
+
+                $dateDebutDemande = $demandeAide->getDateDebutSouhaitee();
+                if ($dateDebutDemande !== null) {
+                    $mission->setDateDebut(\DateTime::createFromInterface($dateDebutDemande));
+                }
+
+                $dateFinDemande = $demandeAide->getDateFinSouhaitee();
+                if ($dateFinDemande !== null) {
+                    $mission->setDateFin(\DateTime::createFromInterface($dateFinDemande));
+                }
 
                 // Enregistrer la mission
                 if (!empty($demandeAideData['dateDebutSouhaitee'])) {
@@ -233,13 +253,20 @@ final class DemandeAideController extends BaseController
         $aidesSoignantsCompatibles = $qb
             ->orderBy('a.disponible', 'DESC')
             ->addOrderBy('a.niveauExperience', 'DESC')
+            ->setMaxResults(self::MAX_AIDE_CANDIDATES)
             ->getQuery()
             ->getResult();
 
         // **SECTION 3: Filtrer les aides basé sur le calendrier (CalendarBlockingService)**
         $startDate = $demandeAide->getDateDebutSouhaitee();
         $endDate = $demandeAide->getDateFinSouhaitee();
-        $aidesSoignantsCompatibles = $calendarBlocker->filterAvailableAides($aidesSoignantsCompatibles, $startDate, $endDate);
+        if ($startDate !== null && $endDate !== null) {
+            $aidesSoignantsCompatibles = $calendarBlocker->filterAvailableAides(
+                $aidesSoignantsCompatibles,
+                \DateTime::createFromInterface($startDate),
+                \DateTime::createFromInterface($endDate)
+            );
+        }
 
         $aidesRanking = $this->buildAidesRanking($aidesSoignantsCompatibles, $demandeAide, $entityManager);
         usort($aidesSoignantsCompatibles, function($a, $b) use ($aidesRanking) {
@@ -394,6 +421,7 @@ final class DemandeAideController extends BaseController
         $aidesSoignantsCompatibles = $qb
             ->orderBy('a.disponible', 'DESC')
             ->addOrderBy('a.niveauExperience', 'DESC')
+            ->setMaxResults(self::MAX_AIDE_CANDIDATES)
             ->getQuery()
             ->getResult();
 
@@ -448,8 +476,16 @@ final class DemandeAideController extends BaseController
             $mission->setTitreM($demandeAide->getTitreD());
             $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
             $mission->setPrixFinal(0);
-            $mission->setDateDebut($demandeAide->getDateDebutSouhaitee());
-            $mission->setDateFin($demandeAide->getDateFinSouhaitee());
+
+            $dateDebutDemande = $demandeAide->getDateDebutSouhaitee();
+            if ($dateDebutDemande !== null) {
+                $mission->setDateDebut(\DateTime::createFromInterface($dateDebutDemande));
+            }
+
+            $dateFinDemande = $demandeAide->getDateFinSouhaitee();
+            if ($dateFinDemande !== null) {
+                $mission->setDateFin(\DateTime::createFromInterface($dateFinDemande));
+            }
             $entityManager->persist($mission);
         }
 
@@ -521,8 +557,16 @@ final class DemandeAideController extends BaseController
             $mission->setTitreM($demande->getTitreD());
             $mission->setWorkflowState(Mission::STATE_EN_ATTENTE);
             $mission->setPrixFinal(0);
-            $mission->setDateDebut($demande->getDateDebutSouhaitee());
-            $mission->setDateFin($demande->getDateFinSouhaitee());
+
+            $dateDebutDemande = $demande->getDateDebutSouhaitee();
+            if ($dateDebutDemande !== null) {
+                $mission->setDateDebut(\DateTime::createFromInterface($dateDebutDemande));
+            }
+
+            $dateFinDemande = $demande->getDateFinSouhaitee();
+            if ($dateFinDemande !== null) {
+                $mission->setDateFin(\DateTime::createFromInterface($dateFinDemande));
+            }
             $entityManager->persist($mission);
         }
 
@@ -547,6 +591,7 @@ final class DemandeAideController extends BaseController
             return $this->redirectToRoute('aidesoingnant_demandes');
         }
 
+        $mission->setStatutMission('ACCEPTÉE');
         $demande->setStatut('ACCEPTÉE');
 
         $entityManager->flush();
@@ -628,8 +673,9 @@ final class DemandeAideController extends BaseController
             ->distinct()
             ->andWhere('d.aideChoisie = :aideSoignant')
             ->setParameter('aideSoignant', $aideSoignant)
-            ->andWhere('m.StatutMission = :status')
-            ->setParameter('status', 'EN_ATTENTE')
+            ->andWhere('(m.workflowState = :pendingWorkflow OR m.StatutMission = :pendingLegacy)')
+            ->setParameter('pendingWorkflow', Mission::STATE_EN_ATTENTE)
+            ->setParameter('pendingLegacy', 'EN_ATTENTE')
             ->andWhere('d.statut = :demandeStatus')
             ->setParameter('demandeStatus', 'EN_ATTENTE')
             ->andWhere('d.dateDebutSouhaitee > :now')
@@ -747,8 +793,7 @@ final class DemandeAideController extends BaseController
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
 
-        $user = $this->getUser();
-        $email = $user ? $user->getEmail() : '';
+        $email = $this->getCurrentUserEmail() ?? '';
 
         if (!$email) {
             throw $this->createAccessDeniedException('User not found');
@@ -757,22 +802,7 @@ final class DemandeAideController extends BaseController
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = 10;
 
-        // Récupérer toutes les demandes d'aide archivées de ce patient
-        $allDemandes = $demandeAideRepository->findAll();
-        $userDemandes = array_filter($allDemandes, function($d) use ($email) {
-            $de = strtolower((string) $d->getEmail());
-            return $de !== '' && strcasecmp($de, $email) === 0;
-        });
-
-        // Filtrer par statuts archivés
-        $archivedDemandes = array_filter($userDemandes, function($d) {
-            return in_array($d->getStatut(), ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE'], true);
-        });
-
-        // Trier par date décroissante
-        usort($archivedDemandes, function($a, $b) {
-            return $b->getDateCreation()->getTimestamp() - $a->getDateCreation()->getTimestamp();
-        });
+        $archivedDemandes = $demandeAideRepository->findArchivedByEmail($email);
 
         $totalCount = count($archivedDemandes);
         $totalPages = ceil($totalCount / $limit);
@@ -799,8 +829,7 @@ final class DemandeAideController extends BaseController
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
 
-        $user = $this->getUser();
-        $email = $user ? $user->getEmail() : '';
+        $email = $this->getCurrentUserEmail() ?? '';
         if (!$email || strcasecmp((string) $demandeAide->getEmail(), (string) $email) !== 0) {
             $this->addFlash('error', 'Vous ne pouvez pas supprimer cette demande.');
             return $this->redirectToRoute('app_demandes_history');
@@ -827,6 +856,10 @@ final class DemandeAideController extends BaseController
         return $this->redirectToRoute('app_demandes_history');
     }
 
+    /**
+     * @param list<AideSoignant> $aides
+     * @return array<int, array{available: bool, score: int}>
+     */
     private function buildAidesRanking(array $aides, DemandeAide $demande, EntityManagerInterface $entityManager): array
     {
         $ranking = [];
@@ -913,6 +946,17 @@ final class DemandeAideController extends BaseController
         }
 
         return max(0, min(100, $score));
+    }
+
+    private function getCurrentUserEmail(): ?string
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $user->getEmail();
     }
 }
 

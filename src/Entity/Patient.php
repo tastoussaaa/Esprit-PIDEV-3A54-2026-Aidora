@@ -6,6 +6,7 @@ use App\Repository\PatientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PatientRepository::class)]
@@ -38,21 +39,22 @@ class Patient
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $mdp = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Email(message: 'L\'email doit être valide')]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le nom complet est obligatoire')]
     private ?string $fullName = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTimeInterface $birthDate = null;
 
+    #[Ignore]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $ssn = null;
 
-    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
@@ -133,7 +135,7 @@ class Patient
         return $this->ssn;
     }
 
-    public function setSsn(?string $ssn): static
+    public function setSsn(#[\SensitiveParameter] ?string $ssn): static
     {
         $this->ssn = $ssn;
         return $this;
@@ -301,7 +303,7 @@ class Patient
 
     /**
      * Retourne les champs manquants pour compléter le profil
-     * @return array
+        * @return array<string, string>
      */
     public function getMissingFields(): array
     {

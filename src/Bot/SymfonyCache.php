@@ -3,7 +3,6 @@ namespace App\Bot;
 
 use BotMan\BotMan\Interfaces\CacheInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\Cache\CacheItem;
 
 class SymfonyCache implements CacheInterface
 {
@@ -19,12 +18,22 @@ class SymfonyCache implements CacheInterface
         return $this->cache->getItem($this->sanitize($key))->isHit();
     }
 
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function get($key, $default = null)
     {
         $item = $this->cache->getItem($this->sanitize($key));
         return $item->isHit() ? $item->get() : $default;
     }
 
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function pull($key, $default = null)
     {
         $value = $this->get($key, $default);
@@ -32,6 +41,12 @@ class SymfonyCache implements CacheInterface
         return $value;
     }
 
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @param int $minutes
+     * @return void
+     */
     public function put($key, $value, $minutes)
     {
         $item = $this->cache->getItem($this->sanitize($key));
@@ -40,6 +55,10 @@ class SymfonyCache implements CacheInterface
         $this->cache->save($item);
     }
 
+    /**
+     * @param string $key
+     * @return void
+     */
     public function forget($key)
     {
         $this->cache->deleteItem($this->sanitize($key));

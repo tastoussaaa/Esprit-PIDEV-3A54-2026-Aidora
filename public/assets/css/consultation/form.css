@@ -1,19 +1,61 @@
 /* Consultation form styles - clean and professional */
-.form{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
-.form__fields{
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:14px;
+
+.form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
-.form__field{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+
+.form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
 }
+
+.form__field:last-child {
+    margin-bottom: 0;
+}
+
+/* Symfony form-group styles */
+.form-group {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1a202c;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(7,19,31,0.1);
+    background: #fff;
+    font-size: 14px;
+    color: #1a202c;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #0a7ba7;
+    box-shadow: 0 0 0 3px rgba(10, 123, 167, 0.1);
+}
+
 .form__label{
   font-weight:700;
   font-size:13px;
@@ -60,4 +102,193 @@
   .form__actions .btn{ width:100% }
   .form__actions .btn--primary{ order:2 }
   .form__actions .btn--ghost{ order:1 }
+}
+
+/* ====================== PROFESSIONAL PDF/PRINT STYLES ====================== */
+@media print {
+  * {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a202c;
+    background: white;
+  }
+
+  /* Hide unnecessary elements */
+  .btn, button, .form__actions, .enhance-btn, .motif-enhancement, 
+  .form__advice, [class*="btn--"], input[type="submit"], input[type="button"],
+  nav, .navigation, header, footer {
+    display: none !important;
+  }
+
+  /* Professional header styling */
+  .form__section-header {
+    background: linear-gradient(135deg, #0a7ba7 0%, #055a7e 100%);
+    color: white;
+    padding: 12px 16px !important;
+    margin: -16px -16px 14px -16px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .form__section-emoji {
+    font-size: 18px;
+    margin-right: 10px;
+  }
+
+  .form__section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: white;
+    display: inline;
+    margin: 0;
+  }
+
+  /* Form sections */
+  .form__section {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+    padding: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .form__section:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Grid layouts - 2 columns for print */
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  div[style*="grid-template-columns: 1fr"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Form field styling for print */
+  .form-group {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 10pt;
+    color: #0a7ba7;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .form-field-text {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 10pt;
+    color: #1a202c;
+    background: #fafafa;
+    page-break-inside: avoid;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Professional information display */
+  .consultation-info {
+    background: #f5f9fc;
+    padding: 12px;
+    border-left: 3px solid #0a7ba7;
+    margin-bottom: 12px;
+    font-size: 10pt;
+  }
+
+  .consultation-info strong {
+    color: #0a7ba7;
+  }
+
+  /* Risk score styling */
+  .risk-score {
+    background: #e8f4f8;
+    border: 1px solid #b3dce8;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+
+  .risk-score-label {
+    font-weight: 700;
+    color: #0a7ba7;
+    font-size: 10pt;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .risk-score-value {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #055a7e;
+  }
+
+  /* Page breaks and pagination */
+  .form {
+    page-break-after: auto;
+  }
+
+  .form__fields {
+    page-break-inside: avoid;
+  }
+
+  /* Text readability */
+  textarea {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Professional spacing */
+  p, div {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Remove shadows for print */
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .portal__card {
+    box-shadow: none !important;
+  }
+
+  /* Ensure text is black for better printing */
+  body, .form__section, .form-group {
+    color: #1a1a1a;
+  }
+
+  /* Professional footer note */
+  .print-footer {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #d0d0d0;
+    font-size: 9pt;
+    color: #666;
+    text-align: center;
+  }
 }

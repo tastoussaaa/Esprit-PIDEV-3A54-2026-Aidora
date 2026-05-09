@@ -15,7 +15,7 @@ class Medecin
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $specialite = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -27,20 +27,20 @@ class Medecin
     #[ORM\Column(nullable: true)]
     private ?int $anneesExperience = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?bool $disponible = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $fullName = null;
 
-    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?bool $isValidated = false;
 
     #[ORM\Column]
@@ -69,7 +69,7 @@ class Medecin
      */
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'medecin')]
     private Collection $feedbacks;
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $mdp = null;
 
     public function __construct()
@@ -167,6 +167,14 @@ class Medecin
         $this->anneesExperience = $anneesExperience;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Feedback>
+     */
+    public function getFeedbacks(): Collection
+    {
+        return $this->feedbacks;
     }
 
     public function isDisponible(): ?bool

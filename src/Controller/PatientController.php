@@ -44,14 +44,9 @@ final class PatientController extends BaseController
         if ($user instanceof User) {
             try {
                 $email = $user->getEmail();
-                $all = $repository->findAll();
-                $consultations = array_filter($all, function($c) use ($email) {
-                    $ce = strtolower((string) $c->getEmail());
-                    return $ce !== '' && strcasecmp($ce, $email) === 0;
-                });
-                
-                // Sort by createdAt desc
-                usort($consultations, fn($a, $b) => $b->getCreatedAt() <=> $a->getCreatedAt());
+                if ($email !== null) {
+                    $consultations = $repository->findBy(['email' => $email], ['createdAt' => 'DESC']);
+                }
             } catch (\Exception $e) {
                 // User filtering error, skip
             }
@@ -87,14 +82,9 @@ final class PatientController extends BaseController
         if ($user instanceof User) {
             try {
                 $email = $user->getEmail();
-                $all = $repository->findAll();
-                $consultations = array_filter($all, function($c) use ($email) {
-                    $ce = strtolower((string) $c->getEmail());
-                    return $ce !== '' && strcasecmp($ce, $email) === 0;
-                });
-
-                // sort by createdAt desc
-                usort($consultations, fn($a, $b) => $b->getCreatedAt() <=> $a->getCreatedAt());
+                if ($email !== null) {
+                    $consultations = $repository->findBy(['email' => $email], ['createdAt' => 'DESC']);
+                }
             } catch (\Exception $e) {
                 // User filtering error, skip
             }

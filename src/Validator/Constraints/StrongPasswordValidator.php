@@ -9,6 +9,10 @@ class StrongPasswordValidator extends ConstraintValidator
 {
     public function validate(mixed $value, Constraint $constraint): void
     {
+        if (!$constraint instanceof StrongPassword) {
+            return;
+        }
+
         if (!$value) {
             return;
         }

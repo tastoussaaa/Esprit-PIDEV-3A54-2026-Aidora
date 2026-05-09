@@ -473,6 +473,7 @@
     const lngInput = document.getElementById('longitude');
     const submitBtn = document.getElementById('submitBtn');
     const locationError = document.getElementById('locationError');
+    let isSubmitting = false;
 
     // Initialiser la carte
     const map = L.map('map').setView([35.7595, 10.5626], 13);
@@ -581,6 +582,11 @@
     // Submit
     document.getElementById('demandeForm').addEventListener('submit', (e) => {
         e.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
+
         let hasErrors = false;
         let firstErrorField = null;
         
@@ -608,7 +614,14 @@
         
         // Si pas d'erreur, soumettre
         if (!hasErrors) {
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Envoi en cours...';
             e.target.submit();
+        } else {
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Envoyer';
         }
     });
 
