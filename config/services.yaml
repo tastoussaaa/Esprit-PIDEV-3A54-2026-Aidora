@@ -7,7 +7,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 parameters:
     upload_dir: '%kernel.project_dir%/public/uploads'
-    pdf_directory: '%kernel.project_dir%/public/uploads/pdfs%'
+    pdf_directory: '%kernel.project_dir%/public/uploads/pdfs'
     api_key: '%env(GSK_API_KEY)%'
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 # Twilio credentials should be provided via environment variables for local

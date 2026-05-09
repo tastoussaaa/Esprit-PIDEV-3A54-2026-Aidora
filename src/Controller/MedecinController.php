@@ -216,10 +216,8 @@ class MedecinController extends BaseController
         $selectedCategory = $request->query->get('category');
         $searchTerm = $request->query->get('search');
 
-        // Show validated formations + current medecin own formations (including EN_ATTENTE)
-        $formations = $medecin
-            ? $formationRepository->findVisibleForMedecin($medecin, $selectedCategory, $searchTerm)
-            : $formationRepository->findValidatedByCategory($selectedCategory, $searchTerm);
+        // Show all validated formations available in the database
+        $formations = $formationRepository->findValidatedByCategory($selectedCategory, $searchTerm);
 
         // Get all categories for dropdown
         $categories = $formationRepository->findAllCategories();
