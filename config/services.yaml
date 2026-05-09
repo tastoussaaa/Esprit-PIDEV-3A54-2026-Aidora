@@ -43,10 +43,13 @@ services:
 
     App\Service\AiDescriptionService:
         arguments:
-            $apiKey: '%env(GROQ_API_KEY)%'
+            $baseUrl: '%env(string:OLLAMA_BASE_URL)%'
+            $model: '%env(string:OLLAMA_MODEL)%'
 
-    App\Service\OpenAIService:
+    App\Service\OllamaService:
         arguments:
+            $baseUrl: '%env(string:OLLAMA_BASE_URL)%'
+            $model: '%env(string:OLLAMA_MODEL)%'
             $openaiApiKey: '%env(OPENAI_API_KEY)%'
 
     # BotMan
@@ -61,6 +64,7 @@ services:
 
     App\Repository\FormationRepository:
         public: true
+    
 
     AhmedBhs\DoctrineDoctor\Analyzer\Integrity\TimestampableTraitAnalyzer:
         autowire: true

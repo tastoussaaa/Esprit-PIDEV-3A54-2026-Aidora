@@ -5,8 +5,10 @@ namespace App\Controller;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
 use App\Entity\AideSoignant;
+use App\Entity\Avis;
 use App\Entity\User;
 use App\Form\DemandeAideType;
+use App\Repository\AvisRepository;
 use App\Repository\DemandeAideRepository;
 use App\Service\TransitionNotificationService;
 use App\Service\UserService;
@@ -436,12 +438,84 @@ final class DemandeAideController extends BaseController
             return $scoreB <=> $scoreA;
         });
 
+        $aideRatingStats = [];
+        $alreadyRatedAideIds = [];
+        $patient = $this->getCurrentPatient();
+        if ($patient && $aidesSoignantsCompatibles !== []) {
+            $aideIds = array_values(array_unique(array_map(static fn(AideSoignant $a): int => (int) $a->getId(), $aidesSoignantsCompatibles)));
+            $avisRepo = $entityManager->getRepository(Avis::class);
+            if ($avisRepo instanceof AvisRepository && $aideIds !== []) {
+                $aideRatingStats = $avisRepo->getAideStatsMap($aideIds);
+                $existingAvis = $avisRepo->findBy(['patient' => $patient, 'aideSoignant' => $aideIds]);
+                foreach ($existingAvis as $avis) {
+                    if ($avis instanceof Avis && $avis->getAideSoignant()) {
+                        $alreadyRatedAideIds[] = (int) $avis->getAideSoignant()->getId();
+                    }
+                }
+            }
+        }
+
         return $this->render('demande_aide/select_aide.html.twig', [
             'demande' => $demandeAide,
             'aidesSoignantsCompatibles' => $aidesSoignantsCompatibles,
             'aidesRanking' => $aidesRanking,
+            'aideRatingStats' => $aideRatingStats,
+            'alreadyRatedAideIds' => $alreadyRatedAideIds,
             'navigation' => $navigation,
         ]);
+    }
+
+    #[Route('/patient/aide-soignant/{id}/avis', name: 'patient_aide_rate', methods: ['POST'])]
+    public function rateAideSoignant(
+        Request $request,
+        AideSoignant $aideSoignant,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        if (!$this->isCurrentUserPatient()) {
+            $this->addFlash('error', 'Action reservee aux patients.');
+            return $this->redirectToRoute('app_demandes_index');
+        }
+
+        $patient = $this->getCurrentPatient();
+        if (!$patient) {
+            $this->addFlash('error', 'Patient introuvable.');
+            return $this->redirectToRoute('app_demandes_index');
+        }
+
+        $token = (string) $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('rate-aide-' . $aideSoignant->getId(), $token)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_demandes_index');
+        }
+
+        $rating = (int) $request->request->get('rating', 0);
+        if ($rating < 1 || $rating > 5) {
+            $this->addFlash('error', 'La note doit etre comprise entre 1 et 5.');
+            return $this->redirectToRoute('app_demandes_index');
+        }
+
+        $avisRepo = $entityManager->getRepository(Avis::class);
+        if ($avisRepo instanceof AvisRepository && $avisRepo->hasPatientRatedAide($patient, $aideSoignant)) {
+            $this->addFlash('error', 'Vous avez deja note cet aide-soignant.');
+            return $this->redirectToRoute('app_demandes_index');
+        }
+
+        $avis = (new Avis())
+            ->setPatient($patient)
+            ->setAideSoignant($aideSoignant)
+            ->setRating($rating);
+        $entityManager->persist($avis);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre avis a bien ete enregistre.');
+
+        $demandeId = (int) $request->request->get('demande_id', 0);
+        if ($demandeId > 0) {
+            return $this->redirectToRoute('app_demande_select_aide', ['id' => $demandeId]);
+        }
+
+        return $this->redirectToRoute('app_demandes_index');
     }
 
     #[Route('/demande/{id}/select-aide/{aideId}', name: 'app_demande_select_aide_post', methods: ['POST'])]

@@ -43,6 +43,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isActive = true;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $googleId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $authProvider = 'local';
+
     public function getId(): ?int
     {
         return $this->id;
@@ -150,6 +159,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setActive(bool $isActive): static
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function getGoogleId(): ?string
+    {
+        return $this->googleId;
+    }
+
+    public function setGoogleId(?string $googleId): static
+    {
+        $this->googleId = $googleId;
+
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function getAuthProvider(): ?string
+    {
+        return $this->authProvider;
+    }
+
+    public function setAuthProvider(?string $authProvider): static
+    {
+        $this->authProvider = $authProvider;
 
         return $this;
     }

@@ -224,6 +224,93 @@
     <script src="{{ asset('assets/js/consultation-slots.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🤖 IA locale script loaded');
+            
+            // Find the motif input - try multiple selectors
+            let motifInput = document.querySelector('input[name*="motif"]') || 
+                            document.querySelector('#consultation_type_motif') ||
+                            document.querySelector('[id*="motif"]');
+            
+            console.log('Motif input found:', motifInput);
+            
+            if (!motifInput) {
+                console.error('Could not find motif input field');
+                return;
+            }
+
+            // Create enhancement container
+            const motifField = motifInput.closest('.form__field') || motifInput.parentElement;
+            
+            // Create the enhancement panel
+            const enhancementPanel = document.createElement('div');
+            enhancementPanel.id = 'motif-enhancement-panel';
+            enhancementPanel.style.display = 'none';
+            enhancementPanel.innerHTML = `
+                <div class="motif-enhancement" id="motif-enhancement">
+                    <span class="enhancement-label" id="enhancement-label">
+                        <span class="ai-badge">🤖 AI Assistant</span>
+                        <span id="urgency-badge"></span>
+                    </span>
+                    <div class="enhancement-content" id="enhancement-content"></div>
+                </div>
+            `;
+            
+            // Insert after motif field
+            if (motifField && motifField.parentElement) {
+                motifField.parentElement.insertBefore(enhancementPanel, motifField.nextSibling);
+            } else {
+                motifInput.parentElement.appendChild(enhancementPanel);
+            }
+
+            // Create enhance button
+            const enhanceBtn = document.createElement('button');
+            enhanceBtn.type = 'button';
+            enhanceBtn.className = 'enhance-btn';
+            enhanceBtn.id = 'enhance-btn';
+            enhanceBtn.innerHTML = '✨ Analyser avec IA';
+            enhanceBtn.title = 'Cliquez pour analyser votre motif avec l\'IA';
+            
+            // Insert button after motif input
+            motifInput.parentElement.insertBefore(enhanceBtn, motifInput.nextSibling);
+
+            const enhancementDiv = document.getElementById('motif-enhancement');
+            const enhancementContent = document.getElementById('enhancement-content');
+            const urgencyBadge = document.getElementById('urgency-badge');
+            const enhancementLabel = document.getElementById('enhancement-label');
+
+            // Function to get urgency display text
+            function getUrgencyText(urgency) {
+                const urgencyTexts = {
+                    'elevee': '🚨 Urgence élevée',
+                    'moderee': '⚠️ Urgence modérée',
+                    'faible': '✅ Routine / Faible'
+                };
+                return urgencyTexts[urgency] || '⚠️ Urgence modérée';
+            }
+
+            // Fonction pour appeler le endpoint d'analyse IA locale
+            function callLocalAI(motif) {
+                enhancementPanel.style.display = 'block';
+                enhancementDiv.className = 'motif-enhancement loading';
+                enhanceBtn.className = 'enhance-btn loading';
+                enhanceBtn.disabled = true;
+                enhanceBtn.innerHTML = '⏳ Analyse en cours...';
+                
+                // Hide urgency badge during loading
+                urgencyBadge.innerHTML = '';
+                
+                console.log('Appel IA locale avec motif:', motif);
+                
+                // Use the new comprehensive analysis endpoint
+                fetch('/consultation/analyze-motif?motif=' + encodeURIComponent(motif))
+                    .then(response => {
+                        console.log('IA locale response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('IA locale data:', data);
+                        enhanceBtn.className = 'enhance-btn';
+                        enhanceBtn.disabled = false;
             const motifInput = document.querySelector('textarea[name*="motif"]') || document.querySelector('input[name*="motif"]');
             const enhanceBtn = document.getElementById('enhance-motif-btn');
             const enhancementPanel = document.getElementById('motif-enhancement');
@@ -262,6 +349,19 @@
                             
                             showEnhancementMessage(enhancementPanel, 'success', messageHTML);
                         } else {
+                            // API error
+                            enhancementDiv.className = 'motif-enhancement error';
+                            enhancementContent.innerHTML = `
+                                <span class="enhancement-label">⚠️ Service IA indisponible</span>
+                                <span class="enhancement-content">${data.message || data.error || 'L\'enhancement AI n\'est pas configuré. Le service IA local n'est pas configure.'}</span>
+                            `;
+                            enhanceBtn.innerHTML = '⚠️ Réessayer';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('IA locale fetch error:', error);
+                        enhancementDiv.className = 'motif-enhancement error';
+                        enhanceBtn.className = 'enhance-btn';
                             showEnhancementMessage(enhancementPanel, 'error', '❌ ' + (data.message || data.error || 'Erreur lors de l\'analyse'));
                         }
                     } catch (error) {
@@ -273,6 +373,50 @@
                     }
                 });
             }
+
+            // Button click handler
+            enhanceBtn.addEventListener('click', function() {
+                const motif = motifInput.value.trim();
+                if (!motif || motif.length < 3) {
+                    alert('Veuillez d\'abord entrer un motif de consultation (au moins 3 caractères).');
+                    motifInput.focus();
+                    return;
+                }
+                callLocalAI(motif);
+            });
+
+            // Also trigger on blur for convenience
+            motifInput.addEventListener('blur', function() {
+                const motif = this.value.trim();
+                if (motif && motif.length >= 3 && enhancementPanel.style.display === 'none') {
+                    // Auto-show hint that enhancement is available
+                    enhanceBtn.style.animation = 'pulse 2s infinite';
+                }
+            });
+
+            // Remove pulse animation when user clicks the button
+            enhanceBtn.addEventListener('click', function() {
+                this.style.animation = 'none';
+            });
+        });
+
+        function applyEnhancement(enhancedText) {
+            console.log('Applying enhancement:', enhancedText);
+            const motifInput = document.querySelector('input[name*="motif"]') || 
+                              document.querySelector('#consultation_type_motif') ||
+                              document.querySelector('[id*="motif"]');
+            if (motifInput) {
+                motifInput.value = enhancedText;
+                motifInput.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Show success feedback
+                const panel = document.getElementById('motif-enhancement-panel');
+                if (panel) {
+                    panel.style.display = 'none';
+                }
+                
+                // Show confirmation
+                alert('✅ Version améliorée appliquée!');
             
             function showEnhancementMessage(panel, type, message) {
                 if (!panel) return;
@@ -375,3 +519,4 @@
 
 </div>
 {% endblock %}
+

@@ -16,6 +16,16 @@ protected function setUp(): void
 {
     parent::setUp();
 
+    // Créer un patient de test
+    $this->patient = new Patient();
+    $this->patient->setNom('Doe');
+    $this->patient->setPrenom('John');
+    $this->patient->setAge(30);
+
+    // Utilisateurs aide et admin restent des User
+    $this->aide = $this->createUser('aide@test.com', ['ROLE_AIDE_SOIGNANT']);
+    $this->admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
+}
         $this->patient = $this->createPatient('patient@test.com', 'Patient Test');
         $this->aide = $this->createAideSoignant('aide@test.com', 'Aide Test');
     }

@@ -442,10 +442,10 @@ document.addEventListener('DOMContentLoaded', function() {
         new Chart(urgentCtx, {
             type: 'doughnut',
             data: {
-                labels: {{ urgentData.labels|json_encode|raw }},
+                labels: {{ urgentData.labels|default(['Urgentes', 'Moderees', 'Routine'])|json_encode|raw }},
                 datasets: [{
-                    data: {{ urgentData.data|json_encode|raw }},
-                    backgroundColor: {{ urgentData.colors|json_encode|raw }},
+                    data: {{ urgentData.data|default([0, 0, 0])|json_encode|raw }},
+                    backgroundColor: {{ urgentData.colors|default(['#dc2626', '#f59e0b', '#10b981'])|json_encode|raw }},
                     borderColor: '#fff',
                     borderWidth: 2
                 }]

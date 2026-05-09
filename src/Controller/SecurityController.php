@@ -7,10 +7,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class SecurityController extends AbstractController
 {
-    public function __construct(private UserService $userService) {}
+    public function __construct(
+        private UserService $userService,
+        private RequestStack $requestStack
+    ) {}
 
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authUtils): Response
@@ -27,9 +31,16 @@ class SecurityController extends AbstractController
             };
         }
 
+        $session = $this->requestStack->getSession();
+        $validationError = $session->get('validation_error_message');
+        if ($validationError) {
+            $session->remove('validation_error_message');
+        }
+
         return $this->render('security/login.html.twig', [
             'last_username' => $authUtils->getLastUsername(),
             'error' => $authUtils->getLastAuthenticationError(),
+            'validation_error' => $validationError,
         ]);
     }
 

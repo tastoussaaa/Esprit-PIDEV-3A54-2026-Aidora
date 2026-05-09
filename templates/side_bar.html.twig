@@ -1,7 +1,7 @@
 <aside class="portal__side">
 
     <a href="#" class="portal__brand">
-        <img src="{{ asset('assets/images/logo_mini.png') }}" class="portal__logo" alt="">
+        <img src="{{ asset('assets/images/logo_mini.png') }}" class="portal__logo" alt="Aidora logo">
         <div>
             <div class="portal__name">Aidora</div>
             <div class="portal__tag">
@@ -37,6 +37,15 @@
     </a>
 
     <nav class="portal__menu">
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('app_admin_dashboard') }}"
+               class="portal__item {% if app.request.pathinfo == path('app_admin_dashboard') %}is-active{% endif %}">
+                <span class="portal__icon">ADM</span>
+                <span>Validation des comptes</span>
+            </a>
+        {% endif %}
+        {% for item in navigation|default([]) %}
+            {% if not (is_granted('ROLE_ADMIN') and item.path == path('app_admin_dashboard')) %}
         {% if is_granted('ROLE_ADMIN') or current_user_type == 'admin' %}
             {% set admin_navigation = [
                 { path: path('app_admin_dashboard'), name: 'Validation des Comptes', icon: '🛠️' },
@@ -84,8 +93,16 @@
         {% endif %}
     </nav>
 
+    <div class="portal__visual">
+        <img src="{{ asset('assets/images/hero.png') }}" alt="Illustration sante Aidora">
+        <div class="portal__visual-overlay">
+            <strong>Aidora Care</strong>
+            <span>Suivi intelligent et accompagnement personnalise</span>
+        </div>
+    </div>
+
     <div class="portal__bottom">
-        <a href="{{ path('app_logout') }}" class="portal__logout">Déconnexion</a>
+        <a href="{{ path('app_logout') }}" class="portal__logout">Deconnexion</a>
     </div>
 
 </aside>

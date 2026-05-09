@@ -4,13 +4,17 @@ namespace App\Controller;
 
 use App\Entity\Consultation;
 use App\Entity\Formation;
+use App\Entity\MessagePatientMedecin;
 use App\Form\FormationType;
 use App\Repository\ConsultationRepository;
 use App\Repository\FormationRepository;
+use App\Repository\MessagePatientMedecinRepository;
 use App\Service\UserService;
 use App\Service\RiskScoringService;
+use App\Service\OllamaService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Service\AiDescriptionService;
@@ -19,12 +23,14 @@ class MedecinController extends BaseController
 {
     private RiskScoringService $riskService;
     private AiDescriptionService $aiService;
+    private OllamaService $ollamaService;
 
-    public function __construct(UserService $userService, RiskScoringService $riskService, AiDescriptionService $aiService)
+    public function __construct(UserService $userService, private MailerInterface $mailer, RiskScoringService $riskService, AiDescriptionService $aiService, OllamaService $ollamaService)
     {
         parent::__construct($userService);
         $this->riskService = $riskService;
         $this->aiService = $aiService;
+        $this->ollamaService = $ollamaService;
     }
 
 
@@ -32,7 +38,7 @@ class MedecinController extends BaseController
     
 
     #[Route('/medecin/dashboard', name: 'app_medecin_dashboard')]
-    public function dashboard(): Response
+    public function dashboard(MessagePatientMedecinRepository $messageRepository): Response
     {
         // Ensure user is authenticated
         $this->denyAccessUnlessGranted('ROLE_USER');
@@ -47,9 +53,6 @@ class MedecinController extends BaseController
                 default => $this->redirectToRoute('app_login'),
             };
         }
-
-        $medecin = $this->getCurrentMedecin();
-        $userId = $this->getCurrentUserId();
 
         $medecin = $this->getCurrentMedecin();
         $userId = $this->getCurrentUserId();
@@ -71,10 +74,136 @@ class MedecinController extends BaseController
             return $consultationDt >= $now && $consultationDt < (clone $now)->modify('+7 days');
         });
         
+        $patientCards = [];
+        $pendingRepliesCount = 0;
+        $repliedCount = 0;
+
+        if ($medecin) {
+            foreach ($messageRepository->findByMedecinOrdered($medecin) as $messageRow) {
+                $patient = $messageRow->getPatient();
+                if (!$patient) {
+                    continue;
+                }
+
+                $pathologie = trim((string) $patient->getPathologie());
+                $compatibility = $this->ollamaService->evaluatePathologySpecialityCompatibility(
+                    $pathologie,
+                    (string) $medecin->getSpecialite()
+                );
+
+                if (!$compatibility['compatible']) {
+                    continue;
+                }
+
+                if ($messageRow->getReponse()) {
+                    $repliedCount++;
+                } else {
+                    $pendingRepliesCount++;
+                }
+
+                $patientCards[] = [
+                    'messageId' => (int) $messageRow->getId(),
+                    'patientName' => (string) ($patient->getFullName() ?? 'Patient'),
+                    'patientEmail' => (string) ($patient->getEmail() ?? ''),
+                    'pathologie' => $pathologie !== '' ? $pathologie : 'Non renseignee',
+                    'score' => (int) $compatibility['score'],
+                    'reason' => (string) $compatibility['reason'],
+                    'message' => (string) $messageRow->getMessage(),
+                    'createdAt' => $messageRow->getCreatedAt(),
+                    'reponse' => $messageRow->getReponse(),
+                    'repliedAt' => $messageRow->getRepliedAt(),
+                ];
+            }
+
+            usort($patientCards, static function (array $a, array $b): int {
+                $scoreCompare = (int) $b['score'] <=> (int) $a['score'];
+                if ($scoreCompare !== 0) {
+                    return $scoreCompare;
+                }
+
+                return (($b['createdAt'] ?? null)?->getTimestamp() ?? 0) <=> (($a['createdAt'] ?? null)?->getTimestamp() ?? 0);
+            });
+        }
+
         return $this->render('medecin/dashboard.html.twig', [
             'medecin' => $medecin,
             'userId' => $userId,
+            'patientCards' => $patientCards,
+            'patientCardsTotal' => count($patientCards),
+            'patientCardsPendingReplies' => $pendingRepliesCount,
+            'patientCardsReplied' => $repliedCount,
         ]);
+    }
+
+    #[Route('/medecin/patient-message/{id}/reply', name: 'medecin_patient_message_reply', methods: ['POST'])]
+    public function replyToPatientMessage(
+        Request $request,
+        MessagePatientMedecin $messageRow,
+        EntityManagerInterface $em
+    ): RedirectResponse {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        if (!$this->isCurrentUserMedecin()) {
+            $this->addFlash('error', 'Action reservee aux medecins.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $medecin = $this->getCurrentMedecin();
+        if (!$medecin || $messageRow->getMedecin()?->getId() !== $medecin->getId()) {
+            $this->addFlash('error', 'Vous n etes pas autorise a repondre a ce message.');
+            return $this->redirectToRoute('app_medecin_dashboard');
+        }
+
+        $token = (string) $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('reply-patient-message-' . $messageRow->getId(), $token)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_medecin_dashboard');
+        }
+
+        $reponse = trim((string) $request->request->get('reponse'));
+        if ($reponse === '') {
+            $this->addFlash('error', 'Veuillez saisir une reponse.');
+            return $this->redirectToRoute('app_medecin_dashboard');
+        }
+
+        if (mb_strlen($reponse) > 2000) {
+            $this->addFlash('error', 'La reponse est trop longue (maximum 2000 caracteres).');
+            return $this->redirectToRoute('app_medecin_dashboard');
+        }
+
+        $messageRow->setReponse($reponse);
+        $messageRow->setRepliedAt(new \DateTimeImmutable());
+        $em->persist($messageRow);
+        $em->flush();
+
+        $patient = $messageRow->getPatient();
+        $patientEmail = trim((string) ($patient?->getEmail() ?? ''));
+        $from = $_ENV['MAILER_FROM'] ?? 'noreply@aidora.local';
+
+        if ($patientEmail !== '') {
+            try {
+                $email = (new Email())
+                    ->from($from)
+                    ->to($patientEmail)
+                    ->replyTo((string) $medecin->getEmail())
+                    ->subject('Reponse de votre medecin - ' . (string) $medecin->getFullName())
+                    ->text(
+                        "Votre medecin a repondu a votre message.\n\n" .
+                        "Medecin: " . (string) $medecin->getFullName() . "\n" .
+                        "Specialite: " . (string) $medecin->getSpecialite() . "\n\n" .
+                        "Votre message:\n" . (string) $messageRow->getMessage() . "\n\n" .
+                        "Reponse du medecin:\n{$reponse}\n"
+                    );
+
+                $this->mailer->send($email);
+            } catch (\Throwable $e) {
+                $this->addFlash('warning', 'Reponse enregistree, mais email patient non envoye.');
+                return $this->redirectToRoute('app_medecin_dashboard');
+            }
+        }
+
+        $this->addFlash('success', 'Votre reponse a ete enregistree et envoyee au patient.');
+        return $this->redirectToRoute('app_medecin_dashboard');
     }
 
     #[Route('/medecin/formations', name: 'medecin_formations')]
