@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Commande;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,7 +17,10 @@ class CommandeRepository extends ServiceEntityRepository
         parent::__construct($registry, Commande::class);
     }
 
-    public function findByDemandeur($user): array
+    /**
+     * @return list<Commande>
+     */
+    public function findByDemandeur(User $user): array
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.demandeur = :user')
@@ -28,8 +32,9 @@ class CommandeRepository extends ServiceEntityRepository
 
     /**
      * Find commandes for a user with optional filtering and sorting
+        * @return list<Commande>
      */
-    public function findForUser($user, ?string $statut = null, ?string $tri = 'dateCommande', ?string $ordre = 'DESC'): array
+        public function findForUser(User $user, ?string $statut = null, ?string $tri = 'dateCommande', ?string $ordre = 'DESC'): array
     {
         $qb = $this->createQueryBuilder('c')
             ->andWhere('c.demandeur = :user')
@@ -75,6 +80,7 @@ class CommandeRepository extends ServiceEntityRepository
     
     /**
      * Get all distinct statuts
+        * @return list<string>
      */
     public function findDistinctStatuts(): array
     {

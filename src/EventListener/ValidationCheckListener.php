@@ -4,11 +4,11 @@ namespace App\EventListener;
 
 use App\Entity\Medecin;
 use App\Entity\AideSoignant;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Security\Core\Event\AuthenticationEvent;
 use Symfony\Component\Security\Http\Event\CheckPassportEvent;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -31,7 +31,7 @@ class ValidationCheckListener implements EventSubscriberInterface
         $passport = $event->getPassport();
         $user = $passport->getUser();
 
-        if (!$user instanceof UserInterface) {
+        if (!$user instanceof User) {
             return;
         }
 

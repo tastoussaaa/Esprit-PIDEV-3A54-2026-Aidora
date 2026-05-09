@@ -8,7 +8,7 @@ use Google_Service_Calendar_Event;
 
 class GoogleCalendarService
 {
-    private $client;
+    private Google_Client $client;
 
     public function __construct()
     {
@@ -18,12 +18,12 @@ class GoogleCalendarService
         $this->client->setAccessType('offline');
     }
 
-    public function getClient()
+    public function getClient(): Google_Client
     {
         return $this->client;
     }
 
-    public function createEvent($title, $description, $start, $end)
+    public function createEvent(string $title, string $description, string $start, string $end): Google_Service_Calendar_Event
     {
         $service = new Google_Service_Calendar($this->client);
 

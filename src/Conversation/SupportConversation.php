@@ -20,7 +20,22 @@ class SupportConversation extends Conversation
 
             $category = trim($answer->getText());
 
-            $repo = $this->bot->getContainer()->get(FormationRepository::class);
+            $bot = $this->bot;
+            if (!method_exists($bot, 'getContainer')) {
+                $this->say('❌ Le service de recherche est indisponible pour le moment.');
+                $this->askAgain();
+                return;
+            }
+
+            $container = $bot->getContainer();
+            if (!method_exists($container, 'get')) {
+                $this->say('❌ Le service de recherche est indisponible pour le moment.');
+                $this->askAgain();
+                return;
+            }
+
+            /** @var FormationRepository $repo */
+            $repo = $container->get(FormationRepository::class);
             $formations = $repo->findValidatedByCategory($category);
 
             if (empty($formations)) {

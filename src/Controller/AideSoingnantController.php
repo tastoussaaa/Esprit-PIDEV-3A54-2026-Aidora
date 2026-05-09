@@ -106,7 +106,7 @@ public function formations(Request $request, FormationRepository $formationRepos
 
 
 
-    #[Route('/aidesoingnant/missions', name: 'aidesoingnant_missions')]
+    #[Route('/legacy/aidesoingnant/missions', name: 'legacy_aidesoingnant_missions')]
     public function missions(EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
@@ -131,7 +131,7 @@ public function formations(Request $request, FormationRepository $formationRepos
         ]);
     }
 
-    #[Route('/aidesoingnant/missions/accept/{id}', name: 'aidesoingnant_missions_accept')]
+    #[Route('/legacy/aidesoingnant/missions/accept/{id}', name: 'legacy_aidesoingnant_missions_accept')]
     public function acceptMission(int $id, DemandeAideRepository $demandeAideRepository, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
@@ -163,7 +163,7 @@ public function formations(Request $request, FormationRepository $formationRepos
         return $this->redirectToRoute('aidesoingnant_missions');
     }
 
-    #[Route('/aidesoingnant/missions/refuse/{id}', name: 'aidesoingnant_missions_refuse')]
+    #[Route('/legacy/aidesoingnant/missions/refuse/{id}', name: 'legacy_aidesoingnant_missions_refuse')]
     public function refuseMission(int $id, DemandeAideRepository $demandeAideRepository, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
@@ -194,7 +194,7 @@ public function formations(Request $request, FormationRepository $formationRepos
         return $this->redirectToRoute('aidesoingnant_missions');
     }
 
-    #[Route('/aidesoingnant/missions/details/{id}', name: 'aidesoingnant_missions_details')]
+    #[Route('/legacy/aidesoingnant/missions/details/{id}', name: 'legacy_aidesoingnant_missions_details')]
     public function showMission(int $id, DemandeAideRepository $demandeAideRepository): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
@@ -216,7 +216,7 @@ public function formations(Request $request, FormationRepository $formationRepos
         ]);
     }
 
-    #[Route('/aidesoingnant/missions/propose-price/{id}', name: 'aidesoingnant_missions_propose_price', methods: ['POST'])]
+    #[Route('/legacy/aidesoingnant/missions/propose-price/{id}', name: 'legacy_aidesoingnant_missions_propose_price', methods: ['POST'])]
     public function proposePrice(int $id, Request $request, DemandeAideRepository $demandeAideRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         try {
@@ -251,7 +251,7 @@ public function formations(Request $request, FormationRepository $formationRepos
         }
     }
 
-    #[Route('/aidesoingnant/missions/delete/{id}', name: 'aidesoingnant_missions_delete', methods: ['POST'])]
+    #[Route('/legacy/aidesoingnant/missions/delete/{id}', name: 'legacy_aidesoingnant_missions_delete', methods: ['POST'])]
     public function deleteMission(int $id, DemandeAideRepository $demandeAideRepository, EntityManagerInterface $entityManager): Response
     {
         $demande = $demandeAideRepository->find($id);

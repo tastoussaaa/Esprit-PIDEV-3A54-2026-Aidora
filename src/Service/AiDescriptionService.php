@@ -14,6 +14,9 @@ class AiDescriptionService
     ) {
     }
 
+    /**
+     * @param array{title?: string, category?: string, startDate?: string, endDate?: string} $data
+     */
     public function generateDescription(array $data): string
     {
         $prompt = sprintf(

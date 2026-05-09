@@ -19,6 +19,8 @@ class DemandeValidationService
     /**
      * Valide la cohérence complète d'une demande avant enregistrement
      * Retourne ['valid' => true/false, 'errors' => [...]]
+        *
+        * @return array{valid: bool, errors: list<string>}
      */
     public function validateDemande(DemandeAide $demande): array
     {
@@ -37,11 +39,9 @@ class DemandeValidationService
         }
 
         // 3. Valider que le profil patient est complet
-        if ($demande instanceof DemandeAide) {
-            $patientErrors = $this->validatePatientProfile($demande);
-            if (!empty($patientErrors)) {
-                $errors = array_merge($errors, $patientErrors);
-            }
+        $patientErrors = $this->validatePatientProfile($demande);
+        if (!empty($patientErrors)) {
+            $errors = array_merge($errors, $patientErrors);
         }
 
         // 4. Valider urgence calculée
@@ -59,6 +59,8 @@ class DemandeValidationService
     /**
      * Valide que dateFinSouhaitee > dateDebutSouhaitee et
      * que la durée est raisonnable (min 1h, max 365 jours)
+        *
+        * @return list<string>
      */
     public function validateDateCoherence(DemandeAide $demande): array
     {
@@ -94,6 +96,8 @@ class DemandeValidationService
      * - Durée courte (< 5h): budget min 50 DT
      * - Durée moyenne (5h-40h): budget min 150 DT
      * - Durée longue (> 40h): budget min 400 DT
+        *
+        * @return list<string>
      */
     public function validateBudgetCoherence(DemandeAide $demande): array
     {
@@ -142,6 +146,8 @@ class DemandeValidationService
 
     /**
      * Valide que le profil patient est complet avant création de demande
+        *
+        * @return list<string>
      */
     public function validatePatientProfile(DemandeAide $demande): array
     {
@@ -178,6 +184,8 @@ class DemandeValidationService
     /**
      * Valide que le calcul d'urgence est cohérent
      * URGENT = demande dans < 48h
+        *
+        * @return list<string>
      */
     public function validateUrgenceCalculation(DemandeAide $demande): array
     {
@@ -219,6 +227,8 @@ class DemandeValidationService
      * - ANNULÉE → Archiver missions + statut ANNULÉE
      * - A_REASSIGNER → Relancer matching automatiquement
      * - EXPIRÉE → Automatique après dateFinSouhaitee
+    *
+    * @return array{oldStatut: string, newStatut: string, actions: list<string>}
      */
     public function propagateStatut(DemandeAide $demande, string $oldStatut, string $newStatut): array
     {

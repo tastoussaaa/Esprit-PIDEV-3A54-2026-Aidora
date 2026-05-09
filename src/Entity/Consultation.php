@@ -13,6 +13,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 
 #[ORM\Entity(repositoryClass: ConsultationRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['dateConsultation', 'timeSlot'])]
 #[Assert\Callback(callback: 'validateWorkingHours')]
 #[Assert\Callback(callback: 'validateFutureDate')]
@@ -24,7 +25,7 @@ class Consultation
     private ?int $id = null;
 
     #[Assert\NotBlank]
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateConsultation = null;
 
     #[ORM\Column(type: Types::STRING, length: 5, nullable: true)]
@@ -35,7 +36,7 @@ class Consultation
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $motif = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 20, nullable: true)]
     private ?string $status = 'pending';
 
     #[Assert\NotBlank]
@@ -65,8 +66,8 @@ class Consultation
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $age = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $createdAt = null;
+    #[ORM\Column(nullable: false)]
+    private \DateTimeImmutable $createdAt;
 
     // -----------------------
     // Relation with Patient
@@ -86,7 +87,10 @@ class Consultation
     // Relation with Ordonnance
     // -----------------------
     // One Consultation can have many Ordonnances
-    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'consultation', orphanRemoval: true)]
+    /**
+     * @var Collection<int, Ordonnance>
+     */
+    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'consultation', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $ordonnances;
 
     /**
@@ -212,7 +216,7 @@ class Consultation
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
@@ -283,9 +287,17 @@ class Consultation
     }
 
     /**
+     * @return Collection<int, Feedback>
+     */
+    public function getFeedbacks(): Collection
+    {
+        return $this->feedbacks;
+    }
+
+    /**
      * Validate that the consultation date and time slot is not in the past
      */
-    public static function validateFutureDate($object, ExecutionContextInterface $context): void
+    public static function validateFutureDate(mixed $object, ExecutionContextInterface $context): void
     {
         if (!$object instanceof Consultation) {
             return;
@@ -310,7 +322,7 @@ class Consultation
     /**
      * Validate that the time slot is within working hours
      */
-    public static function validateWorkingHours($object, ExecutionContextInterface $context): void
+    public static function validateWorkingHours(mixed $object, ExecutionContextInterface $context): void
     {
         if (!$object instanceof Consultation) {
             return;

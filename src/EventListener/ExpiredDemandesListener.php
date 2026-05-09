@@ -29,29 +29,25 @@ final class ExpiredDemandesListener
 
         $nowDateTime = new \DateTime();
 
-        // Get all demandes that haven't been archived yet
-        $demandes = $this->entityManager->getRepository(DemandeAide::class)->findAll();
+        $demandes = $this->entityManager->getRepository(DemandeAide::class)
+            ->createQueryBuilder('d')
+            ->andWhere('d.statut NOT IN (:archivedStatuses)')
+            ->andWhere('d.dateDebutSouhaitee IS NOT NULL')
+            ->andWhere('d.dateDebutSouhaitee < :now')
+            ->setParameter('archivedStatuses', ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE', 'REFUSÉE'])
+            ->setParameter('now', $nowDateTime)
+            ->getQuery()
+            ->getResult();
 
+        $hasChanges = false;
         foreach ($demandes as $demande) {
-            // Skip if already complete or refused
-            if (in_array($demande->getStatut(), ['TERMINÉE', 'EXPIRÉE', 'ANNULÉE', 'REFUSÉE'], true)) {
-                continue;
-            }
-
-            // Get expected start date
-            $dateDebut = $demande->getDateDebutSouhaitee();
-            if (!$dateDebut) {
-                continue;
-            }
-
-            // If current time is past expected start date and no acceptance happened, mark as EXPIRÉE
-            if ($nowDateTime > $dateDebut) {
-                $demande->setStatut('EXPIRÉE');
-                $this->entityManager->persist($demande);
-            }
+            $demande->setStatut('EXPIRÉE');
+            $this->entityManager->persist($demande);
+            $hasChanges = true;
         }
 
-        // Flush all changes at once
-        $this->entityManager->flush();
+        if ($hasChanges) {
+            $this->entityManager->flush();
+        }
     }
 }

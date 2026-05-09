@@ -2,17 +2,17 @@
 
 namespace App\Tests\Functional;
 
+use App\Entity\AideSoignant;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
-use App\Entity\User;
+use App\Entity\Patient;
 use App\Service\TransitionNotificationService;
 
 class NotificationServiceTest extends AbstractFunctionalTest
 {
     private TransitionNotificationService $notifier;
-    private User $patient;
-    private User $aide;
-    private User $admin;
+    private Patient $patient;
+    private AideSoignant $aide;
 
     protected function setUp(): void
     {
@@ -20,10 +20,9 @@ class NotificationServiceTest extends AbstractFunctionalTest
         
         $this->notifier = self::getContainer()->get(TransitionNotificationService::class);
         
-        // Create test users
-        $this->patient = $this->createUser('patient.notif@test.com', ['ROLE_PATIENT']);
-        $this->aide = $this->createUser('aide.notif@test.com', ['ROLE_AIDE_SOIGNANT']);
-        $this->admin = $this->createUser('admin.notif@test.com', ['ROLE_ADMIN']);
+        $this->patient = $this->createPatient('patient.notif@test.com', 'Patient Notif');
+        $this->aide = $this->createAideSoignant('aide.notif@test.com', 'Aide Notif');
+        $this->createUser('admin.notif@test.com', ['ROLE_ADMIN']);
     }
 
     /**
@@ -32,32 +31,15 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnDemandeAssigned(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('EN_COURS');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $demande = $this->createDemande(new \DateTime('+1 day'), new \DateTime('+7 days'), 'EN_ATTENTE');
+        $mission = $this->createMission($demande, 'EN_COURS');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Verify service method executes without error
         $this->notifier->notifyCriticalTransition('DEMANDE_ASSIGNED', $demande, $mission, $this->aide);
-
-        // In a real test, you'd mock MailerInterface and verify send() was called
-        // For now we just verify no exceptions are thrown
-        $this->assertTrue(true);
+        $this->assertNotNull($mission->getId());
     }
 
     /**
@@ -66,31 +48,15 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnMissionAccepted(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $demande = $this->createDemande(new \DateTime('+1 day'), new \DateTime('+7 days'), 'EN_ATTENTE', true);
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Send notification
         $this->notifier->notifyCriticalTransition('MISSION_ACCEPTED', $demande, $mission, $this->aide);
-
-        $this->assertTrue(true);
+        $this->assertNotNull($mission->getId());
     }
 
     /**
@@ -99,32 +65,17 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnDemandeReassigned(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('A_REASSIGNER');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('EN_COURS');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
-        $mission->setArchivee(true);
+        $demande = $this->createDemande(new \DateTime('+1 day'), new \DateTime('+7 days'), 'A_REASSIGNER', true);
+        $mission = $this->createMission($demande, 'EN_COURS');
+        $mission->setFinalStatus('ANNULÉE');
+        $mission->setArchivedAt(new \DateTime());
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Send notification
         $this->notifier->notifyCriticalTransition('DEMANDE_REASSIGNED', $demande, $mission, $this->aide);
-
-        $this->assertTrue(true);
+        $this->assertSame('A_REASSIGNER', $demande->getStatut());
     }
 
     /**
@@ -133,31 +84,15 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnMissionCancelled(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut((new \DateTime())->modify('+2 days'));
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $demande = $this->createDemande(new \DateTime('+2 days'), new \DateTime('+7 days'), 'EN_ATTENTE', true);
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Send notification
         $this->notifier->notifyCriticalTransition('MISSION_CANCELLED', $demande, $mission, $this->aide);
-
-        $this->assertTrue(true);
+        $this->assertNotNull($mission->getId());
     }
 
     /**
@@ -166,35 +101,20 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnMissionCompleted(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut((new \DateTime())->modify('-2 hours'));
-        $demande->setDateFin((new \DateTime())->modify('+5 hours'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
-        $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('TERMINÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $demande = $this->createDemande(new \DateTime('-2 hours'), new \DateTime('+5 hours'), 'EN_ATTENTE', true);
+        $mission = $this->createMission($demande, 'TERMINÉE');
         $mission->setCheckInAt((new \DateTime())->modify('-1 hour'));
         $mission->setCheckOutAt(new \DateTime());
         $mission->setProofPhotoData('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
-        $mission->setArchivee(true);
+        $mission->setFinalStatus('TERMINÉE');
+        $mission->setArchivedAt(new \DateTime());
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Send notification
         $this->notifier->notifyCriticalTransition('MISSION_COMPLETED', $demande, $mission, $this->aide);
-
-        $this->assertTrue(true);
+        $this->assertSame('TERMINÉE', $mission->getFinalStatus());
     }
 
     /**
@@ -203,29 +123,53 @@ class NotificationServiceTest extends AbstractFunctionalTest
      */
     public function testNotificationOnMissionDeleted(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('A_REASSIGNER');
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('EN_COURS');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $demande = $this->createDemande(new \DateTime('+1 day'), new \DateTime('+7 days'), 'A_REASSIGNER');
+        $mission = $this->createMission($demande, 'EN_COURS');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Send notification
         $this->notifier->notifyCriticalTransition('MISSION_DELETED', $demande, $mission, $this->aide);
+        $this->assertNotNull($mission->getId());
+    }
 
-        $this->assertTrue(true);
+    private function createDemande(\DateTimeInterface $start, \DateTimeInterface $end, string $statut, bool $withAide = false): DemandeAide
+    {
+        $demande = new DemandeAide();
+        $demande->setTitreD('Titre notification test');
+        $demande->setTypeDemande('NORMAL');
+        $demande->setDescriptionBesoin('Aide requise');
+        $demande->setTypePatient('AUTRE');
+        $demande->setDateCreation(new \DateTime());
+        $demande->setDateDebutSouhaitee($start);
+        $demande->setDateFinSouhaitee($end);
+        $demande->setBudgetMax(500);
+        $demande->setLieu('Tunis');
+        $demande->setLatitude(36.8065);
+        $demande->setLongitude(10.1815);
+        $demande->setSexe('N');
+        $demande->setEmail((string) $this->patient->getEmail());
+        $demande->setStatut($statut);
+
+        if ($withAide) {
+            $demande->setAideChoisie($this->aide);
+        }
+
+        return $demande;
+    }
+
+    private function createMission(DemandeAide $demande, string $statut): Mission
+    {
+        $mission = new Mission();
+        $mission->setDemandeAide($demande);
+        $mission->setAideSoignant($this->aide);
+        $mission->setStatutMission($statut);
+        $mission->setDateDebut(\DateTime::createFromInterface($demande->getDateDebutSouhaitee() ?? new \DateTime()));
+        $mission->setDateFin(\DateTime::createFromInterface($demande->getDateFinSouhaitee() ?? new \DateTime('+1 day')));
+        $mission->setTitreM('Mission notification');
+        $mission->setPrixFinal(500);
+
+        return $mission;
     }
 }

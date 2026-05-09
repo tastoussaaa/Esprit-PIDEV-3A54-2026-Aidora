@@ -1,0 +1,48 @@
+<div class="medicament-card" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+    <div class="form__field">
+        <label class="form__label">Médicament</label>
+        {{ form_widget(medicament.medicament, {
+            'attr': {
+                'class': 'form__input medicament-input',
+                'placeholder': 'Nom du médicament',
+                'autocomplete': 'off'
+            }
+        }) }}
+        <small class="validation-status" style="color: #666; display: block; margin-top: 4px;"></small>
+    </div>
+
+    <div class="form__field">
+        <label class="form__label">Dosage</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <button type="button" class="lookup-dosage-btn" style="padding: 4px 8px; font-size: 12px;">🔎 Lookup dosage</button>
+            <small class="lookup-status" style="color:#666">Rechercher le dosage recommandé</small>
+        </div>
+        {{ form_widget(medicament.dosage, {
+            'attr': {
+                'class': 'form__input dosage-input',
+                'placeholder': 'Ex: 500mg'
+            }
+        }) }}
+    </div>
+
+    <div class="form__field">
+        <label class="form__label">Durée</label>
+        {{ form_widget(medicament.duree, {
+            'attr': {
+                'class': 'form__input duree-input',
+                'placeholder': 'Ex: 7 jours'
+            }
+        }) }}
+    </div>
+
+    <div class="form__field">
+        <label class="form__label">Instructions</label>
+        {{ form_widget(medicament.instructions, {
+            'attr': {
+                'class': 'form__textarea instructions-input',
+                'rows': 2,
+                'placeholder': 'Comment prendre le médicament'
+            }
+        }) }}
+    </div>
+</div>

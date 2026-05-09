@@ -2,13 +2,15 @@
 
 namespace App\Tests\Functional;
 
+use App\Entity\AideSoignant;
 use App\Entity\DemandeAide;
 use App\Entity\Mission;
-use App\Entity\User;
+use App\Entity\Patient;
 
 class DemandeCriticalFlowTest extends AbstractFunctionalTest
 {
-   private Patient $patient; // ✅ Patient et non User
+    private Patient $patient;
+    private AideSoignant $aide;
 
 protected function setUp(): void
 {
@@ -24,6 +26,9 @@ protected function setUp(): void
     $this->aide = $this->createUser('aide@test.com', ['ROLE_AIDE_SOIGNANT']);
     $this->admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 }
+        $this->patient = $this->createPatient('patient@test.com', 'Patient Test');
+        $this->aide = $this->createAideSoignant('aide@test.com', 'Aide Test');
+    }
 
     /**
      * Test: Creation demande with entity persistence
@@ -31,27 +36,19 @@ protected function setUp(): void
      */
     public function testCreationDemandeValidData(): void
     {
-        // Create a new demande directly
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide pour nettoyage');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide pour nettoyage');
 
         $this->em->persist($demande);
         $this->em->flush();
 
-        // Verify demande was persisted
         $saved = $this->em->getRepository(DemandeAide::class)->findOneBy([
-            'patient' => $this->patient
+            'email' => $this->patient->getEmail(),
+            'TitreD' => 'Titre Aide pour nettoyage',
         ]);
 
         $this->assertNotNull($saved);
         $this->assertSame('EN_ATTENTE', $saved->getStatut());
-        $this->assertSame('Aide pour nettoyage', $saved->getDescription());
+        $this->assertSame('Aide pour nettoyage', $saved->getDescriptionBesoin());
     }
 
     /**
@@ -60,28 +57,13 @@ protected function setUp(): void
      */
     public function testSelectionAideHappyPath(): void
     {
-        // Setup: Create a demande first
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide requise');
 
         $this->em->persist($demande);
         $this->em->flush();
 
-        // Select aide by creating mission
         $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('EN_COURS');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $mission = $this->createMission($demande, 'EN_COURS');
 
         $this->em->persist($mission);
         $this->em->flush();
@@ -92,13 +74,13 @@ protected function setUp(): void
 
         // Verify mission was created
         $missions = $this->em->getRepository(Mission::class)->findBy([
-            'demande' => $demande
+            'demandeAide' => $demande,
         ]);
 
         $this->assertCount(1, $missions);
         $mission = $missions[0];
-        $this->assertSame($this->aide, $mission->getAide());
-        $this->assertSame('EN_COURS', $mission->getStatut());
+        $this->assertSame($this->aide, $mission->getAideSoignant());
+        $this->assertSame('EN_COURS', $mission->getStatutMission());
     }
 
     /**
@@ -107,35 +89,20 @@ protected function setUp(): void
      */
     public function testAcceptMissionHappyPath(): void
     {
-        // Setup: Create demande and mission
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide requise');
         $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('EN_COURS');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $mission = $this->createMission($demande, 'EN_COURS');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Change mission status to ACCEPTÉE
-        $mission->setStatut('ACCEPTÉE');
+        $mission->setStatutMission('ACCEPTÉE');
         $this->em->flush();
 
         // Verify status changed
         $this->em->refresh($mission);
-        $this->assertSame('ACCEPTÉE', $mission->getStatut());
+        $this->assertSame('ACCEPTÉE', $mission->getStatutMission());
     }
 
     /**
@@ -144,39 +111,24 @@ protected function setUp(): void
      */
     public function testRefuseMissionReassignment(): void
     {
-        // Setup: Create demande and accepted mission
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime());
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide requise');
         $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Aide refuses: set demande to A_REASSIGNER and archive mission
         $demande->setStatut('A_REASSIGNER');
-        $mission->setArchivee(true);
+        $mission->setFinalStatus('ANNULÉE');
+        $mission->setArchivedAt(new \DateTime());
         $this->em->flush();
 
-        // Verify mission archived and demande reassigned
         $this->em->refresh($demande);
         $this->assertSame('A_REASSIGNER', $demande->getStatut());
 
         $this->em->refresh($mission);
-        $this->assertTrue($mission->isArchivee());
+        $this->assertSame('ANNULÉE', $mission->getFinalStatus());
     }
 
     /**
@@ -185,45 +137,30 @@ protected function setUp(): void
      */
     public function testCheckoutWithProofData(): void
     {
-        // Setup: Create mission at ACCEPTÉE status
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut(new \DateTime('-2 hours'));
-        $demande->setDateFin((new \DateTime())->modify('+5 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide requise', new \DateTime('-2 hours'), new \DateTime('+5 days'));
         $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
         $mission->setCheckInAt(new \DateTime());
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Checkout with proof
         $proofPhotoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         $signatureDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         $mission->setProofPhotoData($proofPhotoDataUri);
         $mission->setSignatureData($signatureDataUri);
         $mission->setCheckOutAt(new \DateTime());
-        $mission->setStatut('TERMINÉE');
-        $mission->setArchivee(true);
+        $mission->setStatutMission('TERMINÉE');
+        $mission->setFinalStatus('TERMINÉE');
+        $mission->setArchivedAt(new \DateTime());
         $this->em->flush();
 
-        // Verify proof data persisted
         $this->em->refresh($mission);
         $this->assertStringStartsWith('data:image/', $mission->getProofPhotoData());
         $this->assertStringStartsWith('data:image/', $mission->getSignatureData());
-        $this->assertSame('TERMINÉE', $mission->getStatut());
+        $this->assertSame('TERMINÉE', $mission->getStatutMission());
     }
 
     /**
@@ -232,38 +169,61 @@ protected function setUp(): void
      */
     public function testCancelMissionBeforeStart(): void
     {
-        $demande = new DemandeAide();
-        $demande->setPatient($this->patient);
-        $demande->setDescription('Aide requise');
-        $demande->setDateDebut((new \DateTime())->modify('+2 days'));
-        $demande->setDateFin((new \DateTime())->modify('+7 days'));
-        $demande->setBudgetMax(500);
-        $demande->setLocalisation('Tunis');
-        $demande->setStatut('EN_ATTENTE');
+        $demande = $this->createDemande('Aide requise', new \DateTime('+2 days'), new \DateTime('+7 days'));
         $demande->setAideChoisie($this->aide);
-
-        $mission = new Mission();
-        $mission->setDemande($demande);
-        $mission->setAide($this->aide);
-        $mission->setStatut('ACCEPTÉE');
-        $mission->setDateDebut($demande->getDateDebut());
-        $mission->setDateFin($demande->getDateFin());
+        $mission = $this->createMission($demande, 'ACCEPTÉE');
 
         $this->em->persist($demande);
         $this->em->persist($mission);
         $this->em->flush();
 
-        // Cancel mission: set demande to A_REASSIGNER and archive mission
         $demande->setStatut('A_REASSIGNER');
-        $mission->setArchivee(true);
+        $mission->setFinalStatus('ANNULÉE');
+        $mission->setArchivedAt(new \DateTime());
         $this->em->flush();
 
-        // Verify demande reverted to A_REASSIGNER
         $this->em->refresh($demande);
         $this->assertSame('A_REASSIGNER', $demande->getStatut());
 
-        // Verify mission archived
         $this->em->refresh($mission);
-        $this->assertTrue($mission->isArchivee());
+        $this->assertSame('ANNULÉE', $mission->getFinalStatus());
+    }
+
+    private function createDemande(string $description, ?\DateTimeInterface $dateDebut = null, ?\DateTimeInterface $dateFin = null): DemandeAide
+    {
+        $start = $dateDebut ?? new \DateTime('+1 day');
+        $end = $dateFin ?? new \DateTime('+7 days');
+
+        $demande = new DemandeAide();
+        $demande->setTitreD('Titre ' . $description);
+        $demande->setTypeDemande('NORMAL');
+        $demande->setDescriptionBesoin($description);
+        $demande->setTypePatient('AUTRE');
+        $demande->setDateCreation(new \DateTime());
+        $demande->setDateDebutSouhaitee($start);
+        $demande->setDateFinSouhaitee($end);
+        $demande->setBudgetMax(500);
+        $demande->setLieu('Tunis');
+        $demande->setLatitude(36.8065);
+        $demande->setLongitude(10.1815);
+        $demande->setSexe('N');
+        $demande->setEmail((string) $this->patient->getEmail());
+        $demande->setStatut('EN_ATTENTE');
+
+        return $demande;
+    }
+
+    private function createMission(DemandeAide $demande, string $statut): Mission
+    {
+        $mission = new Mission();
+        $mission->setDemandeAide($demande);
+        $mission->setAideSoignant($this->aide);
+        $mission->setStatutMission($statut);
+        $mission->setDateDebut(\DateTime::createFromInterface($demande->getDateDebutSouhaitee() ?? new \DateTime()));
+        $mission->setDateFin(\DateTime::createFromInterface($demande->getDateFinSouhaitee() ?? new \DateTime('+1 day')));
+        $mission->setTitreM('Mission test');
+        $mission->setPrixFinal(500);
+
+        return $mission;
     }
 }

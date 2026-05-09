@@ -1,0 +1,21 @@
+{# slots-helper.html.twig #}
+{# This template provides helper functionality for time slot selection #}
+<div id="slots-helper" style="display: none;">
+    <div class="slots-info">
+        <p>Available time slots will be displayed based on the selected date.</p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.querySelector('input[name*="dateConsultation"]');
+        const timeSlotSelect = document.querySelector('select[name*="timeSlot"]');
+        
+        if (dateInput && timeSlotSelect) {
+            dateInput.addEventListener('change', function() {
+                // Trigger slot loading if needed
+                console.log('Date changed:', this.value);
+            });
+        }
+    });
+</script>

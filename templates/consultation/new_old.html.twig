@@ -1,0 +1,367 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Consultation - AI Assist{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
+    <style>
+        /* Modern, minimal form design */
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+        .portal__card { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+        .portal__title { font-size: 28px; font-weight: 700; color: #1a202c; letter-spacing: -0.5px; }
+        .portal__subtitle { font-size: 15px; color: #6b7280; line-height: 1.6; margin-top: 8px; }
+        
+        /* Form field improvements */
+        .form__field { margin-bottom: 20px; display: flex; flex-direction: column; }
+        .form__field label { font-weight: 600; color: #2d3748; margin-bottom: 8px; font-size: 14px; }
+        .form__field input, .form__field textarea, .form__field select {
+            padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; 
+            font-size: 14px; font-family: inherit; transition: all 0.3s;
+            background: #fafbfc;
+        }
+        .form__field input:focus, .form__field textarea:focus, .form__field select:focus {
+            outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        /* Grid layout */
+        .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-three { display: grid; grid-template-columns: 1fr 120px 80px; gap: 16px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        /* Motif field styling */
+        .motif-field textarea { min-height: 100px; resize: vertical; }
+        
+        /* Helper text - hidden by default, expandable */
+        .motif-guidance {
+            margin-top: 12px; padding: 12px; background: #f0f7ff; border-radius: 8px;
+            border: 1px solid #d6e4ff; font-size: 13px; color: #4a5568; display: none;
+        }
+        .motif-guidance.active { display: block; }
+        .motif-guidance strong { color: #2d3748; display: block; margin-bottom: 6px; }
+        .motif-guidance ul { margin: 6px 0 0 16px; }
+        .motif-guidance li { margin: 4px 0; color: #4a5568; }
+        
+        /* AI Enhancement styles */
+        .motif-enhancement {
+            margin-top: 12px; padding: 14px; background: #f0f7ff; border-radius: 8px;
+            border: 1px solid #d6e4ff; font-size: 13px; transition: all 0.3s ease;
+        }
+        .motif-enhancement.loading { background: #e6f0ff; }
+        .motif-enhancement.success { background: #d1f2eb; border-color: #a7f3d0; }
+        .motif-enhancement.error { background: #fee2e2; border-color: #fca5a5; }
+        .motif-enhancement.warning { background: #fff3cd; border-color: #ffeaa7; }
+        .enhance-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 10px 18px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 12px;
+            display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+        }
+        .enhance-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.35); }
+        .enhance-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        /* Form actions */
+        .form__actions {
+            display: flex; gap: 12px; margin-top: 28px; padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .btn { border-radius: 8px; font-weight: 600; padding: 11px 24px; font-size: 14px; transition: all 0.3s; }
+        .btn--primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; }
+        .btn--primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(102,126,234,0.3); }
+        .btn--ghost { background: transparent; color: #667eea; border: 1.5px solid #e2e8f0; }
+        .btn--ghost:hover { background: #f7fafc; border-color: #cbd5e0; }
+        
+        /* Badge styles */
+        .ai-badge { display: inline-block; background: #ede9fe; color: #667eea; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .urgency-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .urgency-elevee { background: #fee2e2; color: #991b1b; }
+        .urgency-moderee { background: #fcd34d; color: #78350f; }
+        .urgency-faible { background: #d1fae5; color: #065f46; }
+        
+        /* Validation error */
+        .validation-error { color: #991b1b; font-size: 13px; margin-top: 8px; padding: 10px 12px; background: #fee2e2; border-radius: 6px; border-left: 3px solid #dc2626; }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/consultation-slots.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🤖 OpenAI Enhancement script loaded');
+            
+            // Find the motif input - try multiple selectors
+            let motifInput = document.querySelector('input[name*="motif"]') || 
+                            document.querySelector('#consultation_type_motif') ||
+                            document.querySelector('[id*="motif"]');
+            
+            console.log('Motif input found:', motifInput);
+            
+            if (!motifInput) {
+                console.error('Could not find motif input field');
+                return;
+            }
+
+            // Create enhancement container
+            const motifField = motifInput.closest('.form__field') || motifInput.parentElement;
+            
+            // Create the enhancement panel
+            const enhancementPanel = document.createElement('div');
+            enhancementPanel.id = 'motif-enhancement-panel';
+            enhancementPanel.style.display = 'none';
+            enhancementPanel.innerHTML = `
+                <div class="motif-enhancement" id="motif-enhancement">
+                    <span class="enhancement-label" id="enhancement-label">
+                        <span class="ai-badge">🤖 AI Assistant</span>
+                        <span id="urgency-badge"></span>
+                    </span>
+                    <div class="enhancement-content" id="enhancement-content"></div>
+                </div>
+            `;
+            
+            // Insert after motif field
+            if (motifField && motifField.parentElement) {
+                motifField.parentElement.insertBefore(enhancementPanel, motifField.nextSibling);
+            } else {
+                motifInput.parentElement.appendChild(enhancementPanel);
+            }
+
+            // Create enhance button
+            const enhanceBtn = document.createElement('button');
+            enhanceBtn.type = 'button';
+            enhanceBtn.className = 'enhance-btn';
+            enhanceBtn.id = 'enhance-btn';
+            enhanceBtn.innerHTML = '✨ Analyser avec IA';
+            enhanceBtn.title = 'Cliquez pour analyser votre motif avec l\'IA';
+            
+            // Insert button after motif input
+            motifInput.parentElement.insertBefore(enhanceBtn, motifInput.nextSibling);
+
+            const enhancementDiv = document.getElementById('motif-enhancement');
+            const enhancementContent = document.getElementById('enhancement-content');
+            const urgencyBadge = document.getElementById('urgency-badge');
+            const enhancementLabel = document.getElementById('enhancement-label');
+
+            // Function to get urgency display text
+            function getUrgencyText(urgency) {
+                const urgencyTexts = {
+                    'elevee': '🚨 Urgence élevée',
+                    'moderee': '⚠️ Urgence modérée',
+                    'faible': '✅ Routine / Faible'
+                };
+                return urgencyTexts[urgency] || '⚠️ Urgence modérée';
+            }
+
+            // Function to call OpenAI API using new comprehensive endpoint
+            function callOpenAI(motif) {
+                enhancementPanel.style.display = 'block';
+                enhancementDiv.className = 'motif-enhancement loading';
+                enhanceBtn.className = 'enhance-btn loading';
+                enhanceBtn.disabled = true;
+                enhanceBtn.innerHTML = '⏳ Analyse en cours...';
+                
+                // Hide urgency badge during loading
+                urgencyBadge.innerHTML = '';
+                
+                console.log('Calling OpenAI API with motif:', motif);
+                
+                // Use the new comprehensive analysis endpoint
+                fetch('/consultation/analyze-motif?motif=' + encodeURIComponent(motif))
+                    .then(response => {
+                        console.log('OpenAI response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('OpenAI data:', data);
+                        enhanceBtn.className = 'enhance-btn';
+                        enhanceBtn.disabled = false;
+                        
+                        if (data.ok) {
+                            // Show urgency level
+                            const urgencyClass = 'urgency-' + (data.urgency || 'moderee');
+                            urgencyBadge.className = 'urgency-badge ' + urgencyClass;
+                            urgencyBadge.innerHTML = getUrgencyText(data.urgency);
+                            
+                            if (!data.isValid) {
+                                // Motif is not valid/understandable - show error/warning
+                                enhancementDiv.className = 'motif-enhancement warning';
+                                enhancementContent.innerHTML = `
+                                    <div class="validation-error">
+                                        <strong>⚠️ Motif incompréhensible</strong><br>
+                                        ${data.message || 'Veuillez entrer un motif de consultation clair et comprehensible.'}
+                                    </div>
+                                    <div class="original-motif">
+                                        <strong>Votre message:</strong> "${motif}"
+                                    </div>
+                                    <p style="margin-top: 10px; color: #666; font-size: 13px;">
+                                        💡 <strong>Conseils:</strong> Décrivez vos symptômes clairement (ex: "J'ai mal à la tête depuis 2 jours", "Fièvre et toux depuis une semaine")
+                                    </p>
+                                `;
+                                enhanceBtn.innerHTML = '🔄 Réessayer';
+                            } else if (data.enhanced && data.enhanced !== motif) {
+                                // Valid and enhanced
+                                enhancementDiv.className = 'motif-enhancement success';
+                                enhancementContent.innerHTML = `
+                                    <div class="enhancement-content">
+                                        <strong>Version améliorée:</strong><br>
+                                        <span style="color: #155e3d; font-size: 15px;">"${data.enhanced}"</span>
+                                    </div>
+                                    <div class="original-motif">
+                                        <strong>Original:</strong> "${motif}"
+                                    </div>
+                                    <button type="button" class="enhance-btn" onclick="applyEnhancement('${data.enhanced.replace(/'/g, "\\'")}')" style="margin-top: 10px;">
+                                        ✅ Utiliser cette version
+                                    </button>
+                                `;
+                                enhanceBtn.innerHTML = '🔄 Re-analyser';
+                            } else {
+                                // Valid but no enhancement needed - hide the panel silently
+                                enhancementPanel.style.display = 'none';
+                                enhanceBtn.innerHTML = '✨ Re-analyser';
+                            }
+                            
+                            // Update message if provided
+                            if (data.message && data.isValid) {
+                                enhancementContent.innerHTML += `<p style="margin-top: 8px; font-size: 13px; color: #666;">${data.message}</p>`;
+                            }
+                        } else {
+                            // API error
+                            enhancementDiv.className = 'motif-enhancement error';
+                            enhancementContent.innerHTML = `
+                                <span class="enhancement-label">⚠️ Service IA indisponible</span>
+                                <span class="enhancement-content">${data.message || data.error || 'L\'enhancement AI n\'est pas configuré. Veuillez vérifier la clé API OpenAI.'}</span>
+                            `;
+                            enhanceBtn.innerHTML = '⚠️ Réessayer';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('OpenAI fetch error:', error);
+                        enhancementDiv.className = 'motif-enhancement error';
+                        enhanceBtn.className = 'enhance-btn';
+                        enhanceBtn.disabled = false;
+                        enhancementContent.innerHTML = `
+                            <span class="enhancement-label">⚠️ Erreur de connexion</span>
+                            <span class="enhancement-content">${error.message}</span>
+                        `;
+                        enhanceBtn.innerHTML = '⚠️ Réessayer';
+                    });
+            }
+
+            // Button click handler
+            enhanceBtn.addEventListener('click', function() {
+                const motif = motifInput.value.trim();
+                if (!motif || motif.length < 3) {
+                    alert('Veuillez d\'abord entrer un motif de consultation (au moins 3 caractères).');
+                    motifInput.focus();
+                    return;
+                }
+                callOpenAI(motif);
+            });
+
+            // Also trigger on blur for convenience
+            motifInput.addEventListener('blur', function() {
+                const motif = this.value.trim();
+                if (motif && motif.length >= 3 && enhancementPanel.style.display === 'none') {
+                    // Auto-show hint that enhancement is available
+                    enhanceBtn.style.animation = 'pulse 2s infinite';
+                }
+            });
+
+            // Remove pulse animation when user clicks the button
+            enhanceBtn.addEventListener('click', function() {
+                this.style.animation = 'none';
+            });
+        });
+
+        function applyEnhancement(enhancedText) {
+            console.log('Applying enhancement:', enhancedText);
+            const motifInput = document.querySelector('input[name*="motif"]') || 
+                              document.querySelector('#consultation_type_motif') ||
+                              document.querySelector('[id*="motif"]');
+            if (motifInput) {
+                motifInput.value = enhancedText;
+                motifInput.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Show success feedback
+                const panel = document.getElementById('motif-enhancement-panel');
+                if (panel) {
+                    panel.style.display = 'none';
+                }
+                
+                // Show confirmation
+                alert('✅ Version améliorée appliquée!');
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block body %}
+<div class="portal">
+
+    <!-- SIDEBAR -->
+    {% include 'side_bar.html.twig' %}
+
+    <!-- MAIN CONTENT -->
+    <main class="portal__main">
+
+        <header class="portal__header">
+            <h1 class="portal__title">Nouvelle consultation</h1>
+            <p class="portal__subtitle">Remplissez votre motif de consultation pour prendre rendez-vous.</p>
+        </header>
+
+        <section class="portal__content portal__card">
+
+            {{ form_start(form, {'attr': {'class': 'form', 'novalidate': 'novalidate'}}) }}
+
+                <div class="form__fields" id="consultation-form-fields">
+                    <div class="grid-two">
+                        <div>{{ form_row(form.dateConsultation) }}</div>
+                        <div>{{ form_row(form.timeSlot) }}</div>
+                    </div>
+
+                    {% include 'consultation/slots-helper.html.twig' %}
+
+                    <div class="full-width">{{ form_row(form.motif) }}</div>
+
+                    <div class="motif-guidance" style="margin-top:10px;padding:12px;border:1px dashed rgba(7,19,31,0.06);border-radius:8px;background:#fafafa;font-size:14px;color:#333">
+                        <strong>Besoin d'aide pour décrire votre problème ?</strong>
+                        <p style="margin:6px 0 8px 0">Écrivez une phrase claire en précisant : <em>quoi</em>, <em>depuis quand</em>, <em>intensité</em>, <em>symptômes associés</em>, <em>maladies chroniques</em> et <em>médicaments</em> si applicable.</p>
+                        <div style="font-size:13px;color:#555">
+                            <div><strong>Modèle à copier :</strong></div>
+                            <div style="margin:6px 0">« J’ai [symptôme principal] depuis [durée], intensité [faible/modérée/forte], accompagné de [autres symptômes], j’ai [maladies chroniques si oui] et je prends [médicaments si oui]. »</div>
+                            <div style="margin-top:6px"><strong>Exemples :</strong></div>
+                            <ul style="margin:6px 0 0 18px;color:#555">
+                                <li>« Mal de gorge depuis 2 jours, toux sèche légère, pas de maladies chroniques. »</li>
+                                <li>« Fièvre 38.5°C depuis 3 jours, céphalées modérées, je suis diabétique. »</li>
+                                <li>« Douleur thoracique forte et essoufflement depuis 1 heure, antécédents d’hypertension — urgence. »</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid-two">
+                        <div>{{ form_row(form.name) }}</div>
+                        <div>{{ form_row(form.familyName) }}</div>
+                    </div>
+
+                    <div class="grid-three">
+                        <div>{{ form_row(form.email) }}</div>
+                        <div>{{ form_row(form.sex) }}</div>
+                        <div>{{ form_row(form.age) }}</div>
+                    </div>
+                </div>
+
+                <div class="form__actions">
+                    <a href="{{ path('patient_consultations') }}" class="btn btn--ghost" role="button" aria-label="Cancel and go back">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn--primary" title="Save consultation">
+                        Créer
+                    </button>
+                </div>
+
+            {{ form_end(form) }}
+
+        </section>
+
+    </main>
+</div>
+{% endblock %}

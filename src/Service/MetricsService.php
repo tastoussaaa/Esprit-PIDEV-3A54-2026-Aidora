@@ -15,7 +15,6 @@ use Doctrine\ORM\EntityManagerInterface;
 class MetricsService
 {
     public function __construct(
-        private EntityManagerInterface $em,
         private DemandeAideRepository $demandeRepo,
         private MissionRepository $missionRepo,
     ) {
@@ -26,7 +25,7 @@ class MetricsService
      * = (Demandes ACCEPTÉE + TERMINÉE) / Total demandes créées
      * @param \DateTimeInterface|null $startDate Filtrer par date création >= startDate
      * @param \DateTimeInterface|null $endDate Filtrer par date création <= endDate
-     * @return array ['rate' => float (0-100), 'accepted' => int, 'total' => int]
+    * @return array{rate: float, accepted: int, total: int}
      */
     public function calculateAcceptanceRate(?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null): array
     {
@@ -77,7 +76,7 @@ class MetricsService
     /**
      * Calcule le délai moyen de prise en charge
      * = Temps médian entre dateCreation et première mission créée
-     * @return array ['average_hours' => float, 'median_hours' => float, 'count' => int]
+    * @return array{average_hours: float, median_hours: float, count: int}
      */
     public function calculateAssignmentDelay(): array
     {
@@ -91,17 +90,19 @@ class MetricsService
             }
 
             // Trouver première mission créée pour cette demande
-            $missions = $this->missionRepo->findBy(
-                ['demande' => $demande],
-                ['dateCreation' => 'ASC']
-            );
+            $missions = $this->missionRepo->findBy(['demandeAide' => $demande]);
 
             if (empty($missions)) {
                 continue; // Pas de mission encore
             }
 
             $firstMission = $missions[0];
-            $firstMissionDate = $firstMission->getDateCreation() ?? $firstMission->getDateDebut();
+            usort(
+                $missions,
+                static fn(Mission $a, Mission $b): int => $a->getDateDebut() <=> $b->getDateDebut()
+            );
+
+            $firstMissionDate = $missions[0]->getDateDebut();
 
             if (!$firstMissionDate) {
                 continue;
@@ -136,6 +137,8 @@ class MetricsService
     /**
      * Compte les demandes en statut A_REASSIGNER
      * Indicateur de combien de demandes ont besoin d'une relance
+        *
+        * @return array{count: int, demandes: list<DemandeAide>}
      */
     public function countReassignments(): array
     {
@@ -150,6 +153,8 @@ class MetricsService
     /**
      * Calcule taux de complétion des missions vs demandes
      * = Missions TERMINÉE / Missions créées
+        *
+        * @return array{rate: float, completed: int, total: int}
      */
     public function calculateMissionCompletionRate(): array
     {
@@ -160,9 +165,7 @@ class MetricsService
             return ['rate' => 0, 'completed' => 0, 'total' => 0];
         }
 
-        $completed = count(
-            $this->missionRepo->findBy(['statut' => 'TERMINÉE'])
-        );
+        $completed = count($this->missionRepo->findBy(['finalStatus' => 'TERMINÉE']));
 
         return [
             'rate' => round(($completed / $totalMissions) * 100, 2),
@@ -173,6 +176,14 @@ class MetricsService
 
     /**
      * Dashboard complet de gouvernance
+        *
+        * @return array{
+        *   acceptance_rate: array{rate: float, accepted: int, total: int},
+        *   assignment_delay: array{average_hours: float, median_hours: float, count: int},
+        *   reassignments: array{count: int, demandes: list<DemandeAide>},
+        *   mission_completion_rate: array{rate: float, completed: int, total: int},
+        *   generated_at: \DateTime
+        * }
      */
     public function getGovernanceDashboard(): array
     {
@@ -188,6 +199,8 @@ class MetricsService
     /**
      * Rapport détaillé pour admin
      * Inclut alertes si métriques dégradées
+        *
+        * @return array{dashboard: array<string, mixed>, alerts: list<string>, timestamp: \DateTime}
      */
     public function generateAdminReport(): array
     {

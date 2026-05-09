@@ -40,7 +40,7 @@ public function setPatient(Patient $patient): static
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le type de demande est obligatoire')]
     #[Assert\Choice(choices: ['URGENT', 'NORMAL', 'ECONOMIE'], message: 'Veuillez sélectionner un type de demande valide')]
     private ?string $typeDemande = null;
@@ -48,12 +48,12 @@ public function setPatient(Patient $patient): static
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: 'La description du besoin est obligatoire')]
     #[Assert\Length(min: 10, minMessage: 'La description doit contenir au moins 10 caractères', max: 5000, maxMessage: 'La description ne peut pas dépasser 5000 caractères')]
     private ?string $descriptionBesoin = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le type de patient est obligatoire')]
     #[Assert\Choice(choices: ['PERSONNE_AGEE', 'ALZHEIMER', 'HANDICAP', 'AUTRE'], message: 'Veuillez sélectionner un type de patient valide')]
     private ?string $typePatient = null;
@@ -86,12 +86,12 @@ public function setPatient(Patient $patient): static
     #[Assert\Length(max: 255, maxMessage: 'La ville ne peut pas dépasser 255 caractères')]
     private ?string $ville = null;
 
-    #[ORM\Column(type: 'float')]
+    #[ORM\Column(type: 'float', nullable: true)]
     #[Assert\NotBlank(message: 'La latitude est obligatoire')]
     #[Assert\Range(min: -90, max: 90, notInRangeMessage: 'La latitude doit être entre -90 et 90')]
     private ?float $latitude = null;
 
-    #[ORM\Column(type: 'float')]
+    #[ORM\Column(type: 'float', nullable: true)]
     #[Assert\NotBlank(message: 'La longitude est obligatoire')]
     #[Assert\Range(min: -180, max: 180, notInRangeMessage: 'La longitude doit être entre -180 et 180')]
     private ?float $longitude = null;
@@ -100,18 +100,21 @@ public function setPatient(Patient $patient): static
     #[Assert\Length(max: 255, maxMessage: 'Le lieu ne peut pas dépasser 255 caractères')]
     private ?string $lieu = null;
 
-    #[ORM\Column(length: 1)]
+    #[ORM\Column(length: 1, nullable: true)]
     #[Assert\NotBlank(message: 'Le sexe est obligatoire')]
     #[Assert\Choice(choices: ['M', 'F', 'N'], message: 'Veuillez sélectionner un sexe valide')]
     private ?string $sexe = null;
 
-    #[ORM\Column(length: 255, nullable: false)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $email = null;
 
-    #[ORM\OneToMany(mappedBy: "demandeAide", targetEntity: Mission::class, cascade: ['remove'])]
+    /**
+     * @var Collection<int, Mission>
+     */
+    #[ORM\OneToMany(mappedBy: "demandeAide", targetEntity: Mission::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $missions;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le titre de la demande est obligatoire')]
     #[Assert\Length(min: 10, minMessage: 'Le titre doit contenir au moins 10 caractères', max: 5000, maxMessage: 'Le titre ne peut pas dépasser 5000 caractères')]
     private ?string $TitreD = null;
@@ -323,11 +326,7 @@ public function setPatient(Patient $patient): static
 
     public function removeMission(Mission $mission): static
     {
-        if ($this->missions->removeElement($mission)) {
-            if ($mission->getDemandeAide() === $this) {
-                $mission->setDemandeAide(null);
-            }
-        }
+        $this->missions->removeElement($mission);
         return $this;
     }
 

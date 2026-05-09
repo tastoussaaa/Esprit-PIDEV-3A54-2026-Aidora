@@ -10,10 +10,11 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-#[AsCommand(name: 'app:create-admin-user', description: 'Create a User with ROLE_ADMIN and optionally link to an Admin entity')]
+#[AsCommand(name: 'app:create-admin-user', description: 'Create a User with ROLE_ADMIN and link to an Admin entity')]
 class CreateAdminUserCommand extends Command
 {
     public function __construct(private EntityManagerInterface $em, private UserPasswordHasherInterface $passwordHasher)
@@ -26,12 +27,17 @@ class CreateAdminUserCommand extends Command
         $this
             ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'Admin user email')
             ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'Admin user password')
-            ->addOption('admin-id', null, InputOption::VALUE_OPTIONAL, 'Link created User to existing Admin id');
+            ->addOption('full-name', null, InputOption::VALUE_OPTIONAL, 'Full name')
+            ->addOption('nom', null, InputOption::VALUE_OPTIONAL, 'Last name')
+            ->addOption('prenom', null, InputOption::VALUE_OPTIONAL, 'First name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $helper = $this->getHelper('question');
+        if (!$helper instanceof QuestionHelper) {
+            throw new \RuntimeException('Question helper unavailable.');
+        }
 
         $email = $input->getOption('email');
         if (!$email) {
@@ -47,8 +53,26 @@ class CreateAdminUserCommand extends Command
             $password = $helper->ask($input, $output, $question);
         }
 
-        if (!$email || !$password) {
-            $output->writeln('<error>Email and password are required.</error>');
+        $fullName = $input->getOption('full-name');
+        if (!$fullName) {
+            $question = new Question('Full Name: ');
+            $fullName = $helper->ask($input, $output, $question);
+        }
+
+        $nom = $input->getOption('nom');
+        if (!$nom) {
+            $question = new Question('Last Name: ');
+            $nom = $helper->ask($input, $output, $question);
+        }
+
+        $prenom = $input->getOption('prenom');
+        if (!$prenom) {
+            $question = new Question('First Name: ');
+            $prenom = $helper->ask($input, $output, $question);
+        }
+
+        if (!$email || !$password || !$fullName || !$nom || !$prenom) {
+            $output->writeln('<error>Email, password, full name, last name, and first name are required.</error>');
             return Command::FAILURE;
         }
 
@@ -62,30 +86,26 @@ class CreateAdminUserCommand extends Command
         $user->setEmail($email);
         $user->setRoles(['ROLE_ADMIN']);
         $user->setUserType('admin');
-        $user->setFullName('Administrator');
+        $user->setFullName($fullName);
         $hashed = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashed);
 
         $this->em->persist($user);
 
-        $adminId = $input->getOption('admin-id');
-        if ($adminId) {
-            $admin = $this->em->getRepository(Admin::class)->find($adminId);
-            if (!$admin) {
-                $output->writeln('<error>Admin with id ' . $adminId . ' not found.</error>');
-                return Command::FAILURE;
-            }
-            $admin->setUser($user);
-            $this->em->persist($admin);
-        }
+        $admin = new Admin();
+        $admin->setUser($user);
+        $admin->setNom($nom);
+        $admin->setPrenom($prenom);
+        $admin->setMdp($password);
 
+        $this->em->persist($admin);
         $this->em->flush();
 
         $output->writeln('<info>Admin user created successfully.</info>');
         $output->writeln('Email: ' . $email);
-        if ($adminId) {
-            $output->writeln('Linked to Admin id: ' . $adminId);
-        }
+        $output->writeln('Full Name: ' . $fullName);
+        $output->writeln('Last Name: ' . $nom);
+        $output->writeln('First Name: ' . $prenom);
 
         return Command::SUCCESS;
     }

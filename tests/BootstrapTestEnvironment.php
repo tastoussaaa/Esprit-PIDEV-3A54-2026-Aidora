@@ -2,7 +2,7 @@
 
 namespace App\Tests;
 
-use Symfony\Component\HttpKernel\Kernel;
+use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -11,12 +11,12 @@ class BootstrapTestEnvironment
 {
     public static function setUp(): void
     {
-        if ('test' !== $_ENV['APP_ENV'] ?? null) {
+        if (($_ENV['APP_ENV'] ?? null) !== 'test') {
             throw new \RuntimeException('APP_ENV must be "test"');
         }
         
         // Create/setup test database
-        $kernel = new Kernel($_ENV['APP_ENV'], (bool)($_ENV['APP_DEBUG'] ?? false));
+        $kernel = new Kernel((string) $_ENV['APP_ENV'], (bool) ($_ENV['APP_DEBUG'] ?? false));
         $kernel->boot();
         
         $application = new Application($kernel);

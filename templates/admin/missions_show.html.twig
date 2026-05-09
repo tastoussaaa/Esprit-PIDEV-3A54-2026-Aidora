@@ -8,7 +8,8 @@
         .detail-shell {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 24px;
+            gap: 40px;
+            max-width: 1400px;
         }
 
         .detail-card {
@@ -16,49 +17,51 @@
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .detail-card__head {
-            padding: 14px 16px;
+            padding: 20px 24px;
             background: #f8fafc;
             border-bottom: 1px solid #e5e7eb;
             font-weight: 700;
+            font-size: 16px;
         }
 
         .detail-card__body {
-            padding: 18px;
+            padding: 28px;
         }
 
         .meta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 20px;
         }
 
         .meta-item {
             background: #f8fafc;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
-            padding: 10px;
+            padding: 16px;
         }
 
-        .meta-item strong { display: block; color: #475569; font-size: 12px; margin-bottom: 4px; }
+        .meta-item strong { display: block; color: #475569; font-size: 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
 
-        .status-chip { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .status-chip { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
         .status-success { background: #bbf7d0; color: #14532d; }
         .status-warning { background: #fde68a; color: #78350f; }
         .status-danger { background: #fecaca; color: #7f1d1d; }
         .status-expired { background: #ddd6fe; color: #4c1d95; }
         .status-dark { background: #e2e8f0; color: #1e293b; }
 
-        .action-stack { display: grid; gap: 12px; }
-        .action-btn { width: 100%; border: 1px solid transparent; border-radius: 8px; padding: 11px 12px; font-weight: 600; display: block; text-align: center; }
+        .action-stack { display: grid; gap: 16px; }
+        .action-btn { width: 100%; border: 1px solid transparent; border-radius: 8px; padding: 14px 18px; font-weight: 600; display: block; text-align: center; font-size: 14px; }
         .action-btn--edit { background: #fde68a; border-color: #fcd34d; color: #78350f; }
         .action-btn--delete { background: #fecaca; border-color: #fca5a5; color: #7f1d1d; }
         .action-btn--link { background: #bfdbfe; border-color: #93c5fd; color: #1e3a8a; text-align: center; text-decoration: none; }
 
-        .detail-page { padding: 8px 0 20px; }
-        .section-gap { margin-bottom: 18px; }
+        .detail-page { padding: 12px 0 32px; }
+        .section-gap { margin-bottom: 32px; }
 
         @media (max-width: 992px) {
             .detail-shell { grid-template-columns: 1fr; }
@@ -105,7 +108,7 @@
             <div class="detail-card section-gap">
                 <div class="detail-card__head">📋 Informations de la Mission</div>
                 <div class="detail-card__body">
-                    <div class="meta-grid mb-3">
+                    <div class="meta-grid" style="margin-bottom: 24px;">
                         <div class="meta-item">
                             <strong>Statut</strong>
                             {% set missionStatusClass = mission.statutMission == 'ACCEPTÉE' ? 'status-success' : (mission.statutMission == 'TERMINÉE' ? 'status-dark' : (mission.statutMission == 'EXPIRÉE' ? 'status-expired' : (mission.statutMission == 'ANNULÉE' ? 'status-danger' : 'status-warning'))) %}
@@ -125,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="meta-grid">
+                    <div class="meta-grid" style="margin-bottom: 20px;">
                         <div class="meta-item">
                             <strong>Check-in</strong>
                             {{ mission.checkInAt ? mission.checkInAt|date('d/m/Y H:i') : 'Non effectué' }}
@@ -137,14 +140,14 @@
                     </div>
 
                     {% if mission.statusVerification %}
-                        <div class="mt-3">
-                            <strong>Vérification: </strong>
+                        <div style="margin-top: 24px;">
+                            <strong style="display: block; margin-bottom: 8px; font-size: 13px; color: #475569;">Vérification: </strong>
                             <span class="status-chip {{ mission.statusVerification == 'VALIDÉE' ? 'status-success' : 'status-warning' }}">{{ mission.statusVerification }}</span>
                         </div>
                     {% endif %}
 
                     {% if mission.proofPhotoData or mission.signatureData %}
-                        <div class="mt-3">
+                        <div style="margin-top: 24px;">
                             <strong>Preuves:</strong>
                             {% if mission.proofPhotoData %}<span class="status-chip status-dark">📷 Photo</span>{% endif %}
                             {% if mission.signatureData %}<span class="status-chip status-dark">✍️ Signature</span>{% endif %}
@@ -175,7 +178,7 @@
 
         <div>
             {# Actions #}
-            <div class="detail-card mb-4">
+            <div class="detail-card" style="margin-bottom: 32px;">
                 <div class="detail-card__head">⚙️ Actions</div>
                 <div class="detail-card__body action-stack">
                     <a href="{{ path('admin_missions_edit', {id: mission.id}) }}" class="action-btn action-btn--edit">✏️ Modifier</a>
@@ -192,9 +195,9 @@
                 <div class="detail-card">
                     <div class="detail-card__head">📋 Demande Liée</div>
                     <div class="detail-card__body">
-                        <p><strong>Titre:</strong> {{ mission.demandeAide.titreD }}</p>
+                        <p style="margin-bottom: 16px;"><strong style="font-size: 13px; color: #475569;">Titre:</strong> {{ mission.demandeAide.titreD }}</p>
                         {% set demandeStatusClass = mission.demandeAide.statut == 'ACCEPTÉE' ? 'status-success' : (mission.demandeAide.statut == 'EN_ATTENTE' ? 'status-warning' : (mission.demandeAide.statut == 'EXPIRÉE' ? 'status-expired' : 'status-danger')) %}
-                        <p><strong>Statut:</strong> <span class="status-chip {{ demandeStatusClass }}">{{ mission.demandeAide.statut|replace({'_':' '}) }}</span></p>
+                        <p style="margin-bottom: 20px;"><strong style="font-size: 13px; color: #475569;">Statut:</strong> <span class="status-chip {{ demandeStatusClass }}">{{ mission.demandeAide.statut|replace({'_':' '}) }}</span></p>
                         <a href="{{ path('admin_demandes_show', {id: mission.demandeAide.id}) }}" class="action-btn action-btn--link">Voir Demande</a>
                     </div>
                 </div>

@@ -18,7 +18,10 @@ class FormationApplicationRepository extends ServiceEntityRepository
         parent::__construct($registry, FormationApplication::class);
     }
 
-    public function findByFormation(Formation $formation)
+    /**
+     * @return list<FormationApplication>
+     */
+    public function findByFormation(Formation $formation): array
     {
         return $this->createQueryBuilder('fa')
             ->andWhere('fa.formation = :formation')
@@ -28,7 +31,10 @@ class FormationApplicationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findByAideSoignant(AideSoignant $aideSoignant)
+    /**
+     * @return list<FormationApplication>
+     */
+    public function findByAideSoignant(AideSoignant $aideSoignant): array
     {
         return $this->createQueryBuilder('fa')
             ->andWhere('fa.aideSoignant = :aideSoignant')
@@ -38,7 +44,10 @@ class FormationApplicationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findPendingByFormation(Formation $formation)
+    /**
+     * @return list<FormationApplication>
+     */
+    public function findPendingByFormation(Formation $formation): array
     {
         return $this->createQueryBuilder('fa')
             ->andWhere('fa.formation = :formation')
@@ -50,7 +59,7 @@ class FormationApplicationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findExistingApplication(Formation $formation, AideSoignant $aideSoignant)
+    public function findExistingApplication(Formation $formation, AideSoignant $aideSoignant): ?FormationApplication
     {
         return $this->createQueryBuilder('fa')
             ->andWhere('fa.formation = :formation')

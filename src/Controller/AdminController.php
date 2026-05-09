@@ -24,6 +24,7 @@ use App\Entity\Produit;
 use App\Form\ProduitType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use App\Entity\Ressource;
@@ -210,7 +211,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
 
 
     #[Route('/admin/formations', name: 'admin_formations')]
-    public function formations(FormationRepository $formationRepository)
+    public function formations(FormationRepository $formationRepository): Response
     {
         $formations = $formationRepository->findAll();
 
@@ -220,7 +221,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin/consultations', name: 'admin_consultations')]
-    public function consultations(Request $request, ConsultationRepository $consultationRepository)
+    public function consultations(Request $request, ConsultationRepository $consultationRepository): Response
     {
         $search = $request->query->get('search', '');
         $sort = $request->query->get('sort', 'date');
@@ -270,7 +271,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin', name: 'app_admin_dashboard')]
-    public function dashboard(MedecinRepository $medecinRepository, AideSoignantRepository $aideRepo, PatientRepository $patientRepo, ConsultationRepository $consultationRepo)
+    public function dashboard(MedecinRepository $medecinRepository, AideSoignantRepository $aideRepo, PatientRepository $patientRepo, ConsultationRepository $consultationRepo): Response
     {
         // Médecins
         $pendingMedecins = $medecinRepository->findBy(['isValidated' => false]);
@@ -325,6 +326,9 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
 
     /**
      * Generate consultations per day data for the last 30 days
+        *
+        * @param list<\App\Entity\Consultation> $consultations
+        * @return array{labels: list<string>, data: list<int>, total: int}
      */
     private function generateConsultationsByDayData(array $consultations): array
     {
@@ -359,6 +363,9 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
 
     /**
      * Calculate acceptance rate
+        *
+        * @param list<\App\Entity\Consultation> $consultations
+        * @return array{accepted: int, pending: int, rejected: int, acceptanceRate: float|int, total: int, labels: list<string>, data: list<int>}
      */
     private function calculateAcceptanceRate(array $consultations): array
     {
@@ -369,7 +376,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
                 'rejected' => 0,
                 'acceptanceRate' => 0,
                 'total' => 0,
-                'labels' => ['Acceptees', 'En attente'],
+                'labels' => ['Acceptées', 'En attente'],
                 'data' => [0, 0]
             ];
         }
@@ -388,7 +395,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
         }
         
         $total = count($consultations);
-        $acceptanceRate = $total > 0 ? round(($accepted / $total) * 100, 1) : 0;
+        $acceptanceRate = round(($accepted / $total) * 100, 1);
         
         return [
             'accepted' => $accepted,
@@ -403,6 +410,9 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
 
     /**
      * Calculate urgent cases percentage
+        *
+        * @param list<\App\Entity\Consultation> $consultations
+        * @return array{urgent: int, moderate: int, low: int, urgentPercentage: float|int, total: int, labels: list<string>, data: list<int>, colors: list<string>}
      */
     private function calculateUrgentCases(array $consultations): array
     {
@@ -413,7 +423,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
                 'low' => 0,
                 'urgentPercentage' => 0,
                 'total' => 0,
-                'labels' => ['Urgentes', 'Moderees', 'Routine'],
+                'labels' => ['Urgentes', 'Modérées', 'Routine'],
                 'data' => [0, 0, 0],
                 'colors' => ['#dc2626', '#f59e0b', '#10b981']
             ];
@@ -447,7 +457,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
         }
         
         $total = count($consultations);
-        $urgentPercentage = $total > 0 ? round(($urgent / $total) * 100, 1) : 0;
+        $urgentPercentage = round(($urgent / $total) * 100, 1);
         
         return [
             'urgent' => $urgent,
@@ -562,7 +572,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     // ===== CRUD ADMIN DEMANDE AIDE =====
 
     #[Route('/admin/demandes', name: 'admin_demandes')]
-    public function demandesIndex(DemandeAideRepository $demandeRepo, Request $request)
+    public function demandesIndex(DemandeAideRepository $demandeRepo, Request $request): Response
     {
         $search = $request->query->get('search', '');
         $statut = $request->query->get('statut', '');
@@ -596,7 +606,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin/demandes/{id}', name: 'admin_demandes_show')]
-    public function demandesShow(DemandeAide $demande)
+    public function demandesShow(DemandeAide $demande): Response
     {
         $navigation = [
             ['name' => 'Dashboard', 'path' => $this->generateUrl('app_admin_dashboard'), 'icon' => '📊'],
@@ -611,7 +621,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin/demandes/{id}/edit', name: 'admin_demandes_edit', methods: ['GET', 'POST'])]
-    public function demandesEdit(DemandeAide $demande, Request $request, EntityManagerInterface $em)
+    public function demandesEdit(DemandeAide $demande, Request $request, EntityManagerInterface $em): Response
     {
         if ($request->isMethod('POST')) {
             $token = $request->request->get('_token');
@@ -672,7 +682,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     // ===== CRUD ADMIN MISSION =====
 
     #[Route('/admin/missions', name: 'admin_missions')]
-    public function missionsIndex(MissionRepository $missionRepo, Request $request)
+    public function missionsIndex(MissionRepository $missionRepo, Request $request): Response
     {
         $search = $request->query->get('search', '');
         $statut = $request->query->get('statut', '');
@@ -903,7 +913,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin/missions/{id}', name: 'admin_missions_show')]
-    public function missionsShow(Mission $mission)
+    public function missionsShow(Mission $mission): Response
     {
         $navigation = [
             ['name' => 'Dashboard', 'path' => $this->generateUrl('app_admin_dashboard'), 'icon' => '📊'],
@@ -975,7 +985,7 @@ public function new(Request $request, Formation $formation, EntityManagerInterfa
     }
 
     #[Route('/admin/missions/{id}/edit', name: 'admin_missions_edit', methods: ['GET', 'POST'])]
-    public function missionsEdit(Mission $mission, Request $request, EntityManagerInterface $em)
+    public function missionsEdit(Mission $mission, Request $request, EntityManagerInterface $em): Response
     {
         if ($request->isMethod('POST')) {
             $token = $request->request->get('_token');

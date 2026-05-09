@@ -7,6 +7,7 @@ use App\Entity\Patient;
 use App\Entity\AideSoignant;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -37,7 +38,7 @@ abstract class AbstractFunctionalTest extends WebTestCase
     protected function tearDown(): void
     {
         parent::tearDown();
-        if ($this->em && $this->em->isOpen()) {
+        if ($this->em->isOpen()) {
             // Clear all data between tests
             $this->em->clear();
         }
@@ -78,6 +79,9 @@ abstract class AbstractFunctionalTest extends WebTestCase
         $application->run(new ArrayInput(['command' => 'doctrine:schema:create']), new NullOutput());
     }
 
+    /**
+     * @param list<string> $roles
+     */
     protected function createUser(string $email, array $roles = ['ROLE_USER']): User
     {
         $user = new User();
@@ -150,7 +154,7 @@ abstract class AbstractFunctionalTest extends WebTestCase
         return $aide;
     }
 
-    protected function loginAs(User $user)
+    protected function loginAs(User $user): KernelBrowser
     {
         return static::createClient()->loginUser($user);
     }

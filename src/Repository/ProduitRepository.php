@@ -55,6 +55,9 @@ class ProduitRepository extends ServiceEntityRepository
         return $results;
     }
 
+    /**
+     * @return list<string>
+     */
     public function findDistinctCategories(): array
     {
         $result = $this->createQueryBuilder('p')

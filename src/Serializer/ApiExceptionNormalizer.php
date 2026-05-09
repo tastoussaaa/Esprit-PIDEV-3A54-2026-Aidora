@@ -6,6 +6,9 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class ApiExceptionNormalizer implements NormalizerInterface
 {
+    /**
+     * @return array{error: true, type: class-string, message: string, code: int|float|string, timestamp: string}
+     */
     public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         \assert($object instanceof \Throwable);

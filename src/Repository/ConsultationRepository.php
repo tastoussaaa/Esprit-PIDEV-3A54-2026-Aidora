@@ -9,10 +9,10 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<Consultation>
  *
- * @method Consultation|null find($id, $lockMode = null, $lockVersion = null)
- * @method Consultation|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Consultation|null find(mixed $id, mixed $lockMode = null, mixed $lockVersion = null)
+ * @method Consultation|null findOneBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null)
  * @method Consultation[]    findAll()
- * @method Consultation[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Consultation[]    findBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null, int|null $limit = null, int|null $offset = null)
  */
 class ConsultationRepository extends ServiceEntityRepository
 {

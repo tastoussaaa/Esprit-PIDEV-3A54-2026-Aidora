@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 final class CalendarController extends AbstractController
 {
     #[Route('/formations/calendar', name: 'formations_calendar')]
-    public function calendar()
+    public function calendar(): Response
     {
         return $this->render('calendar/calendar.html.twig');
     }

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Inter", "Segoe UI", sans-serif; line-height: 1.6; color: #1a202c; background: #fff; }
+        .document { max-width: 850px; margin: 0 auto; padding: 0; background: #fff; }
+
+        /* Header */
+        .header { display: flex; justify-content: space-between; background: linear-gradient(135deg, #0a7ba7 0%, #055a7e 100%); color: #fff; padding: 20px 30px; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .logo { width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; }
+        .clinic-info h1 { font-size: 26px; font-weight: 700; }
+        .clinic-info p { font-size: 12px; opacity: 0.9; }
+        .header-right { text-align: right; font-size: 12px; }
+        .header-right p { margin: 3px 0; }
+
+        /* Content */
+        .content { padding: 30px; }
+        .main-title { text-align: center; font-size: 28px; font-weight: 800; color: #0a7ba7; margin-bottom: 30px; text-transform: uppercase; }
+        .section { margin-bottom: 25px; padding: 15px; background: #e6f5f2; border-left: 5px solid #0a7ba7; border-radius: 6px; page-break-inside: avoid; }
+        .section-title { font-size: 13px; font-weight: 800; color: #0a7ba7; margin-bottom: 15px; text-transform: uppercase; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-size: 11px; font-weight: 700; color: #0a7ba7; text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-size: 15px; font-weight: 600; }
+
+        /* Medications */
+        .medicaments-section { margin-top: 20px; }
+        .medicaments-title { font-size: 13px; font-weight: 800; color: #0a7ba7; margin-bottom: 15px; text-transform: uppercase; }
+        .medicament-card { background: #fff; border: 2px solid #00897b; border-radius: 6px; padding: 15px; margin-bottom: 12px; page-break-inside: avoid; }
+        .medicament-name { font-size: 17px; font-weight: 700; color: #00897b; margin-bottom: 12px; }
+        .medicament-details { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .medicament-detail { padding: 10px; background: #f9fbfc; border-radius: 6px; border-left: 4px solid #00897b; }
+        .medicament-detail-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 5px; }
+        .medicament-detail-value { font-size: 14px; font-weight: 700; color: #1a202c; }
+
+        .instructions { background: #fff8f0; border-left: 4px solid #ffa726; padding: 10px; border-radius: 6px; font-size: 13px; color: #7c2d12; line-height: 1.5; margin-top: 10px; }
+        .instructions-label { font-size: 11px; font-weight: 700; color: #ffa726; text-transform: uppercase; margin-bottom: 5px; }
+
+        /* Footer */
+        .footer { background: #e6f5f2; padding: 20px; border-top: 1px solid #a6d4ce; text-align: center; page-break-inside: avoid; margin-top: 20px; }
+        .validity-badge { display: inline-block; background: linear-gradient(135deg, #00897b 0%, #00695c 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; margin-bottom: 15px; }
+        .footer-content { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .footer-item { text-align: center; font-size: 12px; }
+        .footer-item-label { font-weight: 700; color: #0a7ba7; font-size: 11px; text-transform: uppercase; margin-bottom: 3px; }
+        .footer-item-value { color: #1a202c; font-size: 13px; }
+        .legal-text { font-size: 11px; color: #6b7280; font-style: italic; margin-top: 15px; line-height: 1.5; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">A</div>
+                <div class="clinic-info">
+                    <h1>AIDORA</h1>
+                    <p>Medical Healthcare Platform</p>
+                    <p>Professional Prescription Management</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <p><strong>Date:</strong> {{ "now"|date("d/m/Y") }}</p>
+                <p><strong>Time:</strong> {{ "now"|date("H:i") }}</p>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="main-title">📋 Prescription</div>
+
+            <!-- Consultation Details -->
+            <div class="section">
+                <div class="section-title">📅 Consultation Details</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Date</span>
+                        <span class="info-value">{{ consultation.dateConsultation ? consultation.dateConsultation|date("d/m/Y") : 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Time</span>
+                        <span class="info-value">{{ consultation.timeSlot ?: 'N/A' }}</span>
+                    </div>
+                    <div class="info-item" style="grid-column: 1 / -1;">
+                        <span class="info-label">Chief Complaint</span>
+                        <span class="info-value">{{ consultation.motif ?: 'Not specified' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Info -->
+            {% if consultation.patient %}
+                <div class="section">
+                    <div class="section-title">👤 Patient Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">{{ consultation.patient.name ~ ' ' ~ consultation.patient.familyName }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Age</span>
+                            <span class="info-value">{{ consultation.age ?: 'N/A' }} years</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ consultation.email ?: 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Gender</span>
+                            <span class="info-value">{{ consultation.sex ?: 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Doctor Info -->
+            {% if consultation.medecin %}
+                <div class="section">
+                    <div class="section-title">👨‍⚕️ Prescriber</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Doctor</span>
+                            <span class="info-value">Dr. {{ consultation.medecin.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Specialty</span>
+                            <span class="info-value">{{ consultation.medecin.specialite ?: 'General Practice' }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Medications -->
+            {% if consultation.ordonnances is not empty %}
+                <div class="medicaments-section">
+                    <div class="medicaments-title">💊 Prescribed Medications</div>
+
+                    {% for ordonnance in consultation.ordonnances %}
+                        <div class="medicament-card">
+                            <div class="medicament-name">✓ {{ ordonnance.medicament ?: 'Medication not specified' }}</div>
+                            <div class="medicament-details">
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Dosage</div>
+                                    <div class="medicament-detail-value">{{ ordonnance.dosage ?: 'Not specified' }}</div>
+                                </div>
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Duration</div>
+                                    <div class="medicament-detail-value">{{ ordonnance.duree ?: 'Not specified' }}</div>
+                                </div>
+                                <div class="medicament-detail">
+                                    <div class="medicament-detail-label">Frequency</div>
+                                    <div class="medicament-detail-value">As prescribed</div>
+                                </div>
+                            </div>
+
+                            {% if ordonnance.instructions %}
+                                <div class="instructions">
+                                    <div class="instructions-label">⚠️ Special Instructions</div>
+                                    {{ ordonnance.instructions|nl2br }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="validity-badge">✓ VALID PRESCRIPTION</div>
+            <div class="footer-content">
+                <div class="footer-item">
+                    <div class="footer-item-label">Generated</div>
+                    <div class="footer-item-value">{{ "now"|date("d/m/Y H:i") }}</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Document ID</div>
+                    <div class="footer-item-value">RX-{{ consultation.id }}</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Validity</div>
+                    <div class="footer-item-value">1 Year</div>
+                </div>
+            </div>
+            <div class="legal-text">
+                This is an official medical prescription. Present to pharmacy for medication dispensing.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

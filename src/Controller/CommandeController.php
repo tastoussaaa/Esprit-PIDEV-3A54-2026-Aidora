@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Commande;
+use App\Entity\User;
 use App\Form\CommandeType;
 use App\Repository\CommandeRepository;
 use App\Repository\ProduitRepository;
@@ -29,14 +30,16 @@ class CommandeController extends AbstractController
         // Validate tri and ordre parameters
         $tri = in_array($tri, ['dateCommande', 'montantTotal', 'statut']) ? $tri : 'dateCommande';
         $ordre = in_array($ordre, ['ASC', 'DESC']) ? $ordre : 'DESC';
+
+        $currentUser = $user instanceof User ? $user : null;
         
         // Fetch commandes with filters
-        $commandes = $user
-            ? $commandeRepo->findForUser($user, $statut ?: null, $tri, $ordre)
+        $commandes = $currentUser
+            ? $commandeRepo->findForUser($currentUser, $statut ?: null, $tri, $ordre)
             : $commandeRepo->findBy([], [$tri => $ordre]);
         
         // Search filter (on product name)
-        if ($recherche !== null && $recherche !== '') {
+        if ($recherche !== '') {
             $recherche = trim($recherche);
             $commandes = array_filter($commandes, function ($c) use ($recherche) {
                 return stripos($c->getProduit() ? $c->getProduit()->getNom() : '', $recherche) !== false;
@@ -68,8 +71,9 @@ class CommandeController extends AbstractController
                 $commande->setQuantite(1);
             }
         }
-        if ($this->getUser()) {
-            $commande->setDemandeur($this->getUser());
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $commande->setDemandeur($currentUser);
         }
 
         $form = $this->createForm(CommandeType::class, $commande);

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Formation;
+use App\Entity\Medecin;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -41,8 +42,9 @@ class FormationRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-
-
+    /**
+     * @return list<Formation>
+     */
     public function findValidated(): array
     {
         return $this->createQueryBuilder('f')
@@ -57,7 +59,10 @@ class FormationRepository extends ServiceEntityRepository
     }
 
 
-    public function findValidatedByCategory(?string $category = null): array
+    /**
+     * @return list<Formation>
+     */
+    public function findValidatedByCategory(?string $category = null, ?string $searchTerm = null): array
     {
         $qb = $this->createQueryBuilder('f')
             ->andWhere('f.statut = :statut')
@@ -71,9 +76,43 @@ class FormationRepository extends ServiceEntityRepository
                 ->setParameter('category', $category);
         }
 
+        if ($searchTerm !== null && $searchTerm !== '') {
+            $qb->andWhere('LOWER(f.title) LIKE :search OR LOWER(f.description) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($searchTerm) . '%');
+        }
+
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @return list<Formation>
+     */
+    public function findVisibleForMedecin(Medecin $medecin, ?string $category = null, ?string $searchTerm = null): array
+    {
+        $qb = $this->createQueryBuilder('f')
+            ->andWhere('(f.statut = :validated OR f.medecin = :medecin)')
+            ->setParameter('validated', Formation::STATUT_VALIDE)
+            ->setParameter('medecin', $medecin)
+            ->andWhere('f.startDate >= :today')
+            ->setParameter('today', new \DateTime())
+            ->orderBy('f.startDate', 'DESC');
+
+        if ($category) {
+            $qb->andWhere('f.category = :category')
+                ->setParameter('category', $category);
+        }
+
+        if ($searchTerm !== null && $searchTerm !== '') {
+            $qb->andWhere('LOWER(f.title) LIKE :search OR LOWER(f.description) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($searchTerm) . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return list<string>
+     */
     public function findAllCategories(): array
     {
         $result = $this->createQueryBuilder('f')
@@ -82,6 +121,9 @@ class FormationRepository extends ServiceEntityRepository
             ->getResult();
 
         // Flatten array of arrays to a simple array of strings
-        return array_map(fn($c) => $c['category'], $result);
+        return array_values(array_map(
+            static fn(array $categoryRow): string => (string) $categoryRow['category'],
+            $result
+        ));
     }
 }

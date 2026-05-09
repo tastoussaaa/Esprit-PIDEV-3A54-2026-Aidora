@@ -11,6 +11,14 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 class UserService
 {
+    private ?User $resolvedUser = null;
+    private bool $resolvedUserLoaded = false;
+
+    /**
+     * @var array<string, Medecin|AideSoignant|Patient|null>
+     */
+    private array $resolvedEntitiesByType = [];
+
     public function __construct(
         private Security $security,
         private EntityManagerInterface $em
@@ -21,7 +29,15 @@ class UserService
      */
     public function getCurrentUser(): ?User
     {
-        return $this->security->getUser();
+        if ($this->resolvedUserLoaded) {
+            return $this->resolvedUser;
+        }
+
+        $user = $this->security->getUser();
+        $this->resolvedUser = $user instanceof User ? $user : null;
+        $this->resolvedUserLoaded = true;
+
+        return $this->resolvedUser;
     }
 
     /**
@@ -47,17 +63,12 @@ class UserService
      */
     public function getCurrentUserEntity(): Medecin|AideSoignant|Patient|null
     {
-        $user = $this->getCurrentUser();
-        if (!$user) {
+        $type = $this->getCurrentUserType();
+        if ($type === null) {
             return null;
         }
 
-        return match ($user->getUserType()) {
-            'medecin' => $this->em->getRepository(Medecin::class)->findOneBy(['user' => $user]),
-            'patient' => $this->em->getRepository(Patient::class)->findOneBy(['user' => $user]),
-            'aidesoignant' => $this->em->getRepository(AideSoignant::class)->findOneBy(['user' => $user]),
-            default => null,
-        };
+        return $this->resolveCurrentEntityForType($type);
     }
 
     /**
@@ -65,11 +76,13 @@ class UserService
      */
     public function getCurrentMedecin(): ?Medecin
     {
-        $user = $this->getCurrentUser();
-        if (!$user || $user->getUserType() !== 'medecin') {
+        if ($this->getCurrentUserType() !== 'medecin') {
             return null;
         }
-        return $this->em->getRepository(Medecin::class)->findOneBy(['user' => $user]);
+
+        $entity = $this->resolveCurrentEntityForType('medecin');
+
+        return $entity instanceof Medecin ? $entity : null;
     }
 
     /**
@@ -77,11 +90,13 @@ class UserService
      */
     public function getCurrentPatient(): ?Patient
     {
-        $user = $this->getCurrentUser();
-        if (!$user || $user->getUserType() !== 'patient') {
+        if ($this->getCurrentUserType() !== 'patient') {
             return null;
         }
-        return $this->em->getRepository(Patient::class)->findOneBy(['user' => $user]);
+
+        $entity = $this->resolveCurrentEntityForType('patient');
+
+        return $entity instanceof Patient ? $entity : null;
     }
 
     /**
@@ -89,11 +104,13 @@ class UserService
      */
     public function getCurrentAideSoignant(): ?AideSoignant
     {
-        $user = $this->getCurrentUser();
-        if (!$user || $user->getUserType() !== 'aidesoignant') {
+        if ($this->getCurrentUserType() !== 'aidesoignant') {
             return null;
         }
-        return $this->em->getRepository(AideSoignant::class)->findOneBy(['user' => $user]);
+
+        $entity = $this->resolveCurrentEntityForType('aidesoignant');
+
+        return $entity instanceof AideSoignant ? $entity : null;
     }
 
     /**
@@ -126,5 +143,30 @@ class UserService
     public function isCurrentUserAideSoignant(): bool
     {
         return $this->getCurrentUserType() === 'aidesoignant';
+    }
+
+    private function resolveCurrentEntityForType(string $type): Medecin|AideSoignant|Patient|null
+    {
+        if (array_key_exists($type, $this->resolvedEntitiesByType)) {
+            return $this->resolvedEntitiesByType[$type];
+        }
+
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            $this->resolvedEntitiesByType[$type] = null;
+
+            return null;
+        }
+
+        $entity = match ($type) {
+            'medecin' => $this->em->getRepository(Medecin::class)->findOneBy(['user' => $user]),
+            'patient' => $this->em->getRepository(Patient::class)->findOneBy(['user' => $user]),
+            'aidesoignant' => $this->em->getRepository(AideSoignant::class)->findOneBy(['user' => $user]),
+            default => null,
+        };
+
+        $this->resolvedEntitiesByType[$type] = $entity;
+
+        return $entity;
     }
 }

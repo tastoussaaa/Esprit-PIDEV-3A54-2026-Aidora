@@ -23,8 +23,12 @@ class CalendarAvailabilityService
             return [];
         }
 
-        $startRef = $demande->getDateDebutSouhaitee() ?? new \DateTimeImmutable('-30 days');
-        $endRef = $demande->getDateFinSouhaitee() ?? $startRef;
+        $startRef = $demande->getDateDebutSouhaitee() !== null
+            ? \DateTimeImmutable::createFromInterface($demande->getDateDebutSouhaitee())
+            : new \DateTimeImmutable('-30 days');
+        $endRef = $demande->getDateFinSouhaitee() !== null
+            ? \DateTimeImmutable::createFromInterface($demande->getDateFinSouhaitee())
+            : $startRef;
 
         $rangeStart = (clone $startRef)->modify('-14 days');
         $rangeEnd = (clone $endRef)->modify('+14 days');

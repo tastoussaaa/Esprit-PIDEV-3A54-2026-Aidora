@@ -15,7 +15,7 @@ class Produit
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'Le nom du produit est obligatoire')]
     #[Assert\Regex(
         pattern: '/[a-zA-ZÀ-ÿ]/',
@@ -23,21 +23,21 @@ class Produit
     )]
     private ?string $nom = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: 'La description est obligatoire')]
     private ?string $description = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     #[Assert\NotBlank(message: 'Le prix est obligatoire')]
     #[Assert\Positive(message: 'Le prix doit être positif')]
     private ?float $prix = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     #[Assert\NotBlank(message: 'Le stock est obligatoire')]
     #[Assert\Positive(message: 'Le stock doit être un nombre positif')]
     private ?int $stock = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire')]
     private ?string $categorie = null;
 

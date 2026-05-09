@@ -47,19 +47,19 @@ class Mission
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTime $dateDebut = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateDebut = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTime $dateFin = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateFin = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $StatutMission = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $workflowState = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?int $prixFinal = null;
 
     #[ORM\Column(nullable: true)]
@@ -70,7 +70,7 @@ class Mission
 
     // Relation ManyToOne vers DemandeAide
     #[ORM\ManyToOne(targetEntity: DemandeAide::class, inversedBy: "missions")]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?DemandeAide $demandeAide = null;
 
     // Relation ManyToOne vers AideSoignant
@@ -78,7 +78,7 @@ class Mission
     #[ORM\JoinColumn(nullable: true)]
     private ?AideSoignant $aideSoignant = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $TitreM = null;
 
     #[ORM\Column(nullable: true)]
@@ -93,11 +93,11 @@ class Mission
     #[ORM\Column(nullable: true)]
     private ?float $longitudeCheckout = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTime $checkInAt = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $checkInAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTime $checkOutAt = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $checkOutAt = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $statusVerification = null;
@@ -113,8 +113,8 @@ class Mission
 
     // ================= ARCHIVE & HISTORIQUE =================
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTime $archivedAt = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $archivedAt = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $finalStatus = null; // TERMINÉE, EXPIRÉE, ANNULÉE
@@ -129,25 +129,25 @@ class Mission
         return $this->id;
     }
 
-    public function getDateDebut(): ?\DateTime
+    public function getDateDebut(): ?\DateTimeImmutable
     {
         return $this->dateDebut;
     }
 
-    public function setDateDebut(\DateTime $dateDebut): static
+    public function setDateDebut(\DateTimeInterface $dateDebut): static
     {
-        $this->dateDebut = $dateDebut;
+        $this->dateDebut = \DateTimeImmutable::createFromInterface($dateDebut);
         return $this;
     }
 
-    public function getDateFin(): ?\DateTime
+    public function getDateFin(): ?\DateTimeImmutable
     {
         return $this->dateFin;
     }
 
-    public function setDateFin(\DateTime $dateFin): static
+    public function setDateFin(\DateTimeInterface $dateFin): static
     {
-        $this->dateFin = $dateFin;
+        $this->dateFin = \DateTimeImmutable::createFromInterface($dateFin);
         return $this;
     }
 
@@ -207,7 +207,7 @@ class Mission
         return $this->Note;
     }
 
-    public function setNote(int $Note): static
+    public function setNote(?int $Note): static
     {
         $this->Note = $Note;
         return $this;
@@ -218,7 +218,7 @@ class Mission
         return $this->Commentaire;
     }
 
-    public function setCommentaire(string $Commentaire): static
+    public function setCommentaire(?string $Commentaire): static
     {
         $this->Commentaire = $Commentaire;
         return $this;
@@ -306,26 +306,26 @@ class Mission
         return $this;
     }
 
-    public function getCheckInAt(): ?\DateTime
+    public function getCheckInAt(): ?\DateTimeImmutable
     {
         return $this->checkInAt;
     }
 
-    public function setCheckInAt(?\DateTime $checkInAt): static
+    public function setCheckInAt(?\DateTimeInterface $checkInAt): static
     {
-        $this->checkInAt = $checkInAt;
+        $this->checkInAt = $checkInAt ? \DateTimeImmutable::createFromInterface($checkInAt) : null;
 
         return $this;
     }
 
-    public function getCheckOutAt(): ?\DateTime
+    public function getCheckOutAt(): ?\DateTimeImmutable
     {
         return $this->checkOutAt;
     }
 
-    public function setCheckOutAt(?\DateTime $checkOutAt): static
+    public function setCheckOutAt(?\DateTimeInterface $checkOutAt): static
     {
-        $this->checkOutAt = $checkOutAt;
+        $this->checkOutAt = $checkOutAt ? \DateTimeImmutable::createFromInterface($checkOutAt) : null;
 
         return $this;
     }
@@ -380,14 +380,14 @@ class Mission
 
     // ================= ARCHIVE & HISTORIQUE =================
 
-    public function getArchivedAt(): ?\DateTime
+    public function getArchivedAt(): ?\DateTimeImmutable
     {
         return $this->archivedAt;
     }
 
-    public function setArchivedAt(?\DateTime $archivedAt): static
+    public function setArchivedAt(?\DateTimeInterface $archivedAt): static
     {
-        $this->archivedAt = $archivedAt;
+        $this->archivedAt = $archivedAt ? \DateTimeImmutable::createFromInterface($archivedAt) : null;
 
         return $this;
     }

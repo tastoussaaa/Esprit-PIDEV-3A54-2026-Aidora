@@ -8,6 +8,7 @@
 parameters:
     upload_dir: '%kernel.project_dir%/public/uploads'
     pdf_directory: '%kernel.project_dir%/public/uploads/pdfs%'
+    api_key: '%env(GSK_API_KEY)%'
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 # Twilio credentials should be provided via environment variables for local
 # development and production. Do NOT hard-code secrets here.
@@ -49,6 +50,7 @@ services:
         arguments:
             $baseUrl: '%env(string:OLLAMA_BASE_URL)%'
             $model: '%env(string:OLLAMA_MODEL)%'
+            $openaiApiKey: '%env(OPENAI_API_KEY)%'
 
     # BotMan
     App\Service\BotManFactory:
@@ -63,3 +65,14 @@ services:
     App\Repository\FormationRepository:
         public: true
     
+
+    AhmedBhs\DoctrineDoctor\Analyzer\Integrity\TimestampableTraitAnalyzer:
+        autowire: true
+        autoconfigure: false
+        tags: []
+
+    AhmedBhs\DoctrineDoctor\Analyzer\Integrity\PrimaryKeyStrategyAnalyzer:
+        autowire: true
+        autoconfigure: false
+        tags: []
+

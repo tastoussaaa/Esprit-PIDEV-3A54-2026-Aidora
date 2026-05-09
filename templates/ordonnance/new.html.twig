@@ -5,6 +5,7 @@
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('assets/css/medecin/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/consultation/form.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ordonnance.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -21,10 +22,22 @@
 
         <section class="portal__content portal__card">
 
-            {{ form_start(form, {'attr': {'class': 'form'}}) }}
+            {{ form_start(form, {'attr': {'class': 'form', 'id': 'ordonnance-form'}}) }}
 
                 <div class="form__fields">
-                    {{ form_widget(form) }}
+                    {{ form_row(form.consultation) }}
+                    
+                    <div id="medicaments-container" data-prototype="{{ include('ordonnance/_medicament_prototype.html.twig', {medicament: form.medicaments.vars.prototype})|e('html_attr') }}">
+                        {% for medicament in form.medicaments %}
+                            <div class="medicament-item">
+                                {{ include('ordonnance/_medicament_prototype.html.twig', {medicament: medicament}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" id="add-medicament-btn" class="btn btn--secondary" style="margin-bottom: 20px;">
+                        + Ajouter un médicament
+                    </button>
                 </div>
 
                 <div class="form__actions">
@@ -39,4 +52,127 @@
     </main>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('medicaments-container');
+    const addBtn = document.getElementById('add-medicament-btn');
+    let medicamentCount = container.querySelectorAll('.medicament-item').length;
+
+    // Add medicament button
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            const prototype = container.dataset.prototype;
+            const newForm = prototype.replace(/__name__/g, medicamentCount);
+            
+            const div = document.createElement('div');
+            div.className = 'medicament-item';
+            div.innerHTML = newForm;
+            
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn--ghost btn-remove-medicament';
+            removeBtn.textContent = '✕ Supprimer';
+            removeBtn.style.marginTop = '10px';
+            removeBtn.style.color = '#dc3545';
+            
+            removeBtn.addEventListener('click', function() {
+                div.remove();
+            });
+            
+            div.appendChild(removeBtn);
+            container.appendChild(div);
+            
+            // Add event listeners to new inputs
+            attachLookupListeners(div);
+            attachValidationListeners(div);
+            
+            medicamentCount++;
+        });
+    }
+
+    // Attach lookup and validation listeners to existing items
+    function attachLookupListeners(item) {
+        const lookupBtn = item.querySelector('.lookup-dosage-btn');
+        const medicamentInput = item.querySelector('.medicament-input');
+        const dosageInput = item.querySelector('.dosage-input');
+        const dureeInput = item.querySelector('.duree-input');
+        const statusEl = item.querySelector('.lookup-status');
+
+        if (lookupBtn && medicamentInput && dosageInput) {
+            lookupBtn.addEventListener('click', async function() {
+                const medicament = medicamentInput.value.trim();
+                if (!medicament) {
+                    if (statusEl) statusEl.textContent = 'Veuillez entrer un nom de médicament';
+                    return;
+                }
+
+                if (statusEl) statusEl.textContent = 'Recherche en cours...';
+                
+                try {
+                    const response = await fetch(`/api/medication/lookup?medicament=${encodeURIComponent(medicament)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.dosage) {
+                        dosageInput.value = data.dosage;
+                        if (dureeInput && data.duree) {
+                            dureeInput.value = data.duree;
+                        }
+                        if (statusEl) statusEl.textContent = 'Dosage trouvé!';
+                    } else {
+                        if (statusEl) statusEl.textContent = data.message || 'Aucune information de dosage trouvée';
+                    }
+                } catch (error) {
+                    if (statusEl) statusEl.textContent = 'Erreur lors de la recherche';
+                    console.error(error);
+                }
+            });
+        }
+    }
+
+    // Attach RxNorm validation listeners
+    function attachValidationListeners(item) {
+        const medicamentInput = item.querySelector('.medicament-input');
+        const validationStatus = item.querySelector('.validation-status');
+
+        if (medicamentInput) {
+            medicamentInput.addEventListener('blur', async function() {
+                const medicament = medicamentInput.value.trim();
+                if (!medicament) return;
+
+                if (validationStatus) validationStatus.textContent = 'Validation...';
+                
+                try {
+                    const response = await fetch(`/api/medication/validate?medicament=${encodeURIComponent(medicament)}`);
+                    const data = await response.json();
+                    
+                    if (data.valid) {
+                        if (validationStatus) {
+                            validationStatus.textContent = '✓ Médicament validé';
+                            validationStatus.style.color = '#28a745';
+                        }
+                        medicamentInput.setCustomValidity('');
+                    } else {
+                        if (validationStatus) {
+                            validationStatus.textContent = data.message || 'Médicament non trouvé dans la base RxNorm';
+                            validationStatus.style.color = '#dc3545';
+                        }
+                        medicamentInput.setCustomValidity(data.message || 'Médicament non trouvé');
+                    }
+                } catch (error) {
+                    if (validationStatus) validationStatus.textContent = '';
+                    console.error(error);
+                }
+            });
+        }
+    }
+
+    // Attach listeners to existing items
+    document.querySelectorAll('.medicament-item').forEach(function(item) {
+        attachLookupListeners(item);
+        attachValidationListeners(item);
+    });
+});
+</script>
 {% endblock %}
